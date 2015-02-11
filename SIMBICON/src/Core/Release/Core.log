@@ -1,0 +1,34 @@
+﻿La génération a démarré 10/02/2015 14:30:09.
+     1>Projet "C:\Users\scarensac\Documents\SIMBICON\src\Core\Core.vcxproj" sur le nœud 2 (Build cible(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I../ /I"../ode-0.9/include" /I../include /nologo /W3 /WX- /O2 /Oi /Ot /Oy- /GL /D WIN32 /D NDEBUG /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /arch:SSE2 /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /wd4996 /analyze- /errorReport:prompt BalanceFeedback.cpp SimBiConFramework.cpp SimBiConState.cpp SimBiController.cpp
+         BalanceFeedback.cpp
+     1>../MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         SimBiConFramework.cpp
+     1>../MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+     1>SimBiConFramework.cpp(124): warning C4244: 'argument' : conversion de 'double' en 'float', perte possible de données
+         SimBiConState.cpp
+     1>../MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         SimBiController.cpp
+     1>../MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"../binaries/Release\Core.lib" /NOLOGO /LTCG Release\Character.obj
+         Release\SimGlobals.obj
+         Release\BalanceFeedback.obj
+         Release\BaseControlFramework.obj
+         Release\Controller.obj
+         Release\ConUtils.obj
+         Release\PoseController.obj
+         Release\SimBiConFramework.obj
+         Release\SimBiConState.obj
+         Release\SimBiController.obj
+         Core.vcxproj -> C:\Users\scarensac\Documents\SIMBICON\src\Core\../binaries/Release\Core.lib
+     1>Génération du projet "C:\Users\scarensac\Documents\SIMBICON\src\Core\Core.vcxproj" terminée (Build cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:03.76

@@ -1,0 +1,108 @@
+﻿La génération a démarré 03/02/2015 16:55:37.
+     1>Projet "C:\Users\scarensac\Documents\SIMBICON\src\ode-0.9\ode.vcxproj" sur le nœud 5 (Build cible(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"..\ode-0.9\include" /I"..\ode-0.9\OPCODE" /I./ /I../ /nologo /W3 /WX- /O2 /Ot /Oy /D WIN32 /D _CRT_SECURE_NO_DEPRECATE /D ODE_LIB /D _MBCS /Gm- /EHsc /MT /GS /Gy /arch:SSE2 /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /FR"Release\\" /Gd /TP /wd4996 /analyze- /errorReport:prompt ode\src\step.cpp
+         step.cpp
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"..\binaries\Release\ode.lib" /NOLOGO Release\array.obj
+         Release\box.obj
+         Release\capsule.obj
+         Release\collision_cylinder_box.obj
+         Release\collision_cylinder_plane.obj
+         Release\collision_cylinder_sphere.obj
+         Release\collision_cylinder_trimesh.obj
+         Release\collision_kernel.obj
+         Release\collision_quadtreespace.obj
+         Release\collision_space.obj
+         Release\collision_transform.obj
+         Release\collision_trimesh_box.obj
+         Release\collision_trimesh_ccylinder.obj
+         Release\collision_trimesh_distance.obj
+         Release\collision_trimesh_opcode.obj
+         Release\collision_trimesh_plane.obj
+         Release\collision_trimesh_ray.obj
+         Release\collision_trimesh_sphere.obj
+         Release\collision_trimesh_trimesh.obj
+         Release\collision_util.obj
+         Release\convex.obj
+         Release\cylinder.obj
+         Release\error.obj
+         "Release\export-dif.obj"
+         Release\fastdot.obj
+         Release\fastldlt.obj
+         Release\fastlsolve.obj
+         Release\fastltsolve.obj
+         Release\heightfield.obj
+         Release\joint.obj
+         Release\lcp.obj
+         Release\mass.obj
+         Release\mat.obj
+         Release\matrix.obj
+         Release\memory.obj
+         Release\misc.obj
+         Release\obstack.obj
+         Release\ode.obj
+         Release\odemath.obj
+         Release\plane.obj
+         Release\quickstep.obj
+         Release\ray.obj
+         Release\rotation.obj
+         Release\sphere.obj
+         Release\step.obj
+         Release\stepfast.obj
+         Release\testing.obj
+         Release\timer.obj
+         Release\util.obj
+         Release\OPC_AABBCollider.obj
+         Release\OPC_AABBTree.obj
+         Release\OPC_BaseModel.obj
+         Release\OPC_BoxPruning.obj
+         Release\OPC_Collider.obj
+         Release\OPC_HybridModel.obj
+         Release\OPC_LSSCollider.obj
+         Release\OPC_MeshInterface.obj
+         Release\OPC_Model.obj
+         Release\OPC_OBBCollider.obj
+         Release\OPC_OptimizedTree.obj
+         Release\OPC_PlanesCollider.obj
+         Release\OPC_RayCollider.obj
+         Release\OPC_SphereCollider.obj
+         Release\OPC_SweepAndPrune.obj
+         Release\OPC_TreeBuilders.obj
+         Release\OPC_TreeCollider.obj
+         Release\OPC_VolumeCollider.obj
+         Release\Opcode.obj
+         Release\IceAABB.obj
+         Release\IceContainer.obj
+         Release\IceHPoint.obj
+         Release\IceIndexedTriangle.obj
+         Release\IceMatrix3x3.obj
+         Release\IceMatrix4x4.obj
+         Release\IceOBB.obj
+         Release\IcePlane.obj
+         Release\IcePoint.obj
+         Release\IceRandom.obj
+         Release\IceRay.obj
+         Release\IceRevisitedRadix.obj
+         Release\IceSegment.obj
+         Release\IceTriangle.obj
+         Release\IceUtils.obj
+         Release\gim_boxpruning.obj
+         Release\gim_contact.obj
+         Release\gim_math.obj
+         Release\gim_memory.obj
+         Release\gim_tri_tri_overlap.obj
+         Release\gim_trimesh.obj
+         Release\gim_trimesh_capsule_collision.obj
+         Release\gim_trimesh_ray_collision.obj
+         Release\gim_trimesh_sphere_collision.obj
+         Release\gim_trimesh_trimesh_collision.obj
+         Release\gimpact.obj
+         ode.vcxproj -> C:\Users\scarensac\Documents\SIMBICON\src\ode-0.9\..\binaries\Release\ode.lib
+       BscMake:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\bscmake.exe /nologo /o"..\binaries\Release\ode.bsc" Release\array.sbr Release\box.sbr Release\capsule.sbr Release\collision_cylinder_box.sbr Release\collision_cylinder_plane.sbr Release\collision_cylinder_sphere.sbr Release\collision_cylinder_trimesh.sbr Release\collision_kernel.sbr Release\collision_quadtreespace.sbr Release\collision_space.sbr Release\collision_transform.sbr Release\collision_trimesh_box.sbr Release\collision_trimesh_ccylinder.sbr Release\collision_trimesh_distance.sbr Release\collision_trimesh_opcode.sbr Release\collision_trimesh_plane.sbr Release\collision_trimesh_ray.sbr Release\collision_trimesh_sphere.sbr Release\collision_trimesh_trimesh.sbr Release\collision_util.sbr Release\convex.sbr Release\cylinder.sbr Release\error.sbr "Release\export-dif.sbr" Release\fastdot.sbr Release\fastldlt.sbr Release\fastlsolve.sbr Release\fastltsolve.sbr Release\heightfield.sbr Release\joint.sbr Release\lcp.sbr Release\mass.sbr Release\mat.sbr Release\matrix.sbr Release\memory.sbr Release\misc.sbr Release\obstack.sbr Release\ode.sbr Release\odemath.sbr Release\plane.sbr Release\quickstep.sbr Release\ray.sbr Release\rotation.sbr Release\sphere.sbr Release\step.sbr Release\stepfast.sbr Release\testing.sbr Release\timer.sbr Release\util.sbr Release\OPC_AABBCollider.sbr Release\OPC_AABBTree.sbr Release\OPC_BaseModel.sbr Release\OPC_BoxPruning.sbr Release\OPC_Collider.sbr Release\OPC_HybridModel.sbr Release\OPC_LSSCollider.sbr Release\OPC_MeshInterface.sbr Release\OPC_Model.sbr Release\OPC_OBBCollider.sbr Release\OPC_OptimizedTree.sbr Release\OPC_PlanesCollider.sbr Release\OPC_RayCollider.sbr Release\OPC_SphereCollider.sbr Release\OPC_SweepAndPrune.sbr Release\OPC_TreeBuilders.sbr Release\OPC_TreeCollider.sbr Release\OPC_VolumeCollider.sbr Release\Opcode.sbr Release\IceAABB.sbr Release\IceContainer.sbr Release\IceHPoint.sbr Release\IceIndexedTriangle.sbr Release\IceMatrix3x3.sbr Release\IceMatrix4x4.sbr Release\IceOBB.sbr Release\IcePlane.sbr Release\IcePoint.sbr Release\IceRandom.sbr Release\IceRay.sbr Release\IceRevisitedRadix.sbr Release\IceSegment.sbr Release\IceTriangle.sbr Release\IceUtils.sbr Release\gim_boxpruning.sbr Release\gim_contact.sbr Release\gim_math.sbr Release\gim_memory.sbr Release\gim_tri_tri_overlap.sbr Release\gim_trimesh.sbr Release\gim_trimesh_capsule_collision.sbr Release\gim_trimesh_ray_collision.sbr Release\gim_trimesh_sphere_collision.sbr Release\gim_trimesh_trimesh_collision.sbr Release\gimpact.sbr
+     1>Génération du projet "C:\Users\scarensac\Documents\SIMBICON\src\ode-0.9\ode.vcxproj" terminée (Build cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:08.72
