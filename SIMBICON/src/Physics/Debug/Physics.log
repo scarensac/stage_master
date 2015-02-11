@@ -1,0 +1,82 @@
+﻿La génération a démarré 21-Nov-14 5:24:05 PM.
+     1>Projet "D:\soft\SIMBICON\src\Physics\Physics.vcxproj" sur le nœud 7 (Build cible(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I../ /I"../ode-0.9/include" /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /wd4996 /analyze- /errorReport:prompt AbstractRBEngine.cpp ArticulatedFigure.cpp ArticulatedRigidBody.cpp ODEWorld.cpp PreCollisionQuery.cpp RBProperties.cpp RBState.cpp RBUtils.cpp RigidBody.cpp BoxCDP.cpp CapsuleCDP.cpp CollisionDetectionPrimitive.cpp PlaneCDP.cpp SphereCDP.cpp BallInSocketJoint.cpp HingeJoint.cpp Joint.cpp UniversalJoint.cpp
+         UniversalJoint.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         Joint.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         HingeJoint.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         BallInSocketJoint.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         SphereCDP.cpp
+     1>D:\soft\SIMBICON\src\MathLib/MathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         PlaneCDP.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         CollisionDetectionPrimitive.cpp
+     1>D:\soft\SIMBICON\src\MathLib/MathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         CapsuleCDP.cpp
+     1>D:\soft\SIMBICON\src\MathLib/MathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         BoxCDP.cpp
+     1>D:\soft\SIMBICON\src\MathLib/MathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         RigidBody.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         RBUtils.cpp
+         RBState.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         RBProperties.cpp
+     1>D:\soft\SIMBICON\src\MathLib/MathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         PreCollisionQuery.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         ODEWorld.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         ArticulatedRigidBody.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         ArticulatedFigure.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         AbstractRBEngine.cpp
+     1>D:\soft\SIMBICON\src\MathLib/mathLib.h(38): warning C4005: 'INFINITY' : redéfinition de macro
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\math.h(102) : voir la définition précédente de 'INFINITY'
+         Génération de code en cours...
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"../binaries/Debug\Physics.lib" /NOLOGO Debug\AbstractRBEngine.obj
+         Debug\ArticulatedFigure.obj
+         Debug\ArticulatedRigidBody.obj
+         Debug\ODEWorld.obj
+         Debug\PreCollisionQuery.obj
+         Debug\RBProperties.obj
+         Debug\RBState.obj
+         Debug\RBUtils.obj
+         Debug\RigidBody.obj
+         Debug\BoxCDP.obj
+         Debug\CapsuleCDP.obj
+         Debug\CollisionDetectionPrimitive.obj
+         Debug\PlaneCDP.obj
+         Debug\SphereCDP.obj
+         Debug\BallInSocketJoint.obj
+         Debug\HingeJoint.obj
+         Debug\Joint.obj
+         Debug\UniversalJoint.obj
+         Physics.vcxproj -> D:\soft\SIMBICON\src\Physics\../binaries/Debug\Physics.lib
+     1>Génération du projet "D:\soft\SIMBICON\src\Physics\Physics.vcxproj" terminée (Build cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:08.15
