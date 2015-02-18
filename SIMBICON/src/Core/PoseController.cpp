@@ -100,12 +100,24 @@ Vector3d PoseController::computePDTorque(const Quaternion& qRel, const Quaternio
 	the torque is already represented in the correct coordinate frame
 */
 void PoseController::limitTorque(Vector3d* torque, ControlParams* cParams){
-	if (torque->x < -cParams->scale.x * cParams->maxAbsTorque) torque->x = -cParams->scale.x * cParams->maxAbsTorque;
-	if (torque->x > cParams->scale.x * cParams->maxAbsTorque) torque->x = cParams->scale.x * cParams->maxAbsTorque;
-	if (torque->y < -cParams->scale.y * cParams->maxAbsTorque) torque->y = -cParams->scale.y * cParams->maxAbsTorque;
-	if (torque->y > cParams->scale.y * cParams->maxAbsTorque) torque->y = cParams->scale.y * cParams->maxAbsTorque;
-	if (torque->z < -cParams->scale.z * cParams->maxAbsTorque) torque->z = -cParams->scale.z * cParams->maxAbsTorque;
-	if (torque->z > cParams->scale.z * cParams->maxAbsTorque) torque->z = cParams->scale.z * cParams->maxAbsTorque;
+	if (torque->x < -cParams->scale.x * cParams->maxAbsTorque){
+		torque->x = -cParams->scale.x * cParams->maxAbsTorque;
+	}
+	if (torque->x > cParams->scale.x * cParams->maxAbsTorque){
+		torque->x = cParams->scale.x * cParams->maxAbsTorque;
+	}
+	if (torque->y < -cParams->scale.y * cParams->maxAbsTorque){
+		torque->y = -cParams->scale.y * cParams->maxAbsTorque;
+	}
+	if (torque->y > cParams->scale.y * cParams->maxAbsTorque){
+		torque->y = cParams->scale.y * cParams->maxAbsTorque;
+	}
+	if (torque->z < -cParams->scale.z * cParams->maxAbsTorque){
+		torque->z = -cParams->scale.z * cParams->maxAbsTorque;
+	}
+	if (torque->z > cParams->scale.z * cParams->maxAbsTorque){
+		torque->z = cParams->scale.z * cParams->maxAbsTorque;
+	}
 }
 
 /**

@@ -58,9 +58,14 @@ public:
 	virtual ~ArticulatedRigidBody(void);
 
 	/**
-		returns the parent joint for the current articulated body
+	returns the parent joint for the current articulated body
 	*/
-	inline Joint* getParentJoint(){return pJoint;};
+	inline Joint* getParentJoint(){ return pJoint; };
+
+	/**
+	returns the child joints for the current articulated body
+	*/
+	DynamicArray<Joint*> getChildJoints(){ return cJoints; };
 
 	/**
 		this method always returns true

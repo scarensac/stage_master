@@ -502,7 +502,7 @@ void SimBiConState::writeTrajectory1D(FILE* f, Trajectory1D& result, int startin
 	Update all the trajectories to recenter them around the new given D and V trajectories
 	Also save these new D and V trajectories.
 */
-void SimBiConState::updateDVTrajectories(SimBiController* con, Joint* j, Trajectory1D& newDTrajX, Trajectory1D& newDTrajZ, Trajectory1D& newVTrajX, Trajectory1D& newVTrajZ, int nbSamples ) {
+void SimBiConState::updateDVTrajectories(SimBiController* con, Joint* j, Trajectory1D& newDTrajX, Trajectory1D& newDTrajZ,Trajectory1D& newVTrajX, Trajectory1D& newVTrajZ, int nbSamples ) {
 
 	int nbTraj = sTraj.size();
 	for( int i = 0; i < nbTraj; ++i ) {		

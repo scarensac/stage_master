@@ -254,6 +254,7 @@ int SimBiController::advanceInTime(double dt, DynamicArray<ContactPoint> *cfs){
 
 /**
 	This method is used to return the ratio of the weight that is supported by the stance foot.
+	return -1 if there are no vertical forces on the feet (meaning neither of them toutch the ground
 */
 double SimBiController::getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs){
 	Vector3d stanceFootForce = getForceOnFoot(stanceFoot, cfs);
@@ -406,15 +407,22 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs){
 	SimBiConState* curState = states[FSMStateIndex];
 	Quaternion newOrientation;
 
+	//get the estimated global trajectory 
+	//I noticed that those values are always equal to 0 (a least on the forward walk...)
+	Vector3d d0, v0;
+	computeD0(phiToUse, &d0);
+	computeV0(phiToUse, &v0);
+
+	//just precompute the variations for d and v
+	Vector3d d_d = d -d0;
+	Vector3d d_v = v -v0;
+
 	for (int i=0;i<curState->getTrajectoryCount();i++){
 		//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
 		int jIndex = curState->sTraj[i]->getJointIndex(stance);
 
 		//get the desired joint orientation to track - include the feedback if necessary/applicable
-		Vector3d d0, v0; 
-		computeD0( phiToUse, &d0 );
-		computeV0( phiToUse, &v0 );	
-		newOrientation = curState->sTraj[i]->evaluateTrajectory(this, character->getJoint(jIndex), stance, phiToUse, d - d0, v - v0);
+		newOrientation = curState->sTraj[i]->evaluateTrajectory(this, character->getJoint(jIndex), stance, phiToUse, d_d, d_v);
 
 		//if the index is -1, it must mean it's the root's trajectory. Otherwise we should give an error
 		if (jIndex == -1){
@@ -505,7 +513,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	rootMakeupTorque -= rootTorque;
 
 	//add to the root makeup torque the predictive torque as well (only consider the effect of the torque in the lateral plane).
-	Vector3d rootPredictiveTorque(0, 0, rootPredictiveTorqueScale*9.8*d.x);
+	Vector3d rootPredictiveTorque(0, 0, rootPredictiveTorqueScale*9.8*d.x);///WARNING seems strange that there is an x here but well...
 	rootMakeupTorque += characterFrame.rotate(rootPredictiveTorque);
 
 	//assume the stance foot is in contact...
@@ -517,14 +525,43 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	swingHipTorque += rootMakeupTorque * (1-stanceHipToSwingHipRatio) * rootStrength;
 
 
-
-
 	if( stanceHipDamping > 0 ) {
 		double wRely = root->getAngularVelocity().y - character->joints[stanceHipIndex]->child->getAngularVelocity().y;
 		if (fabs(wRely) > stanceHipMaxVelocity ) wRely = stanceHipMaxVelocity * SGN(wRely);
 		stanceHipTorque.y -= stanceHipDamping * wRely * wRely * SGN(wRely);
 	}
 
+	//I'l try to keep the balance only with torques 
+	Vector3d v1 =v;
+	v1.y = 0;
+	if (v1.length() > 0.1){
+
+		int idx=character->getJointIndex("pelvis_torso");
+		
+		
+
+		/*Vector3d v2 = Vector3d(0, 1, 0);//y is the vertical vector int this world
+		Vector3d n = v1.crossProductWith(v2);
+		n/=-n.length();
+		n.z= 0;
+		n = Vector3d(1, 0, 0);*/
+
+		//here I'll try something to counter the effect of the water
+		//swingHipTorque += swingHipTorque*SimGlobals::force_alpha / 30000 * 2;
+
+		//swingHipTorque.x += swingHipTorque.x*SimGlobals::liquid_density / 1000 * 2;
+
+		
+		//stanceHipTorque -= stanceHipTorque*SimGlobals::force_alpha / 30000 * 2;
+		//swingHipTorque = Vector3d(0,0,0);
+		//Vector3d vv = torques[idx];
+		//torques[idx] += -n*SimGlobals::force_alpha / 30000 * 200;
+		//stanceHipTorque += n*SimGlobals::force_alpha / 30000 * 200;
+		//swingHipTorque += n*SimGlobals::force_alpha / 30000 * 60;
+		//	stanceHipTorque = n*0;
+
+	
+	}
 
 
 	//now transform the torque to child coordinates, apply torque limits and then change it back to world coordinates
@@ -541,6 +578,21 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	//and done...
 	torques[stanceHipIndex] = stanceHipTorque;
 	torques[swingHipIndex] = swingHipTorque;
+
+	/*std::vector<Joint*> body_top;
+	//character->getCharacterTop(body_top);
+	body_top.push_back(character->getJoint(stanceHipIndex));
+	for (uint i = 0; i < body_top.size(); ++i){
+		std::vector<Joint*> vec_cjoints = body_top[i]->getChild()->getChildJoints();
+		for (uint j = 0; j < vec_cjoints.size(); ++j){
+			body_top.push_back(vec_cjoints[j]);
+		}
+	}
+	
+	Point3d pf = character->getTopCOM();
+
+	compute_virtual_force(-v*SimGlobals::force_alpha / 3000 * 5 * SimGlobals::water_level, pf, body_top);*/
+
 }
 
 

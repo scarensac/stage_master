@@ -1,5 +1,5 @@
 PDParams
-#        joint name              Kp      Kd      MaxTorque    ScaleX        ScaleY        ScaleZ
+#   joint name              Kp      Kd      MaxTorque    ScaleX        ScaleY        ScaleZ
     root	3000.000000	300.000000	10000.000000	1.000000	0.200000	1.000000
     pelvis_torso	200.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
     lHip	300.000000	30.000000	10000.000000	1.000000	0.660000	1.000000
