@@ -112,15 +112,21 @@ SimBiConFramework::~SimBiConFramework(void){
 */
 
 bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recomputeTorques, bool advanceWorldInTime){
-	if (applyControl == false) 
+	//compute te new torques and apply them 
+	if (applyControl == false){
 		con->resetTorques();
-	else
-		if (recomputeTorques == true)
+	}
+	else{
+		if (recomputeTorques == true){
 			con->computeTorques(pw->getContactForces());
-
-	//not applying control is the same as just resetting the torques
+		}
+	}
 	con->applyTorques();
+	
 	ODEWorld* world = dynamic_cast<ODEWorld*>(pw);
+
+	
+	//we now simulate the effect of the liquid
 	world->compute_water_impact(SimGlobals::water_level);
 
 	if (advanceWorldInTime)

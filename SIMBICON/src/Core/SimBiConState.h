@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <Core/Trajectory.h>
 #include <Core/BalanceFeedback.h>
 #include <Utils/Utils.h>
@@ -179,6 +180,8 @@ public:
 		this method is used to evaluate the trajectory at a given point phi, knowing the stance of the character, 
 		and the d and v values used for feedback.
 	*/
+
+
 	inline Quaternion evaluateTrajectory(SimBiController* con, Joint* j, int stance, double phi, const Vector3d& d, const Vector3d& v){
 		Quaternion q = Quaternion(1, 0, 0, 0);
 
@@ -397,7 +400,7 @@ public:
 		Update all the trajectories to recenter them around the new given D and V trajectories
 		Also save these new D and V trajectories.
 	*/
-	void updateDVTrajectories(SimBiController* con, Joint* j, Trajectory1D& newDTrajX, Trajectory1D& newDTrajZ, Trajectory1D& newVTrajX, Trajectory1D& newVTrajZ, int nbSamples = 100 );
+	void updateDVTrajectories(SimBiController* con, Joint* j, Trajectory1D& newDTrajX, Trajectory1D& newDTrajZ,Trajectory1D& newVTrajX, Trajectory1D& newVTrajZ, int nbSamples = 100 );
 
 
 	/**

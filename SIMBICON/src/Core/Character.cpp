@@ -265,22 +265,26 @@ void Character::getReverseStanceState(DynamicArray<double>* state){
 
 
 /**
-	This method is used to compute the center of mass of the articulated figure.
+This method is used to compute the center of mass of the articulated figure.
 */
 Vector3d Character::getCOM(){
 	Vector3d COM = Vector3d(af->root->getCMPosition()) * af->root->getMass();
 	double curMass = af->root->getMass();
 	double totalMass = curMass;
-	for (uint i=0; i <joints.size(); i++){
+	for (uint i = 0; i <joints.size(); i++){
 		curMass = joints[i]->child->getMass();
 		totalMass += curMass;
-		COM.addScaledVector(joints[i]->child->getCMPosition() , curMass);
+		COM.addScaledVector(joints[i]->child->getCMPosition(), curMass);
 	}
 
 	COM /= totalMass;
 
 	return COM;
 }
+
+
+
+
 
 /**
 	This method is used to compute the velocity of the center of mass of the articulated figure.
@@ -299,6 +303,155 @@ Vector3d Character::getCOMVelocity(){
 
 	return COMVel;
 }
+
+/**
+This method is used to compute the center of mass of the articulated figure.
+I supose the only the torso can lead to the top of the body.
+*/
+Vector3d Character::getTopCOM(){
+
+	//this container will help me not to do a recursive funtion
+	std::vector<ArticulatedRigidBody*> body_buffer;
+
+	//first I need to find the torso
+	for (uint i = 0; i < joints.size(); ++i){
+		if (strcmp(joints[i]->child->name, "torso") == 0){
+			//we store it and add it to the COM
+			body_buffer.push_back(joints[i]->child);
+			break;
+		}
+	}
+
+	//now that we have our basis we will iterate on all the top of the caracter
+	for (uint i = 0; i < (int)body_buffer.size(); ++i){
+		std::vector<Joint*> vec_cjoints = body_buffer[i]->getChildJoints();
+		for (uint j = 0; j < vec_cjoints.size(); ++j){
+			body_buffer.push_back(vec_cjoints[j]->getChild());
+		}
+	}
+
+	//now that we have all the bodies I can simply calculate the COM
+	Vector3d COM;
+	double total_mass = 0;
+	double cur_mass = 0;
+	for (uint i = 0; i < (int)body_buffer.size(); ++i){
+		cur_mass = body_buffer[i]->getMass();
+		total_mass += cur_mass;
+		COM.addScaledVector(body_buffer[i]->getCMPosition(), cur_mass);
+
+	}
+
+	COM /= total_mass;
+
+	return COM;
+}
+
+
+/**
+This method is used to compute the center of mass of the articulated figure.
+I supose anything but the torso can lead to the bottom of the body.
+*/
+Vector3d Character::getBottomCOM(){
+
+	//this container will help me not to do a recursive funtion
+	std::vector<ArticulatedRigidBody*> body_buffer;
+
+	//first I need to find the torso
+	for (uint i = 0; i < joints.size(); ++i){
+		if (strcmp(joints[i]->child->name, "torso") != 0){
+			//we store it and add it to the COM
+			body_buffer.push_back(joints[i]->child);
+		}
+	}
+
+	//now that we have our basis we will iterate on all the top of the caracter
+	for (uint i = 0; i < (int)body_buffer.size(); ++i){
+		std::vector<Joint*> vec_cjoints = body_buffer[i]->getChildJoints();
+		for (uint j = 0; j < vec_cjoints.size(); ++j){
+			body_buffer.push_back(vec_cjoints[j]->getChild());
+		}
+	}
+
+	//now that we have all the bodies I can simply calculate the COM
+	Vector3d COM;
+	double total_mass = 0;
+	double cur_mass = 0;
+	for (uint i = 0; i < (int)body_buffer.size(); ++i){
+		cur_mass = body_buffer[i]->getMass();
+		total_mass += cur_mass;
+		COM.addScaledVector(body_buffer[i]->getCMPosition(), cur_mass);
+
+	}
+
+	COM /= total_mass;
+
+	return COM;
+}
+
+/**
+this function can be used to have an easy access to the top of the body (meaning above the root)
+*/
+void Character::getCharacterTop(std::vector<Joint*>& body_top){
+	//this container will help me not to do a recursive funtion
+	std::vector<ArticulatedRigidBody*> body_buffer;
+
+	for (uint i = 0; i < joints.size(); ++i){
+		if (joints[i]->getParent()== getRoot()){
+			//we store it and add it to the COM
+			if (strcmp(joints[i]->child->name, "torso") != 0){
+				body_top.push_back(joints[i]);
+			}
+//			body_buffer.push_back(joints[i]->child);
+		}
+	}
+
+	//first I need to find the torso
+	/*for (uint i = 0; i < joints.size(); ++i){
+		if (strcmp(joints[i]->child->name, "torso") == 0){
+			//we store it and add it to the COM
+			body_top.push_back(joints[i]);
+			body_buffer.push_back(joints[i]->child);
+		}
+	}*/
+
+	//now that we have our basis we will iterate on all the top of the caracter
+	//for (uint i = 0; i < (int)body_buffer.size(); ++i){
+	/*uint i = 0;
+
+	std::vector<Joint*> vec_cjoints = body_buffer[i]->getChildJoints();
+		for (uint j = 0; j < vec_cjoints.size(); ++j){
+			body_top.push_back(vec_cjoints[j]);
+			body_buffer.push_back(vec_cjoints[j]->getChild());
+		}*/
+	//}
+}
+
+/**
+this function can be used to have an easy access to the bottom of the body (meaning under the root)
+*/
+void Character::getCharacterBottom(std::vector<Joint*>& body_bottom){
+	//this container will help me not to do a recursive funtion
+	std::vector<ArticulatedRigidBody*> body_buffer;
+
+	//first I need to find the torso
+	for (uint i = 0; i < joints.size(); ++i){
+		if (strcmp(joints[i]->child->name, "torso") != 0){
+			//we store it and add it to the COM
+			body_bottom.push_back(joints[i]);
+			body_buffer.push_back(joints[i]->child);
+		}
+	}
+
+	//now that we have our basis we will iterate on all the top of the caracter
+	for (uint i = 0; i < (int)body_buffer.size(); ++i){
+		std::vector<Joint*> vec_cjoints = body_buffer[i]->getChildJoints();
+		for (uint j = 0; j < vec_cjoints.size(); ++j){
+			body_bottom.push_back(vec_cjoints[j]);
+			body_buffer.push_back(vec_cjoints[j]->getChild());
+		}
+	}
+}
+
 
 /**
 	This method is used to return the number of joints of the character.

@@ -335,4 +335,19 @@ public:
 			result->z = trajZ->evaluate_catmull_rom( phi );
 	}
 
+	/**
+		This function compute the torques that have the same impact as the specified force if it's applyed at the
+		specified point
+		The force and the application point have to be specified in the olrd coordinates
+		the affected_joints parameter let the use choose the joints on which the force impact have to be calculated.
+	*/
+	void compute_virtual_force(Vector3d F, Point3d p, std::vector<Joint*> affected_joints){
+		for (uint i = 0; i < affected_joints.size(); ++i){
+			Vector3d tmpV = Vector3d(affected_joints[i]->parent->getWorldCoordinates(affected_joints[i]->pJPos), p);
+			Vector3d tmpT = tmpV.crossProductWith(F);
+			torques[character->getJointIndex(affected_joints[i]->name)] += tmpT;
+		}
+	}
+
+
 };

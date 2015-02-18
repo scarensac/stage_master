@@ -722,12 +722,14 @@ void ODEWorld::compute_water_impact(float water_level){
 	for (uint  i= 1; i<objects.size(); ++i){
 		RigidBody* body = objects[i];
 		Vector3d F = -body->getCMVelocity()*SimGlobals::force_alpha/3000;
+		//F.x = 0;
 		//F = -Vector3d(0, 0, 1)*SimGlobals::force_alpha / 3000;
-		bool on_full_body = false;
+		bool on_full_body = true;
 		if (on_full_body){
 			if (strcmp(objects[i]->name, "torso") == 0){
 				//compute_water_on_toes_impact(i, water_level);
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				
+				//applyForceTo(body, F*20, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
@@ -735,7 +737,7 @@ void ODEWorld::compute_water_impact(float water_level){
 		else{
 			if (strcmp(objects[i]->name, "torso") == 0){
 				//compute_water_on_toes_impact(i, water_level);
-				applyForceTo(body, F*5*SimGlobals::water_level, body->getLocalCoordinates(body->getCMPosition()));
+				//applyForceTo(body, F*5*SimGlobals::water_level, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			if (strcmp(objects[i]->name, "rToes") == 0){

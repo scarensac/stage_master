@@ -225,6 +225,29 @@ public:
 		This method is used to compute the velocity of the center of mass of the articulated figure.
 	*/
 	Vector3d getCOMVelocity();
+
+	/**
+	This method is used to compute the center of mass of the articulated figure.
+	I supose the only the torso can lead to the top of the body.
+	*/
+	Vector3d getTopCOM();
+
+	/**
+	This method is used to compute the center of mass of the articulated figure.
+	I supose anything but the torso can lead to the bottom of the body.
+	*/
+	Vector3d getBottomCOM();
+
+	/**
+	this function can be used to have an easy access to the top of the body (meaning above the root)
+	*/
+	void getCharacterTop(std::vector<Joint*>& body_top);
+
+	/**
+	this function can be used to have an easy access to the bottom of the body (meaning under the root)
+	*/
+	void getCharacterBottom(std::vector<Joint*>& body_bottom);
+
 };
 
 #define REDUCED_STATE_VAL(CHAR_STATE, I) ((*((CHAR_STATE)->state))[(I)])

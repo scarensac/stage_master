@@ -255,6 +255,8 @@ void ControllerEditor::stepTaken() {
 	if( Globals::updateDVTraj ) {
 		
 		if (conF) {
+
+
 			SimBiConState *state = conF->getController()->states[ lastFSMState ];
 
 			dTrajX.simplify_catmull_rom( 0.05 );
@@ -337,24 +339,32 @@ void ControllerEditor::processTask(){
 	while (simulationTime/maxRunningTime < Globals::animationTimeToRealTimeRatio){
 		simulationTime += SimGlobals::dt;
 
-		double phi = conF->getController()->getPhase();
-		lastFSMState = conF->getController()->getFSMState();
-		double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
-		Globals::targetPosePhase = phi;
-		Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
-
-//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
-
-		avgSpeed += conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity()).z;
-		timesVelSampled++;
-
+		//we just make sure that we don't try anything before the initialisation of the physical world
 		if (conF) {
+
+			//get the current phase, pose and state and update the GUI
+			double phi = conF->getController()->getPhase();
+			lastFSMState = conF->getController()->getFSMState();
+			double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
+			Globals::targetPosePhase = phi;
+			Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
+
+	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
+
+			//store the current speed to be able to know the avg speed at the end
+			avgSpeed += conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity()).z;
+			timesVelSampled++;
+
+			//if phi is lower than the last position of our trajectory, it means we changed phase and so we need to 
+			//reset the trajectory
 			if( phi < dTrajX.getMaxPosition() ) {
 				dTrajX.clear();
 				dTrajZ.clear();
 				vTrajX.clear();
 				vTrajZ.clear();
 			}
+
+			//we add the current position to the trajectory
 			Vector3d d = conF->getController()->d;
 			Vector3d v = conF->getController()->v;
 			dTrajX.addKnot( phi, d.x * signChange);
@@ -362,15 +372,18 @@ void ControllerEditor::processTask(){
 			vTrajX.addKnot( phi, v.x * signChange );
 			vTrajZ.addKnot( phi, v.z  );					
 
+			//we can now advance the simulation
 			bool newStep = conF->advanceInTime(SimGlobals::dt);
 			
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
+				//compute the speed and show it to the user
 				avgSpeed /= timesVelSampled;
 				Vector3d v = conF->getLastStepTaken();
 				tprintf("step: %lf %lf %lf (phi = %lf, speed = %lf)\n", v.x, v.y, v.z, phi, avgSpeed);
 //				Globals::animationRunning = false;
 
+				//reset the speed for the next step
 				avgSpeed = 0;
 				timesVelSampled = 0;
 

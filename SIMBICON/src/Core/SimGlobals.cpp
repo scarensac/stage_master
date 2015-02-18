@@ -59,6 +59,6 @@ double SimGlobals::stanceKnee = 0;
 double SimGlobals::COMOffsetX = 0;
 double SimGlobals::COMOffsetZ = 0;
 
-double SimGlobals::force_alpha = 10000 * 3;
-double SimGlobals::water_level = 2; 
+double SimGlobals::force_alpha = 0;
+double SimGlobals::water_level = 0; 
 double SimGlobals::liquid_density = 1000;
