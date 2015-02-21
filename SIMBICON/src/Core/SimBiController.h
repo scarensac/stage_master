@@ -202,6 +202,12 @@ public:
 		Destructor
 	*/
 	virtual ~SimBiController(void);
+	
+	Vector3d get_step_size(){
+		if (rFoot != NULL && lFoot != NULL){
+			return Vector3d(getSwingFootPos(), getStanceFootPos());
+		}
+	}
 
 	/**
 		This method is used to compute the torques that are to be applied at the next step.
