@@ -61,6 +61,10 @@ public:
 	SimBiConFramework(char* input, char* conFile = NULL);
 	virtual ~SimBiConFramework(void);
 	
+	Vector3d get_step_size(){
+		return con->get_step_size();
+	}
+
 	/**
 		this method is used to advance the simulation. Typically, we will first compute the control, and then we will take one
 		simulation step. If we are to apply control at this point in the simulation, we can either use a controller to recompute it,

@@ -717,14 +717,14 @@ void ODEWorld::applyTorqueTo(RigidBody* b, const Vector3d& t){
 void ODEWorld::compute_water_impact(float water_level){
 	//I'll consider every part of the body one at a time
 	//each part have a special way to be handled depending on it's physiscal representation
-	
+
 	//0 is the ground so I skip it...
 	for (uint  i= 1; i<objects.size(); ++i){
 		RigidBody* body = objects[i];
-		Vector3d F = -body->getCMVelocity()*SimGlobals::force_alpha/3000;
+		Vector3d F = -body->getCMVelocity()*SimGlobals::force_alpha / 3000 / body->getCMVelocity().length();
 		//F.x = 0;
 		//F = -Vector3d(0, 0, 1)*SimGlobals::force_alpha / 3000;
-		bool on_full_body = true;
+		bool on_full_body = false;
 		if (on_full_body){
 			if (strcmp(objects[i]->name, "torso") == 0){
 				//compute_water_on_toes_impact(i, water_level);
@@ -737,7 +737,7 @@ void ODEWorld::compute_water_impact(float water_level){
 		else{
 			if (strcmp(objects[i]->name, "torso") == 0){
 				//compute_water_on_toes_impact(i, water_level);
-				//applyForceTo(body, F*5*SimGlobals::water_level, body->getLocalCoordinates(body->getCMPosition()));
+				applyForceTo(body, F*5*SimGlobals::liquid_density, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			if (strcmp(objects[i]->name, "rToes") == 0){
@@ -752,6 +752,7 @@ void ODEWorld::compute_water_impact(float water_level){
 			else if (strcmp(objects[i]->name, "rFoot") == 0){
 				//compute_water_on_feet_impact(i, water_level);
 				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				
 			}
 			else if (strcmp(objects[i]->name, "lFoot") == 0){
 				//compute_water_on_feet_impact(i, water_level);
@@ -887,20 +888,26 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 	}
 
 	//I want the lower points to find out if the box is in the water
+	//I call Z the vertical axis but in this world representation the vertical axis is actualy Y...
+
 	Point3d center = box->getCenter();
-	Point3d lower_corners[4];
+	Point3d corners[8];
 
-	lower_corners[0] = center + Point3d(box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
-	lower_corners[1] = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2, -box->getZLen() / 2);
-	lower_corners[2] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
-	lower_corners[3] = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2, -box->getZLen() / 2);
+	corners[0] = center + Point3d(box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
+	corners[1] = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2, -box->getZLen() / 2);
+	corners[2] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
+	corners[3] = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2, -box->getZLen() / 2);
+	corners[4] = center + Point3d(box->getXLen() / 2, box->getYLen() / 2, box->getZLen() / 2);
+	corners[5] = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2, box->getZLen() / 2);
+	corners[6] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, box->getZLen() / 2);
+	corners[7] = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2, box->getZLen() / 2);
 	
-	double minz = body->getWorldCoordinates(lower_corners[0]).getZ();
+	double minz = body->getWorldCoordinates(corners[0]).getY();
 
-	for (int i = 0; i < 4; ++i){
-		lower_corners[i] = body->getWorldCoordinates(lower_corners[i]);
-		if (lower_corners[i].getZ() < minz){
-			minz = lower_corners[i].getZ();
+	for (int i = 0; i < 8; ++i){
+		corners[i] = body->getWorldCoordinates(corners[i]);
+		if (corners[i].getY() < minz){
+			minz = corners[i].getY();
 		}
 	}
 	
@@ -924,32 +931,38 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 		//first let's handle the back face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x/2, -box->getYLen() / 2 + d_y/2, -box->getZLen() / 2);
 		cur_normal = Point3d(0, 0, -1);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
 
 		//now the front face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, box->getZLen() / 2);
 		cur_normal = Point3d(0, 0, 1);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
 
 		//now the left face
 		cur_pos = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(1, 0, 0);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
 		
 		//now the right face
 		cur_pos = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(-1, 0, 0);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
 
 		//now the top face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(0, 1, 0);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
 		//now the top face to finish
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(0, -1, 0);
-		compute_water_on_face_impact(body, box, cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
+		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
 
 		//*/
@@ -959,20 +972,20 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 /**
 	Compute and affect to force on a face 
 */
-void ODEWorld::compute_water_on_face_impact(RigidBody* body, BoxCDP* box, Point3d pos, Vector3d normal, float water_level,
-	int nbr_interval_x, int nbr_interval_y, int nbr_interval_z){
+void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
+	Vector3d normal, float water_level,	int nbr_interval_x, int nbr_interval_y, int nbr_interval_z){
 
-	double d_x, d_y, d_z;
+	double d_x = 0, d_y = 0, d_z = 0;
 	if (nbr_interval_x > 0){
-		d_x = box->getXLen() / nbr_interval_x;
+		d_x = l_x / nbr_interval_x;
 	}
 
 	if (nbr_interval_y > 0){
-		d_y = box->getYLen() / nbr_interval_y;
+		d_y = l_y / nbr_interval_y;
 	}
 
 	if (nbr_interval_z > 0){
-		d_z = box->getZLen() / nbr_interval_z;
+		d_z = l_z / nbr_interval_z;
 	}
 
 	if ((nbr_interval_x > 0) && (nbr_interval_y > 0)){
@@ -1068,6 +1081,88 @@ void ODEWorld::compute_water_on_face_impact(RigidBody* body, BoxCDP* box, Point3
 				pos = pos + Point3d(0, d_y, 0);
 			}
 			pos = Point3d(pos.x , init_y, pos.z + d_z);
+		}
+	}
+}
+
+/**
+this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
+this function handle the legs and arms
+*/
+void ODEWorld::compute_water_on_leg_impact(uint object_id, float water_level){
+
+
+	double dz = water_level - objects[object_id]->getCMPosition().getZ();
+
+	RigidBody* body = objects[object_id];
+	CollisionDetectionPrimitive* cdp = body->cdps.front();
+	CapsuleCDP* capsule = dynamic_cast<CapsuleCDP*>(cdp);
+
+	if (capsule == NULL){
+		//throwError("the toes should only have a sphere primitive...");
+		return;
+	}
+
+	//I want the lower points to find out if the capsule is in the water
+	//it's easy it's forced that the lowest point is the extremity of the cylinder minus the radius
+	//I call Z the vertical axis but in this world representation the vertical axis is actualy Y...	
+	double minz = std::fmin(body->getWorldCoordinates(capsule->getA()).y, body->getWorldCoordinates(capsule->getB()).y);
+	minz -= capsule->getRadius();
+
+
+	//we vrify that the water hit the capsule before doing anything
+	if (minz>water_level){
+		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
+		//so I'll first concider the cylindric part of the capsule.
+		
+		//let's say we will consider 100 intervals on the axis of the cylinder
+		//and we will consider 5 intervals on the facet for each interval on the axis
+		int axis_intervals = 100;
+		int facet_intervals = 5;
+
+		//I precalculate some information on the axis and the facet so the algorithm will be faster
+		double facet_interval_length = capsule->getRadius() * 2 / facet_intervals;
+		Vector3d axis_unit_vector = capsule->getB()-capsule->getA();
+		double axis_length = axis_unit_vector.length();
+		axis_unit_vector /= axis_length;
+		double axis_interval_length = axis_length / axis_intervals;
+		Vector3d axis_interval_vect = axis_unit_vector*axis_interval_length;
+		double facet_interval_area=axis_interval_length*facet_interval_length;
+
+		//position at the start
+		Point3d axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
+
+		//so now we start to iterate along the axis
+		for (int i = 0; i < axis_intervals; ++i){
+			//we read the spead on the axis
+			Vector3d axis_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(axis_cur_pos));
+
+			//to create the facet I must finds the vector that have the same direction as the speed but face the axis
+			Vector3d n = axis_speed - axis_unit_vector*(axis_unit_vector.dotProductWith(axis_speed));
+			n /= n.length();
+
+			//I just compute the last vector of the basis
+			Vector3d v2 = n.crossProductWith(axis_unit_vector);
+			v2 /= v2.length();
+
+			//now I have to iterate on each interval of the facet
+			//so i position myself at the first interval
+			Point3d cur_pos = axis_cur_pos + v2*(capsule->getRadius() - facet_interval_length / 2);
+
+			for (int j = 0; j < facet_intervals; ++j){
+				if (body->getWorldCoordinates(cur_pos).y < water_level){
+					Vector3d local_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(cur_pos));
+				
+					//now i want to ponderate the area by the orientation along the axis
+					//but what I realy want is the sinus (since the ponderation is of 1 if the two vectors are perpendiculate)
+					double effective_area = facet_interval_area*
+						((local_speed / local_speed.length()).crossProductWith(axis_unit_vector)).length();
+
+					//now I can compute the force and apply it
+					Vector3d F = -local_speed*SimGlobals::force_alpha*effective_area;
+					applyForceTo(body, body->getWorldCoordinates(F), cur_pos);
+				}
+			}
 		}
 	}
 }

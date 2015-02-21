@@ -335,18 +335,34 @@ Point3d ControllerEditor::getCameraTarget(){
 void ControllerEditor::processTask(){
 	double simulationTime = 0;
 	double maxRunningTime = 0.98/Globals::desiredFrameRate;
+
+	static double step_time_end = 0;
+
+	double cur_height = 0;
+
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
 	while (simulationTime/maxRunningTime < Globals::animationTimeToRealTimeRatio){
 		simulationTime += SimGlobals::dt;
+		step_time_end += SimGlobals::dt;
 
+		static uint count_step = 0;
 		//we just make sure that we don't try anything before the initialisation of the physical world
-		if (conF) {
+		if (conF) { 
+			
 
 			//get the current phase, pose and state and update the GUI
 			double phi = conF->getController()->getPhase();
 			lastFSMState = conF->getController()->getFSMState();
 			double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
-			Globals::targetPosePhase = phi;
+			if (count_step >= 10&&phi>0.1){
+				//Globals::targetPosePhase = phi;
+				if (cur_height>conF->getController()->getSwingFootPos().y){
+					Globals::targetPosePhase = phi;
+				}
+			}
+			
+			cur_height = conF->getController()->getSwingFootPos().y;
+			
 			Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
 
 	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
@@ -375,17 +391,44 @@ void ControllerEditor::processTask(){
 			//we can now advance the simulation
 			bool newStep = conF->advanceInTime(SimGlobals::dt);
 			
+
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
+
 				//compute the speed and show it to the user
+
 				avgSpeed /= timesVelSampled;
+
+				Vector3d last_step = conF->get_step_size();
+				last_step.y = 0;
+				double real_speed = last_step.length() / step_time_end;
+				real_speed = avgSpeed;
+
+				count_step++;
+				static double avg_speed = 0;
+
+				if (count_step == 5){
+					avg_speed = real_speed;
+					tprintf("ref speed = %lf \n", avg_speed);
+				}
+				if (count_step > 5){
+					double epsilon = real_speed - avg_speed;
+					//SimGlobals::liquid_density += epsilon;
+				}
+
+
+
+
+
 				Vector3d v = conF->getLastStepTaken();
-				tprintf("step: %lf %lf %lf (phi = %lf, speed = %lf)\n", v.x, v.y, v.z, phi, avgSpeed);
+				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, density = %lf)\n",
+					v.x, v.y, v.z, phi, avgSpeed, step_time_end, SimGlobals::liquid_density);
 //				Globals::animationRunning = false;
 
 				//reset the speed for the next step
 				avgSpeed = 0;
 				timesVelSampled = 0;
+				step_time_end = 0;
 
 				stepTaken();
 

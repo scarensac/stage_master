@@ -52,3 +52,4 @@ Temporary Items
 .apdisk
 *.log
 *.tlog
+SIMBICON/src/AppGUI/out/reducedCharacterState.rs

@@ -212,6 +212,20 @@ public:
 	*/
 	void compute_water_on_toes_impact(uint object_id, float water_level);
 	void compute_water_on_feet_impact(uint object_id, float water_level);
-	void compute_water_on_face_impact(RigidBody* body, BoxCDP* box, Point3d pos, Vector3d normal, float water_level,
-		int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
+	void compute_water_on_leg_impact(uint object_id, float water_level);
+
+	/**
+		this function is an utilitary that is used to compute the liquid forces on a rectangular plane
+		The plande have to follow one of the main directions (meaning the normal have to be one of the world basis vectors)
+		parameters explanation:
+		body: body containing the geometry
+		l_x, l_y, l_z: those are the dimention of the plane (one of them should be equal to zero)
+		pos: starting position of the algorithm on the face
+		water_level: level of the water
+		normal: normal of the face (so we know if it face the movement).
+		nbr_interval_x, nbr_interval_x, nbr_interval_x: number of interval in each direction (same logic as the l_*)
+
+	*/
+	void compute_water_on_face_impact(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
+		Vector3d normal, float water_level, int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
 };

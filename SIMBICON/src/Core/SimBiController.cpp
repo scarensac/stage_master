@@ -547,7 +547,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 		n = Vector3d(1, 0, 0);*/
 
 		//here I'll try something to counter the effect of the water
-		//swingHipTorque += swingHipTorque*SimGlobals::force_alpha / 30000 * 2;
+		swingHipTorque += swingHipTorque*SimGlobals::force_alpha / 30000 * SimGlobals::water_level;
 
 		//swingHipTorque.x += swingHipTorque.x*SimGlobals::liquid_density / 1000 * 2;
 

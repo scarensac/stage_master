@@ -61,4 +61,4 @@ double SimGlobals::COMOffsetZ = 0;
 
 double SimGlobals::force_alpha = 0;
 double SimGlobals::water_level = 0; 
-double SimGlobals::liquid_density = 1000;
+double SimGlobals::liquid_density = 0;
