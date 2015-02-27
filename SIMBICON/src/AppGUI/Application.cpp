@@ -95,7 +95,7 @@ void Application::drawGround(){
 	glColor3d(1, 1, 1);
 	//GLUtils::drawCheckerboard(10, 1, 0);
 
-	double size = 50;
+	double size = 100;
 
 	double x, z;
 	
@@ -123,16 +123,16 @@ void Application::drawGround(){
 	glBegin(GL_QUADS);
 		x = size; z = size*100;
 		glTexCoord2d(x / 2, z / 2);
-		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b+ SimGlobals::water_level, z);
+		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b+ SimGlobals::water_level + 0.001, z);
 		z = -size*100;
 		glTexCoord2d(x / 2, z / 2);
-		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level, z);
+		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		x = -size; z = -size*100;
 		glTexCoord2d(x / 2, z / 2);
-		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level, z);
+		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = size*100;
 		glTexCoord2d(x / 2, z / 2);
-		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level, z);
+		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 	glEnd();
 
 }

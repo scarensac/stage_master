@@ -287,8 +287,8 @@ public:
 		nextStateIndex = -1;
 		this->stateTime = 0;
 		transitionOnFootContact = true;
-		minPhiBeforeTransitionOnFootContact = 0.5;
-		minSwingFootForceForContact = 20.0;
+		minPhiBeforeTransitionOnFootContact = 0.7;
+		minSwingFootForceForContact = 100.0;
 		reverseStance = false;
 		keepStance = false;
 

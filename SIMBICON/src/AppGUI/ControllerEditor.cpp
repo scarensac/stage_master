@@ -388,6 +388,11 @@ void ControllerEditor::processTask(){
 			vTrajX.addKnot( phi, v.x * signChange );
 			vTrajZ.addKnot( phi, v.z  );					
 
+			SimGlobals::left_stance_factor = 0;
+			if (conF->getController()->getStance() == RIGHT_STANCE){
+				SimGlobals::left_stance_factor = 1;
+			}
+
 			//we can now advance the simulation
 			bool newStep = conF->advanceInTime(SimGlobals::dt);
 			
@@ -399,21 +404,22 @@ void ControllerEditor::processTask(){
 
 				avgSpeed /= timesVelSampled;
 
-				Vector3d last_step = conF->get_step_size();
-				last_step.y = 0;
-				double real_speed = last_step.length() / step_time_end;
-				real_speed = avgSpeed;
-
 				count_step++;
 				static double avg_speed = 0;
 
-				if (count_step == 5){
-					avg_speed = real_speed;
+				if (count_step == 10){
+					avg_speed = avgSpeed;
 					tprintf("ref speed = %lf \n", avg_speed);
 				}
-				if (count_step > 5){
-					double epsilon = real_speed - avg_speed;
-					//SimGlobals::liquid_density += epsilon;
+				if (count_step > 10){
+					double epsilon = avgSpeed - avg_speed;
+					epsilon *= 10;
+					if (conF->getController()->getStance() == RIGHT_STANCE){
+						SimGlobals::balance_force_factor_right += epsilon;
+					}
+					else{
+						SimGlobals::balance_force_factor_left += epsilon;
+					}
 				}
 
 
@@ -421,8 +427,9 @@ void ControllerEditor::processTask(){
 
 
 				Vector3d v = conF->getLastStepTaken();
-				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, density = %lf)\n",
-					v.x, v.y, v.z, phi, avgSpeed, step_time_end, SimGlobals::liquid_density);
+				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, balance_factor = %lf::%lf)\n",
+					v.x, v.y, v.z, phi, avgSpeed, step_time_end, SimGlobals::balance_force_factor_left,
+					SimGlobals::balance_force_factor_right);
 //				Globals::animationRunning = false;
 
 				//reset the speed for the next step

@@ -413,7 +413,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs){
 	computeD0(phiToUse, &d0);
 	computeV0(phiToUse, &v0);
 
-	//just precompute the variations for d and v
+	//just precompute the real D and v (couting the base trajectory)
 	Vector3d d_d = d -d0;
 	Vector3d d_v = v -v0;
 
@@ -536,7 +536,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	v1.y = 0;
 	if (v1.length() > 0.1){
 
-		int idx=character->getJointIndex("pelvis_torso");
+		//int idx=character->getJointIndex("pelvis_torso");
 		
 		
 
@@ -547,7 +547,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 		n = Vector3d(1, 0, 0);*/
 
 		//here I'll try something to counter the effect of the water
-		swingHipTorque += swingHipTorque*SimGlobals::force_alpha / 30000 * SimGlobals::water_level;
+		//swingHipTorque += swingHipTorque*SimGlobals::force_alpha / 30000 * SimGlobals::water_level;
 
 		//swingHipTorque.x += swingHipTorque.x*SimGlobals::liquid_density / 1000 * 2;
 
