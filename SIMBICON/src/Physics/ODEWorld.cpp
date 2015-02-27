@@ -721,7 +721,7 @@ void ODEWorld::compute_water_impact(float water_level){
 	//0 is the ground so I skip it...
 	for (uint  i= 1; i<objects.size(); ++i){
 		RigidBody* body = objects[i];
-		Vector3d F = -body->getCMVelocity()*SimGlobals::force_alpha / 3000 / body->getCMVelocity().length();
+		
 		//F.x = 0;
 		//F = -Vector3d(0, 0, 1)*SimGlobals::force_alpha / 3000;
 		bool on_full_body = false;
@@ -736,39 +736,48 @@ void ODEWorld::compute_water_impact(float water_level){
 		}
 		else{
 			if (strcmp(objects[i]->name, "torso") == 0){
-				//compute_water_on_toes_impact(i, water_level);
-				applyForceTo(body, F*5*SimGlobals::liquid_density, body->getLocalCoordinates(body->getCMPosition()));
+				/*Vector3d F = -body->getCMVelocity() * 1 / 2 * SimGlobals::liquid_density *;
+
+				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));*/
+				double factor =	(SimGlobals::left_stance_factor*SimGlobals::balance_force_factor_left +
+					(1 - SimGlobals::left_stance_factor)*SimGlobals::balance_force_factor_right);
+				Vector3d F = -body->getCMVelocity()*SimGlobals::liquid_density / 3000 / body->getCMVelocity().length();
+				applyForceTo(body, F*5*factor, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			if (strcmp(objects[i]->name, "rToes") == 0){
-				//compute_water_on_toes_impact(i, water_level);
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_toes_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			else if (strcmp(objects[i]->name, "lToes") == 0){
-				//compute_water_on_toes_impact(i, water_level);
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_toes_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rFoot") == 0){
-				//compute_water_on_feet_impact(i, water_level);
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_feet_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 				
 			}
 			else if (strcmp(objects[i]->name, "lFoot") == 0){
-				//compute_water_on_feet_impact(i, water_level);
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_feet_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "lLowerleg") == 0){
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_leg_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rLowerleg") == 0){
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_leg_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "lUpperleg") == 0){
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_leg_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rUpperleg") == 0){
-				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_water_on_leg_impact(i, water_level);
+				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else{
 
@@ -858,7 +867,7 @@ void ODEWorld::compute_water_on_toes_impact(uint object_id, float water_level){
 		}
 
 		//now that we have the surface we can compute the resulting force
-		Vector3d F = -V*SimGlobals::force_alpha*S;
+		Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
 
 
 		//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
@@ -914,7 +923,7 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 
 	
 	//we vrify that the water hit the ball before doing anything
-	if (minz>water_level){
+	if (minz<water_level){
 		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
 
 		//I'll have to handle each face in a diffenrent way
@@ -1009,7 +1018,7 @@ void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double 
 					double S = d_S * V_norm.dotProductWith(normal);
 
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*SimGlobals::force_alpha*S;
+					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
 
 					//we apply the force
 					applyForceTo(body, body->getWorldCoordinates(F), pos);
@@ -1040,7 +1049,7 @@ void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double 
 					double S = d_S * V_norm.dotProductWith(normal);
 
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*SimGlobals::force_alpha*S;
+					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
 
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
@@ -1072,7 +1081,7 @@ void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double 
 					double S = d_S * V_norm.dotProductWith(normal);
 
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*SimGlobals::force_alpha*S;
+					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
 
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
@@ -1111,14 +1120,14 @@ void ODEWorld::compute_water_on_leg_impact(uint object_id, float water_level){
 
 
 	//we vrify that the water hit the capsule before doing anything
-	if (minz>water_level){
+	if (minz<water_level){
 		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
 		//so I'll first concider the cylindric part of the capsule.
 		
 		//let's say we will consider 100 intervals on the axis of the cylinder
 		//and we will consider 5 intervals on the facet for each interval on the axis
-		int axis_intervals = 100;
-		int facet_intervals = 5;
+		int axis_intervals = 20;
+		int facet_intervals = 3;
 
 		//I precalculate some information on the axis and the facet so the algorithm will be faster
 		double facet_interval_length = capsule->getRadius() * 2 / facet_intervals;
@@ -1132,8 +1141,18 @@ void ODEWorld::compute_water_on_leg_impact(uint object_id, float water_level){
 		//position at the start
 		Point3d axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
 
+		
+
 		//so now we start to iterate along the axis
 		for (int i = 0; i < axis_intervals; ++i){
+			//here is an approximation (comming from the fact that the facet are likely to be horizontal (meaning the height))
+			//of each subfacet is likely to be the same as the on of the central point
+			if (body->getWorldCoordinates(axis_cur_pos).y > water_level){
+				continue;
+			}
+
+
+
 			//we read the spead on the axis
 			Vector3d axis_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(axis_cur_pos));
 
@@ -1155,11 +1174,11 @@ void ODEWorld::compute_water_on_leg_impact(uint object_id, float water_level){
 				
 					//now i want to ponderate the area by the orientation along the axis
 					//but what I realy want is the sinus (since the ponderation is of 1 if the two vectors are perpendiculate)
-					double effective_area = facet_interval_area*
+					double S = facet_interval_area*
 						((local_speed / local_speed.length()).crossProductWith(axis_unit_vector)).length();
 
 					//now I can compute the force and apply it
-					Vector3d F = -local_speed*SimGlobals::force_alpha*effective_area;
+					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * SimGlobals::liquid_density*S;
 					applyForceTo(body, body->getWorldCoordinates(F), cur_pos);
 				}
 			}

@@ -16,11 +16,11 @@ if {$laptop == 1} {
 	wm geometry .dialog 260x120+1008+580
 } else {
 	puts "laptop = 0"
-	wm geometry . +1408+0
-	console eval {wm geometry . 172x15+0+725}
-	launch ControllerEditor 1400 700
+	wm geometry . +1000+0
+	console eval {wm geometry . 120x10+0+500}
+	launch ControllerEditor 1000 450
 	finalizeUI
 	wm title .dialog "Control Parameters"
-	wm geometry .dialog 260x120+1408+840
+	wm geometry .dialog 260x120+0+0
 }
 

@@ -78,6 +78,9 @@ public:
 	static double force_alpha;
 	static double water_level;
 	static double liquid_density;
+	static double balance_force_factor_left;
+	static double balance_force_factor_right;
+	static double left_stance_factor;//0 or 1 
 
 
 	SimGlobals(void){

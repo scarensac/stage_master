@@ -27,7 +27,7 @@ ConState 0
 	nextState 0
 	transitionOn footDown
 	stateStance reverse
-	time 0.700000
+	time 0.7000000
 
 
 	trajectory root
