@@ -727,7 +727,7 @@ void ODEWorld::compute_water_impact(float water_level){
 		bool on_full_body = false;
 		if (on_full_body){
 			if (strcmp(objects[i]->name, "torso") == 0){
-				//compute_water_on_toes_impact(i, water_level);
+				//compute_liquid_drag_on_toes(i, water_level);
 				
 				//applyForceTo(body, F*20, body->getLocalCoordinates(body->getCMPosition()));
 
@@ -746,37 +746,37 @@ void ODEWorld::compute_water_impact(float water_level){
 
 			}
 			if (strcmp(objects[i]->name, "rToes") == 0){
-				compute_water_on_toes_impact(i, water_level);
+				compute_liquid_drag_on_toes(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			else if (strcmp(objects[i]->name, "lToes") == 0){
-				compute_water_on_toes_impact(i, water_level);
+				compute_liquid_drag_on_toes(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rFoot") == 0){
-				compute_water_on_feet_impact(i, water_level);
+				compute_liquid_drag_on_feet(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 				
 			}
 			else if (strcmp(objects[i]->name, "lFoot") == 0){
-				compute_water_on_feet_impact(i, water_level);
+				compute_liquid_drag_on_feet(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "lLowerleg") == 0){
-				compute_water_on_leg_impact(i, water_level);
+				compute_liquid_drag_on_legs(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rLowerleg") == 0){
-				compute_water_on_leg_impact(i, water_level);
+				compute_liquid_drag_on_legs(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "lUpperleg") == 0){
-				compute_water_on_leg_impact(i, water_level);
+				compute_liquid_drag_on_legs(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else if (strcmp(objects[i]->name, "rUpperleg") == 0){
-				compute_water_on_leg_impact(i, water_level);
+				compute_liquid_drag_on_legs(i, water_level);
 				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
 			}
 			else{
@@ -795,7 +795,7 @@ void ODEWorld::compute_buoyancy(uint object_id, float water_level){
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts
 this function handle the toes
 */
-void ODEWorld::compute_water_on_toes_impact(uint object_id, float water_level){
+void ODEWorld::compute_liquid_drag_on_toes(uint object_id, float water_level){
 	RigidBody* body = objects[object_id];
 	CollisionDetectionPrimitive* cdp = body->cdps.front();
 	SphereCDP* sphere = dynamic_cast<SphereCDP*>(cdp);
@@ -882,7 +882,7 @@ void ODEWorld::compute_water_on_toes_impact(uint object_id, float water_level){
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the feet
 */
-void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
+void ODEWorld::compute_liquid_drag_on_feet(uint object_id, float water_level){
 
 
 	double dz = water_level - objects[object_id]->getCMPosition().getZ();
@@ -940,37 +940,37 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 		//first let's handle the back face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x/2, -box->getYLen() / 2 + d_y/2, -box->getZLen() / 2);
 		cur_normal = Point3d(0, 0, -1);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
 
 		//now the front face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, box->getZLen() / 2);
 		cur_normal = Point3d(0, 0, 1);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, nbr_interval_y, 0);
 
 		//now the left face
 		cur_pos = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(1, 0, 0);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
 		
 		//now the right face
 		cur_pos = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(-1, 0, 0);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, 0, nbr_interval_y, nbr_interval_z);
 
 		//now the top face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(0, 1, 0);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
 		//now the top face to finish
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(0, -1, 0);
-		compute_water_on_face_impact(body, box->getXLen(), box->getYLen(), box->getZLen(),
+		compute_liquid_drag_on_plane(body, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
 
@@ -981,7 +981,7 @@ void ODEWorld::compute_water_on_feet_impact(uint object_id, float water_level){
 /**
 	Compute and affect to force on a face 
 */
-void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
+void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
 	Vector3d normal, float water_level,	int nbr_interval_x, int nbr_interval_y, int nbr_interval_z){
 
 	double d_x = 0, d_y = 0, d_z = 0;
@@ -1098,7 +1098,7 @@ void ODEWorld::compute_water_on_face_impact(RigidBody* body, double l_x, double 
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the legs and arms
 */
-void ODEWorld::compute_water_on_leg_impact(uint object_id, float water_level){
+void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 
 
 	double dz = water_level - objects[object_id]->getCMPosition().getZ();
