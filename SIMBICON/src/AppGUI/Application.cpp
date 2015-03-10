@@ -117,7 +117,7 @@ void Application::drawGround(){
 	glEnd();
 
 	//I just duplicate it to show the water level (just for the time being)
-	size = 0.5;
+	size = 15;
 	glEnable(GL_TEXTURE_2D);
 		waterTexture->activate();
 	glBegin(GL_QUADS);
@@ -159,7 +159,6 @@ void Application::init(){
  * This method is used to restart the application.
  */
 void Application::restart(){
-
 }
 
 /**

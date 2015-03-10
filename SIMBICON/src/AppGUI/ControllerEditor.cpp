@@ -211,6 +211,8 @@ void ControllerEditor::restart(){
 	conF->setState(conState);
 	avgSpeed = 0;
 	timesVelSampled = 0;
+	SimGlobals::balance_force_factor_left = 0;
+	SimGlobals::balance_force_factor_right = 0;
 }
 
 

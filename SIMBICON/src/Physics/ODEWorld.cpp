@@ -715,6 +715,12 @@ void ODEWorld::applyTorqueTo(RigidBody* b, const Vector3d& t){
 	this version only work for the bipV2 caracter
 */
 void ODEWorld::compute_water_impact(float water_level){
+	//first I check if the water have any density (if not it's useless to try anything)
+	if (IS_ZERO(SimGlobals::liquid_density)){
+		return;
+	}
+
+	
 	//I'll consider every part of the body one at a time
 	//each part have a special way to be handled depending on it's physiscal representation
 
@@ -741,55 +747,48 @@ void ODEWorld::compute_water_impact(float water_level){
 				applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));*/
 				double factor =	(SimGlobals::left_stance_factor*SimGlobals::balance_force_factor_left +
 					(1 - SimGlobals::left_stance_factor)*SimGlobals::balance_force_factor_right);
-				Vector3d F = -body->getCMVelocity()*SimGlobals::liquid_density / 3000 / body->getCMVelocity().length();
-				applyForceTo(body, F*5*factor, body->getLocalCoordinates(body->getCMPosition()));
+				//Vector3d F = -body->getCMVelocity()*SimGlobals::liquid_density / 3000 / body->getCMVelocity().length();
+				Vector3d F = -Vector3d(0,0,1)*SimGlobals::liquid_density / 3000 ;
+				applyForceTo(body, F * 5 * factor, body->getLocalCoordinates(body->getCMPosition()));
 
 			}
 			if (strcmp(objects[i]->name, "rToes") == 0){
 				compute_liquid_drag_on_toes(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
-
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "lToes") == 0){
 				compute_liquid_drag_on_toes(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "rFoot") == 0){
 				compute_liquid_drag_on_feet(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
-				
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "lFoot") == 0){
 				compute_liquid_drag_on_feet(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "lLowerleg") == 0){
 				compute_liquid_drag_on_legs(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "rLowerleg") == 0){
 				compute_liquid_drag_on_legs(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "lUpperleg") == 0){
 				compute_liquid_drag_on_legs(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
 			else if (strcmp(objects[i]->name, "rUpperleg") == 0){
 				compute_liquid_drag_on_legs(i, water_level);
-				//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+				compute_buoyancy(i, water_level);
 			}
-			else{
-
-			}
-
 		}
 	}
 }
 
-void ODEWorld::compute_buoyancy(uint object_id, float water_level){
 
-}
 
 /**
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts
@@ -805,12 +804,12 @@ void ODEWorld::compute_liquid_drag_on_toes(uint object_id, float water_level){
 		return;
 	}
 
-	double dz = water_level - body->getCMPosition().getZ();
+	double dy = water_level - body->getCMPosition().getY();
 
 
 
 	//we vrify that the water hit the ball before doing anything
-	if (dz + sphere->getRadius()>0){
+	if (dy - sphere->getRadius()>0){
 		//now I want to determine the surface that face the speed
 
 		int nbr_interval_r = 3;
@@ -855,10 +854,10 @@ void ODEWorld::compute_liquid_drag_on_toes(uint object_id, float water_level){
 				Point3d p = center + u*std::cos(cur_t)*cur_r + v*std::sin(cur_t)*cur_r;
 
 				//now I need to know if the corresponding point on the spere is affected by the water
-				//since the water level only depnds on the z coordinate I only need to compute it (nvm the x and y)
-				double z = p.z + alpha*v_norm.z;
+				//since the water level only depnds on the y coordinate I only need to compute it (nvm the x and z)
+				double y = p.y + alpha*v_norm.y;
 
-				if (z < water_level){
+				if (y < water_level){
 					//I need to calculate the area and add count it 
 					double ds = cur_r*dr*dt;
 					S += ds;
@@ -911,19 +910,19 @@ void ODEWorld::compute_liquid_drag_on_feet(uint object_id, float water_level){
 	corners[6] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, box->getZLen() / 2);
 	corners[7] = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2, box->getZLen() / 2);
 	
-	double minz = body->getWorldCoordinates(corners[0]).getY();
+	double miny = body->getWorldCoordinates(corners[0]).getY();
 
 	for (int i = 0; i < 8; ++i){
 		corners[i] = body->getWorldCoordinates(corners[i]);
-		if (corners[i].getY() < minz){
-			minz = corners[i].getY();
+		if (corners[i].getY() < miny){
+			miny = corners[i].getY();
 		}
 	}
 	
 
 	
 	//we vrify that the water hit the ball before doing anything
-	if (minz<water_level){
+	if (miny<water_level){
 		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
 
 		//I'll have to handle each face in a diffenrent way
@@ -936,6 +935,8 @@ void ODEWorld::compute_liquid_drag_on_feet(uint object_id, float water_level){
 		double d_y = box->getYLen() / nbr_interval_y;
 		double d_z = box->getZLen() / nbr_interval_z;
 		Point3d cur_pos,cur_normal;
+
+		///TODO optimize this so we star with the lowest corner
 
 		//first let's handle the back face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x/2, -box->getYLen() / 2 + d_y/2, -box->getZLen() / 2);
@@ -1009,7 +1010,7 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				Vector3d V_norm = V / V.length();
 
 				//we the center of the fragment is not underater we skipp it
-				if (body->getWorldCoordinates(pos).z < water_level){
+				if (body->getWorldCoordinates(pos).y > water_level){
 					continue;
 				}
 
@@ -1040,7 +1041,7 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				Vector3d V_norm = V / V.length();
 
 				//we the center of the fragment is not underater we skipp it
-				if (body->getWorldCoordinates(pos).z < water_level){
+				if (body->getWorldCoordinates(pos).y > water_level){
 					continue;
 				}
 
@@ -1072,7 +1073,7 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				Vector3d V_norm = V / V.length();
 
 				//we the center of the fragment is not underater we skipp it
-				if (body->getWorldCoordinates(pos).z < water_level){
+				if (body->getWorldCoordinates(pos).y > water_level){
 					continue;
 				}
 
@@ -1100,9 +1101,6 @@ this function handle the legs and arms
 */
 void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 
-
-	double dz = water_level - objects[object_id]->getCMPosition().getZ();
-
 	RigidBody* body = objects[object_id];
 	CollisionDetectionPrimitive* cdp = body->cdps.front();
 	CapsuleCDP* capsule = dynamic_cast<CapsuleCDP*>(cdp);
@@ -1115,12 +1113,14 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 	//I want the lower points to find out if the capsule is in the water
 	//it's easy it's forced that the lowest point is the extremity of the cylinder minus the radius
 	//I call Z the vertical axis but in this world representation the vertical axis is actualy Y...	
-	double minz = std::fmin(body->getWorldCoordinates(capsule->getA()).y, body->getWorldCoordinates(capsule->getB()).y);
-	minz -= capsule->getRadius();
+	Point3d wA = body->getWorldCoordinates(capsule->getA());
+	Point3d wB = body->getWorldCoordinates(capsule->getB());
+	double miny = std::fmin(wA.y, wB.y);
+	miny -= capsule->getRadius();
 
 
 	//we vrify that the water hit the capsule before doing anything
-	if (minz<water_level){
+	if (miny<water_level){
 		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
 		//so I'll first concider the cylindric part of the capsule.
 		
@@ -1132,6 +1132,10 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 		//I precalculate some information on the axis and the facet so the algorithm will be faster
 		double facet_interval_length = capsule->getRadius() * 2 / facet_intervals;
 		Vector3d axis_unit_vector = capsule->getB()-capsule->getA();
+		if (wA.y> wB.y){
+			axis_unit_vector *= -1;
+		}
+
 		double axis_length = axis_unit_vector.length();
 		axis_unit_vector /= axis_length;
 		double axis_interval_length = axis_length / axis_intervals;
@@ -1139,19 +1143,22 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 		double facet_interval_area=axis_interval_length*facet_interval_length;
 
 		//position at the start
-		Point3d axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
-
-		
+		Point3d axis_cur_pos;
+		if (wA.y> wB.y){
+			axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
+		}
+		else{
+			axis_cur_pos = capsule->getB() + axis_interval_vect / 2;
+		}
+		 
 
 		//so now we start to iterate along the axis
 		for (int i = 0; i < axis_intervals; ++i){
 			//here is an approximation (comming from the fact that the facet are likely to be horizontal (meaning the height))
 			//of each subfacet is likely to be the same as the on of the central point
-			if (body->getWorldCoordinates(axis_cur_pos).y > water_level){
-				continue;
-			}
-
-
+			//if (body->getWorldCoordinates(axis_cur_pos).y > water_level){
+			//	continue;
+			//}
 
 			//we read the spead on the axis
 			Vector3d axis_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(axis_cur_pos));
@@ -1168,6 +1175,7 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 			//so i position myself at the first interval
 			Point3d cur_pos = axis_cur_pos + v2*(capsule->getRadius() - facet_interval_length / 2);
 
+			bool force_applied = false;
 			for (int j = 0; j < facet_intervals; ++j){
 				if (body->getWorldCoordinates(cur_pos).y < water_level){
 					Vector3d local_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(cur_pos));
@@ -1180,6 +1188,534 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 					//now I can compute the force and apply it
 					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * SimGlobals::liquid_density*S;
 					applyForceTo(body, body->getWorldCoordinates(F), cur_pos);
+
+					force_applied = true;
+				}
+				cur_pos = cur_pos - v2*facet_interval_length;
+			}
+
+			//we stop if we realise that no forces were applied on a whole row
+			if (!force_applied){
+				break;
+			}
+		}
+	}
+}
+
+
+void ODEWorld::compute_buoyancy(uint object_id, float water_level){
+	RigidBody* body = objects[object_id];
+	CollisionDetectionPrimitive* cdp = body->cdps.front();
+	SphereCDP* sphere = dynamic_cast<SphereCDP*>(cdp);
+	BoxCDP* box = dynamic_cast<BoxCDP*>(cdp);
+	CapsuleCDP* capsule = dynamic_cast<CapsuleCDP*>(cdp);
+
+	if (sphere != NULL){
+		compute_buoyancy_on_sphere(object_id, water_level, -SimGlobals::gravity, SimGlobals::liquid_density + SimGlobals::force_alpha);
+	}
+	else if (box != NULL){
+		compute_buoyancy_on_box(object_id, water_level, -SimGlobals::gravity, SimGlobals::liquid_density + SimGlobals::force_alpha);
+	}
+	else if (capsule != NULL){
+		compute_buoyancy_on_capsule(object_id, water_level,-SimGlobals::gravity, SimGlobals::liquid_density + SimGlobals::force_alpha);
+	}
+}
+
+void ODEWorld::compute_buoyancy_on_sphere(uint object_id, float water_level, double gravity, double density){
+	RigidBody* body = objects[object_id];
+	CollisionDetectionPrimitive* cdp = body->cdps.front();
+	SphereCDP* sphere = dynamic_cast<SphereCDP*>(cdp);
+
+	if (sphere == NULL){
+		throwError("the toes should only have a sphere primitive...");
+		return;
+	}
+
+	double r = sphere->getRadius();
+	double h = water_level - body->getCMPosition().getY() - r;
+
+
+	//we vrify that the water hit the ball before doing anything
+	if (h>0){
+		//I first eliminate the case where the spere is fully in the water (for efficiency purposes)
+		if (h > (2 * r)){
+			double V = 4/3 * PI* r*r*r;
+			Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+			applyForceTo(body, F, sphere->getCenter());
+			return;
+		}
+
+		double V = PI / 3 * h*h* (3 * r - h);
+		Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+
+		double dy = 3/4 * (2 * r - h)*(2 * r - h) / (3 * r - h);
+		Point3d pt = body->getLocalCoordinates(body->getCMPosition() - Point3d(0, dy, 0));
+
+		applyForceTo(body, F, pt);
+	}
+}
+
+void ODEWorld::compute_buoyancy_on_box(uint object_id, float water_level, double gravity, double density){
+	double dz = water_level - objects[object_id]->getCMPosition().getZ();
+
+	RigidBody* body = objects[object_id];
+	CollisionDetectionPrimitive* cdp = body->cdps.front();
+	BoxCDP* box = dynamic_cast<BoxCDP*>(cdp);
+
+	if (box == NULL){
+		//throwError("the toes should only have a sphere primitive...");
+		return;
+	}
+
+	//I want the lower points to find out if the box is in the water
+	double lx = box->getXLen(), ly = box->getYLen(), lz = box->getZLen();
+	Point3d center = box->getCenter();
+	Point3d corners[8], wcorners[8];
+
+	corners[0] = center + Point3d(lx / 2, ly / 2, -lz / 2);
+	corners[1] = center + Point3d(lx / 2, -ly / 2, -lz / 2);
+	corners[2] = center + Point3d(-lx / 2, ly / 2, -lz / 2);
+	corners[3] = center + Point3d(-lx / 2, -ly / 2, -lz / 2);
+	corners[4] = center + Point3d(lx / 2, ly / 2, lz / 2);
+	corners[5] = center + Point3d(lx / 2, -ly / 2, lz / 2);
+	corners[6] = center + Point3d(-lx / 2, ly / 2, lz / 2);
+	corners[7] = center + Point3d(-lx / 2, -ly / 2, lz / 2);
+
+	double miny = body->getWorldCoordinates(corners[0]).getY();
+	int idx_min = 0;
+
+	for (int i = 0; i < 8; ++i){
+		wcorners[i] = body->getWorldCoordinates(corners[i]);
+		if (wcorners[i].getY() < miny){
+			miny = wcorners[i].getY();
+			idx_min = i;
+		}
+	}
+
+
+	//we vrify that the water hit the box before doing anything
+	if (miny<water_level){
+		// for all that is after it ill be easier if we know the basis formed by a corner
+		// please note that the condition are set like that because of the way I built the corner structure
+		Vector3d vx(1,0,0), vy(0,1,0), vz(0,0,1);
+		if(idx_min > 3){
+			vz *= -1;
+		}
+		if ((idx_min & 1) == 0){
+			vy *= -1;
+		}
+		if (idx_min % 4 < 2){
+			vx *= -1;
+		}
+
+		// I want to check some easy to compute cases.
+		// First if the object is fully immersed (easy to find the highest point if we know the positions 
+		//of the lower int the box) 
+		//*
+		Point3d upper_corner = corners[idx_min] + vx*lx + vy*ly + vz*lz;
+		if (body->getWorldCoordinates(upper_corner).y < water_level){
+			double V = lx*ly*lz;
+			Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+			applyForceTo(body, F, center);
+			return;
+		}//*/
+
+		//I'll initialize some variable since i'll need them for every following tests
+		int nbr_interval_x = 1;
+		int nbr_interval_y = 1;
+		int nbr_interval_z = 1;
+
+
+		//second test is to check if e could not simplify the plroblem by a prism
+		Vector3d wvx = body->getWorldCoordinates(vx);
+		Vector3d wvy = body->getWorldCoordinates(vy);
+		Vector3d wvz = body->getWorldCoordinates(vz);
+
+		int count_alligned = 0;
+		double epsilon = 1.0/(float)nbr_interval_y;
+
+		if (wvx.y < epsilon){
+			++count_alligned;
+		}
+		if (wvy.y < epsilon){
+			++count_alligned;
+		}
+		if (wvz.y < epsilon){
+			++count_alligned;
+		}
+
+		if (count_alligned>0){
+			//so we have in a configuration were I simplify by a prism calculation
+
+			/*if (count_alligned>1){
+				//so we have a vertical prism calculationare simple so I won't comment it
+				//the calculations 
+				double V, h;
+				Point3d pt;
+				h = (water_level - wcorners[idx_min].y);
+				if (wvx.y < epsilon){
+					if (wvy.y < epsilon){
+						V = lx*ly;
+						pt = corners[idx_min] + vx*(lx / 2) + vy*(ly / 2) + vz*(h / 2);
+					}
+					else{
+						V = lx*lz;
+						pt = corners[idx_min] + vx*(lx / 2) + vy*(h / 2) + vz*(lz / 2);
+					}
+				}
+				else{
+					V = ly*lz;
+					pt = corners[idx_min] + vx*(h / 2) + vy*(ly / 2) + vz*(lz / 2);
+				}
+				V *= h;
+				Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+				applyForceTo(body, F, pt);
+				return;
+			}
+
+			//so we have an inclined prism
+			//here it's more tricky be cause I need the immerged surface on the side face.
+			//so first I'll find the idxs of the corners of the face and i'll order them from
+			//the lowest to the highest
+			//seeing the code of that optimisation (which is not finished btw) I think it may take more time than simply 
+			//doing an integral...
+			//so i'll disactivate it for now
+			/*
+
+			double V,h; 
+			int face[4];
+			face[0] = idx_min;
+			if (wvx.y < epsilon){
+				int fz = 4 * vz.z;
+				int fy = 1 * vy.y;
+
+				if (wvy.y < wvz.y){
+					face[1] = idx_min + fy;
+					face[2] = idx_min + fz;
+				}
+				else {
+					face[1] = idx_min + fz;
+					face[2] = idx_min + fy;
+				}
+				face[3] = idx_min+fz+fy;
+				h= lx;
+			}
+			if (wvy.y < epsilon){
+				int fz = 4 * vx.x;
+				int fx = 2 * vy.y;
+
+				if (wvx.y < wvz.y){
+					face[1] = idx_min + fx;
+					face[2] = idx_min + fz;
+				}
+				else {
+					face[1] = idx_min + fz;
+					face[2] = idx_min + fx;
+				}
+				face[3] = idx_min + fz + fx;
+				h= ly;
+			}
+			else{
+				int fx = 2 * vx.x;
+				int fy = 1 * vy.y;
+
+				if (wvx.y < wvy.y){
+					face[1] = idx_min + fx;
+					face[2] = idx_min + fy;
+				}
+				else {
+					face[1] = idx_min + fy;
+					face[2] = idx_min + fx;
+				}
+				face[3] = idx_min + fy + fx;
+
+				h= lz;
+			}
+			//no that we have the ordored face corner we can calculate the surface
+			//there are 3 cases :
+
+			//the first one is when the water level is above the 3rd point. In that cas e we have a partial
+			//triangle (it's a trapezoid) and a second trapezoid under it
+
+			
+
+			if (water_level>wcorners[face[2]].y){
+				//first I need the last point for the base of the upper triangle
+				double ht = wcorners[face[3]].y - wcorners[face[2]].y;
+				double dht = (wcorners[face[3]].y - water_level) / ht;
+				Point3d triangle_pt = wcorners[face[3]] + (wcorners[face[2]] - wcorners[face[3]])*dht;
+					
+				double A_triangle = ht* (triangle_pt - wcorners[face[2]]).length();
+				A_triangle -= A_triangle*dht;
+
+				//and now the area of the trapezoid
+			}
+			else if (water_level > wcorners[face[2]].y){
+
+			}
+			else{
+
+			}
+			
+			Vector3d F = Vector3d(0, 1, 0)*V*SimGlobals::liquid_density*SimGlobals::gravity;
+			applyForceTo(body, F, center);
+			return;
+			//*/
+		}
+		
+		//I we reach here it mean we are not a in a case where I can do a trivial calculation
+		//now I'll subdivide the box in smaller boxes and simply count the ones underwater
+		double d_x = lx / nbr_interval_x;
+		double d_y = ly / nbr_interval_y;
+		double d_z = lz / nbr_interval_z;
+		double dV = d_x*d_y*d_z;
+
+		//I'll have to work in word coordinate else I'd have to convert everytime I check with the water level
+		Vector3d vxp = body->getWorldCoordinates(vx*d_x);
+		Vector3d vyp = body->getWorldCoordinates(vy*d_y);
+		Vector3d vzp = body->getWorldCoordinates(vz*d_z);
+
+
+		Vector3d result = Vector3d(0, 0, 0);
+		int count=0;
+		int i, j, k;
+		Vector3d cur_pos=wcorners[idx_min]+vxp/2+vyp/2+vzp/2;
+		Vector3d cur_plane,cur_box;
+		double V = 0;
+		for (i = 0; i < nbr_interval_x; ++i){
+			cur_plane = cur_pos;
+			for (j = 0; j < nbr_interval_y; ++j){
+				cur_box = cur_plane;
+				for (k = 0; k < nbr_interval_z; ++k){
+					if (cur_box.y>water_level){
+						break;
+					}
+					//here it mean the box if underwater
+					result += cur_box;
+					V+=dV;
+					count++;
+
+					cur_box += vzp;
+				}
+				if (k == 0){
+					break;
+				}
+				cur_plane += vyp;
+			}
+			if (j == 0){
+				break;
+			}
+			cur_pos += vxp;
+		}
+
+		//and now we apply the force if it is possible
+		if (count != 0){
+			Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+			Point3d inter = result / count;//forced to use an inter var or it does realy strange things...
+			Point3d pt = body->getLocalCoordinates(inter);
+
+			applyForceTo(body, F, pt);
+			return;
+		}
+	}
+}
+
+void ODEWorld::compute_buoyancy_on_capsule(uint object_id, float water_level, double gravity, double density){
+	RigidBody* body = objects[object_id];
+	CollisionDetectionPrimitive* cdp = body->cdps.front();
+	CapsuleCDP* capsule = dynamic_cast<CapsuleCDP*>(cdp);
+
+	if (capsule == NULL){
+		//throwError("the toes should only have a sphere primitive...");
+		return;
+	}
+
+	//I want the lower points to find out if the capsule is in the water
+	//it's easy it's forced that the lowest point is the extremity of the cylinder minus the radius
+	//I call Z the vertical axis but in this world representation the vertical axis is actualy Y...	
+	Point3d wA = body->getWorldCoordinates(capsule->getA());
+	Point3d wB = body->getWorldCoordinates(capsule->getB());
+	double miny = std::fmin(wA.y, wB.y);
+	miny -= capsule->getRadius();
+
+
+	//we vrify that the water hit the capsule before doing anything
+	if (miny < water_level){
+		double r = capsule->getRadius();
+
+		//there are 3 parts: lower sphere, upper sphere and cylinder
+		//FOr each part I'll tryto handle easy cases then use a general method in case none of the optimisation are possible
+
+		//First I handle the lower half sphere
+
+		//then I handle the cylindric part
+		//that for is just an easy way to skip the complex calculation in the case the simplification works
+		for (int uselessvar = 0; uselessvar < 1; ++uselessvar){
+			//first I need the lowest point
+
+			//I need the normal of the vertica plane to create the rotation to get the lowest point
+			Vector3d axis_vector = wA - wB;
+			Point3d axis_lowest_pt = wB;
+			Point3d axis_upper_pt = wA;
+			if (axis_vector.y < 0){
+				axis_vector *= -1;
+				axis_lowest_pt = wA;
+				axis_upper_pt = wB;
+			}
+
+			double axis_len = axis_vector.length();
+			axis_vector /= axis_len;
+		
+			Vector3d n = Vector3d(0, 1, 0).crossProductWith(axis_vector);
+			double sin_angle = n.length();
+			n /= sin_angle;
+		
+		
+			//and now I calculate the lowest point
+			Quaternion quat = Quaternion::getRotationQuaternion(PI / 2, n);
+			Vector3d vh = quat.rotate(axis_vector)*r;
+			if (vh.y > 0){
+				vh *= -1;
+				sin_angle *= -1;
+			}
+			Point3d lowest_pt = axis_lowest_pt + vh;
+
+		
+			if (lowest_pt.y < water_level){
+				//now I check if the full cylinder is 
+				Point3d highest_pt = axis_upper_pt - vh;
+				if (highest_pt.y < water_level){
+					double V = PI*r*r*axis_len;
+					Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+					Point3d inter = Vector3d(wA + wB) / 2;
+					Point3d pt = body->getLocalCoordinates(inter);
+
+					applyForceTo(body, F, pt);
+					break;
+				}
+
+				//another easy case is when the cilinder is near vertical
+				//I will supose that as long as the angle is less than 5° it is vertical 
+				//trully I conpare with 5.73 so that the sin is near 0.1 
+				if (std::abs(sin_angle) < 0.1){
+					double h = water_level - lowest_pt.y + vh.y / 2;
+					if (h > axis_len){
+						h = axis_len;
+					}
+					if (h > 0){
+						double V = PI*r*r*h;
+						Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+						Point3d inter = axis_lowest_pt + axis_vector*h/ 2 +vh*sin_angle;
+						Point3d pt = body->getLocalCoordinates(inter);
+
+						applyForceTo(body, F, pt);
+					}
+					break;
+				}
+
+				//on the same logic I'll handle the cases where the cylinder is near horizontal
+				//my goal is to eliminate the case of the near horizontal cylinder. But it is revelant to do it
+				//only if the 2 bases are affected by water
+				Point3d low_high_pt = lowest_pt + axis_vector*axis_len;
+				if (((1 - std::abs(sin_angle)) < 0.01) && (low_high_pt.y < water_level)){
+					double H = water_level - lowest_pt.y;
+					if (H > r * 2){
+						H = r * 2;
+					}
+					if (H > 0){
+						//now I want to conform the notation used by wolfram
+						//using their formula I can only achieve a result if the immersed part is lower than
+						//half of the circle
+						double h=H;
+						if (H > r){
+							h = 2 * r - H;
+						}
+						double theta = std::acos((r - h) / r);
+						double circle_segment_area = r*r*(theta - std::sin(theta))/2;
+						double area = circle_segment_area;
+						if (axis_lowest_pt.y<water_level){
+							area = PI*r*r - area;
+						}
+						Vector3d v_inter(vh.x, 0, vh.z);
+						double cylinder_length = axis_len - v_inter.length();
+						double V = cylinder_length*area;
+						if (V > 0.00001){
+							Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+
+							double sin_inter = std::sin(theta / 2);
+							double dy=0;
+							if ((theta - std::sin(theta)) > 0.0000001){
+								dy= 4 * r*sin_inter*sin_inter*sin_inter / (3 * (theta - std::sin(theta)));
+								if (H>r){
+									dy = -dy*circle_segment_area/area;
+								}
+							}
+
+							Point3d inter = Vector3d(axis_lowest_pt + Point3d(0, dy, 0) + axis_vector*(cylinder_length-v_inter.length()) / 2);
+							Point3d pt = body->getLocalCoordinates(inter);
+
+							applyForceTo(body, F, pt);
+						}	
+					}
+					break;
+				}
+
+				//now I have 2 case left. depending on the water level we have either a cylindrical wegde or a cylindrical segment
+				//so I need to check in which case we are
+				Point3d high_low_pt = axis_lowest_pt - vh;
+
+				if (high_low_pt.y < water_level){
+					//this mean we have a cylindrical segment
+					double h1 = (axis_vector*((water_level - high_low_pt.y) / axis_vector.y)).length();
+					double h2 = (axis_vector*((water_level - lowest_pt.y) / axis_vector.y)).length();//possible to change this to rmv the /
+
+					double V = PI*r*r*(h1 + h2) / 2;
+					Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+
+					//to compute the center of mass I use a formula from wolfram cilynder segment page
+					//in their coordinate the cylinder axis is following Z and the  base f the cylinder is in the plane (xOy)
+					double dx = r*(h2 - h1) / 4 * (h1 + h2);
+					double dz = (5*h1*h1+6*h1*h2+5*h2*h2)/(16*(h1+h2));
+
+					Point3d inter = Vector3d(axis_lowest_pt + axis_vector*dz + vh / vh.length()*dx);
+					Point3d pt = body->getLocalCoordinates(inter);
+					applyForceTo(body, F, pt);
+				}
+				else{
+					//this mean we have a cylindrical wedge
+					//formula found on the wolfram page for cylindrical wedge
+					double h = (axis_vector*((water_level - lowest_pt.y) / axis_vector.y)).length();
+					double b = (-vh *((water_level - lowest_pt.y) / (-vh.y))).length();
+					double a = std::sqrt(b*(2 * r - b));
+
+					double V = (h / (6 * b))*(2 * a*(3 * r*r - 2 * a*b + b*b) - 3 * PI*r*r*(r - b) +
+						6 * r*r*(r - b)*std::asin((r - b) / r));
+					Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
+
+					//since the calculation of the real application point seems to be pretty hard
+					//I'll use a simplification conidering that the point is on the triangle centroid
+					Point3d inter = Vector3d(lowest_pt - vh / vh.length()*b + lowest_pt + lowest_pt + axis_vector*h) / 3;
+					Point3d pt = body->getLocalCoordinates(inter);
+					applyForceTo(body, F, pt);
+				}
+
+
+				//now I have to compute a negative weight to handle the case where the cylinder is horizontal enougth
+				//to let the water go above the upper face. So that negative weight will correspond to the cylindrical wedge
+				//above that face.
+				if (low_high_pt.y < water_level){
+					double h = (axis_vector*((water_level - low_high_pt.y) / axis_vector.y)).length();
+					double b = (-vh *((water_level - low_high_pt.y) / (-vh.y))).length();
+					double a = std::sqrt(b*(2 * r - b));
+
+					double V = (h / (6 * b))*(2 * a*(3 * r*r - 2 * a*b + b*b) - 3 * PI*r*r*(r - b) +
+						6 * r*r*(r - b)*std::asin((r - b) / r));
+					Vector3d F = Vector3d(0, -1, 0)*V*density*gravity;
+
+					//since the calculation of the real application point seems to be pretty hard
+					//I'll use a simplification conidering that the point is on the triangle centroid
+					Point3d pt = Vector3d(low_high_pt - vh / vh.length()*b + low_high_pt + low_high_pt + axis_vector*h) / 3;
+					applyForceTo(body, F, pt);
 				}
 			}
 		}
