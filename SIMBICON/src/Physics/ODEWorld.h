@@ -199,11 +199,6 @@ public:
 	*/
 	void compute_water_impact(float water_level);
 
-	/**
-		This method compute and apply the forces caused by buoyancy.
-		this version uses the physic representation of the objects to compute the immersed volume
-	*/
-	void compute_buoyancy(uint object_id, float water_level);
 
 
 	/**
@@ -228,4 +223,18 @@ public:
 	*/
 	void compute_liquid_drag_on_plane(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
 		Vector3d normal, float water_level, int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
+
+
+	/**
+	This method compute and apply the forces caused by buoyancy.
+	this version uses the physic representation of the objects to compute the immersed volume
+	*/
+	void compute_buoyancy(uint object_id, float water_level);
+
+
+	void compute_buoyancy_on_sphere(uint object_id, float water_level, double gravity, double density);
+	void compute_buoyancy_on_box(uint object_id, float water_level, double gravity, double density);
+	void compute_buoyancy_on_capsule(uint object_id, float water_level, double gravity, double density);
+
+	
 };
