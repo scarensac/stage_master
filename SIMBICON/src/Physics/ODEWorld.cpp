@@ -809,7 +809,7 @@ void ODEWorld::compute_liquid_drag_on_toes(uint object_id, float water_level){
 
 
 	//we vrify that the water hit the ball before doing anything
-	if (dy - sphere->getRadius()>0){
+	if (dy + sphere->getRadius()>0){
 		//now I want to determine the surface that face the speed
 
 		int nbr_interval_r = 3;
@@ -873,6 +873,13 @@ void ODEWorld::compute_liquid_drag_on_toes(uint object_id, float water_level){
 		//and apply the force on every ds
 		applyForceTo(body, F, sphere->getCenter());
 
+		/*
+		//this can be used to show the forces
+		ContactPoint cp;
+		cp.f = F;
+		cp.cp = body->getWorldCoordinates(sphere->getCenter());
+		SimGlobals::vect_forces.push_back(cp);
+		//*/
 
 	}
 }
@@ -1015,14 +1022,25 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				}
 
 				//we check if we are a facing the movement 
-				if ((V.z*normal.z) > 0){
-					double S = d_S * V_norm.dotProductWith(normal);
+				double V_eff = V.z*normal.z;
+				if (V_eff > 0){
+					double S = d_S;
 
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
+					Vector3d F = -normal*V_eff*V_eff * 1 / 2 * SimGlobals::liquid_density*S;
 
-					//we apply the force
+					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
+					//and apply the force on every ds
 					applyForceTo(body, body->getWorldCoordinates(F), pos);
+
+					/*
+					//this can be used to show the forces
+					ContactPoint cp;
+					cp.f = body->getWorldCoordinates(F);
+					cp.cp = body->getWorldCoordinates(pos);
+					SimGlobals::vect_forces.push_back(cp);
+					//*/
+
 				}
 				pos = pos + Point3d(0, d_y, 0);
 			}
@@ -1046,15 +1064,25 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				}
 
 				//we check if we are afacing the movement 
-				if ((V.y/normal.y) > 0){
-					double S = d_S * V_norm.dotProductWith(normal);
+				double V_eff = V.y*normal.y;
+				if (V_eff > 0){
+					double S = d_S;
 
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
+					Vector3d F = -normal*V_eff*V_eff * 1 / 2 * SimGlobals::liquid_density*S;
 
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					applyForceTo(body, body->getWorldCoordinates(F), pos);
+
+					/*
+					//this can be used to show the forces
+					ContactPoint cp;
+					cp.f = body->getWorldCoordinates(F);
+					cp.cp = body->getWorldCoordinates(pos);
+					SimGlobals::vect_forces.push_back(cp);
+					//*/
+
 				}
 				pos = pos + Point3d(0, 0, d_z);
 			}
@@ -1078,15 +1106,24 @@ void ODEWorld::compute_liquid_drag_on_plane(RigidBody* body, double l_x, double 
 				}
 
 				//we check if we are afacing the movement 
-				if ((V.x*normal.x) < 0){
-					double S = d_S * V_norm.dotProductWith(normal);
-
+				double V_eff = V.x*normal.x;
+				if (V_eff > 0){
+					double S = d_S;
+					
 					//now that we have the surface we can compute the resulting force
-					Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
+					Vector3d F = -normal*V_eff*V_eff * 1 / 2 * SimGlobals::liquid_density*S;
 
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					applyForceTo(body, body->getWorldCoordinates(F), pos);
+
+					/*
+					//this can be used to show the forces
+					ContactPoint cp;
+					cp.f = body->getWorldCoordinates(F);
+					cp.cp = body->getWorldCoordinates(pos);
+					SimGlobals::vect_forces.push_back(cp);
+					//*/
 				}
 				pos = pos + Point3d(0, d_y, 0);
 			}
@@ -1119,6 +1156,8 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 	miny -= capsule->getRadius();
 
 
+
+
 	//we vrify that the water hit the capsule before doing anything
 	if (miny<water_level){
 		//now I'll subdivide the faces in smaller surfaces and apply the necessary force on each of them
@@ -1145,13 +1184,12 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 		//position at the start
 		Point3d axis_cur_pos;
 		if (wA.y> wB.y){
-			axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
-		}
-		else{
 			axis_cur_pos = capsule->getB() + axis_interval_vect / 2;
 		}
+		else{
+			axis_cur_pos = capsule->getA() + axis_interval_vect / 2;
+		}
 		 
-
 		//so now we start to iterate along the axis
 		for (int i = 0; i < axis_intervals; ++i){
 			//here is an approximation (comming from the fact that the facet are likely to be horizontal (meaning the height))
@@ -1181,13 +1219,21 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 					Vector3d local_speed = body->getLocalCoordinates(body->getAbsoluteVelocityForLocalPoint(cur_pos));
 				
 					//now i want to ponderate the area by the orientation along the axis
-					//but what I realy want is the sinus (since the ponderation is of 1 if the two vectors are perpendiculate)
+					//but what I realy want is the sinus (since the ponderation is of 1 if the two vectors are perpendicular)
 					double S = facet_interval_area*
 						((local_speed / local_speed.length()).crossProductWith(axis_unit_vector)).length();
 
 					//now I can compute the force and apply it
 					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * SimGlobals::liquid_density*S;
 					applyForceTo(body, body->getWorldCoordinates(F), cur_pos);
+
+					//*
+					//this can be used to show the forces
+					ContactPoint cp;
+					cp.f = body->getWorldCoordinates(F);
+					cp.cp = body->getWorldCoordinates(cur_pos);
+					SimGlobals::vect_forces.push_back(cp);
+					//*/
 
 					force_applied = true;
 				}
@@ -1198,6 +1244,8 @@ void ODEWorld::compute_liquid_drag_on_legs(uint object_id, float water_level){
 			if (!force_applied){
 				break;
 			}
+
+			axis_cur_pos += axis_interval_vect;
 		}
 	}
 }

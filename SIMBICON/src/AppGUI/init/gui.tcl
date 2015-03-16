@@ -167,6 +167,9 @@ scale .waterlvl -label "Water level" -orient h -digit 4 -from 0.0 -to 3.0 -varia
 scale .waterstr -label "Water strength" -orient h -digit 7 -from 0.0 -to 1000000.0 -variable forceAlpha -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 scale .liquiddensity -label "Liquid Density" -orient h -digit 4 -from 0.0 -to 12000.0 -variable liquidDensity -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
+#### heading control
+scale .desiredheading -label "desired heading" -orient h -digit 4 -from -1.54 -to 1.54 -variable desiredHeading -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+
 
 
 #### other commands
@@ -187,4 +190,5 @@ pack .characterframe -in .mainframe -side top -fill x
 pack .waterlvl -in .mainframe -side top -fill x
 pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
+pack .desiredheading -in .mainframe -side top -fill x
 pack .buttonframe -in .mainframe -side top -fill x

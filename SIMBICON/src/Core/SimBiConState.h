@@ -186,7 +186,7 @@ public:
 		Quaternion q = Quaternion(1, 0, 0, 0);
 
 		for (uint i=0;i<components.size();i++)
-			q = components[i]->evaluateTrajectoryComponent(con, j, stance, phi, d, v) * q;
+			q *= components[i]->evaluateTrajectoryComponent(con, j, stance, phi, d, v) * q;
 
 		return q;
 	}

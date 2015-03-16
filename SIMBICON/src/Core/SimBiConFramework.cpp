@@ -127,8 +127,9 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	
 	//we now simulate the effect of the liquid
+	SimGlobals::vect_forces.clear();
 	world->compute_water_impact(SimGlobals::water_level);
-
+	
 	if (advanceWorldInTime)
 		pw->advanceInTime(dt);
 

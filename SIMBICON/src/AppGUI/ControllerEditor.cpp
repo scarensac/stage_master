@@ -161,14 +161,21 @@ void ControllerEditor::draw(bool shadowMode){
 
 		if (Globals::drawContactForces){
 			//figure out if we should draw the contacts, desired pose, etc.
-			glColor3d(1, 0, 0);
+			glColor3d(0, 0, 1);
 			DynamicArray<ContactPoint>* cfs = conF->getWorld()->getContactForces();
-			for (uint i=0;i<cfs->size();i++){
+			/*for (uint i=0;i<cfs->size();i++){
 				ContactPoint *c = &((*cfs)[i]);
 				
 				GLUtils::drawCylinder(0.01, c->f * 0.09, c->cp);
 				GLUtils::drawCone(0.03, c->f * 0.01, c->cp+c->f*0.09);
+			}*/
+			std::vector<ContactPoint> vect = SimGlobals::vect_forces;
+			double factor = 10;
+			for (uint i = 0; i < vect.size(); ++i){
+				GLUtils::drawCylinder(0.005, vect[i].f * 9*factor, vect[i].cp);
+				GLUtils::drawCone(0.015, vect[i].f * 1 * factor, vect[i].cp + vect[i].f * 9 * factor);
 			}
+
 		}
 	}
 	else{
@@ -417,10 +424,10 @@ void ControllerEditor::processTask(){
 					double epsilon = avgSpeed - avg_speed;
 					epsilon *= 10;
 					if (conF->getController()->getStance() == RIGHT_STANCE){
-						SimGlobals::balance_force_factor_right += epsilon;
+						//SimGlobals::balance_force_factor_right += epsilon;
 					}
 					else{
-						SimGlobals::balance_force_factor_left += epsilon;
+						//SimGlobals::balance_force_factor_left += epsilon;
 					}
 				}
 
