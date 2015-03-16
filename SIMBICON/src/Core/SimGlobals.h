@@ -82,6 +82,9 @@ public:
 	static double balance_force_factor_right;
 	static double left_stance_factor;//0 or 1 
 
+	//I'll use the contact point structure but all I want is the position and the force
+	static std::vector<ContactPoint> vect_forces;
+
 
 	SimGlobals(void){
 	}

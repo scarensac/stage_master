@@ -64,4 +64,5 @@ double SimGlobals::water_level = 0;
 double SimGlobals::liquid_density = 0;
 double SimGlobals::balance_force_factor_left = 0;
 double SimGlobals::balance_force_factor_right = 0;
-double SimGlobals::left_stance_factor=0;
+double SimGlobals::left_stance_factor = 0;
+std::vector<ContactPoint> SimGlobals::vect_forces = std::vector<ContactPoint>();

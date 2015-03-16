@@ -53,6 +53,7 @@ ConState 0
 				0.993311 0.034506
 			/baseTrajectory
 		/component
+		
 	/trajectory
 
 	trajectory SWING_Hip

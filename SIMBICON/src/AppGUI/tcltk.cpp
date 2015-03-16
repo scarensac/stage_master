@@ -297,6 +297,7 @@ int Tcl_AppInit(Tcl_Interp *interp){
 	Tcl_LinkVar(interp, "waterLevel", (char *)&SimGlobals::water_level, TCL_LINK_DOUBLE);
 	Tcl_LinkVar(interp, "forceAlpha", (char *)&SimGlobals::force_alpha, TCL_LINK_DOUBLE);
 	Tcl_LinkVar(interp, "liquidDensity", (char *)&SimGlobals::liquid_density, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "desiredHeading", (char *)&SimGlobals::desiredHeading, TCL_LINK_DOUBLE);
 
 
 	Tcl_EvalFile(interp, "init/setup.tcl");
