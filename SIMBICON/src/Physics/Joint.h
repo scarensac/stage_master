@@ -62,6 +62,8 @@ protected:
 	Vector3d torque;
 	//this is the name of the joint
 	char name[100];
+	//This is the index of the joint (so i search them easily whitout wasting time comparing strings)
+	uint idx;
 
 	/**
 		This method is used to compute the relative orientation between the parent and the child rigid bodies, expressed in 
@@ -98,6 +100,9 @@ public:
 		Default destructor
 	*/
 	virtual ~Joint(void);
+
+	//getter for the index
+	uint get_idx(){ return idx; }
 
 	/**
 		This method is used to automatically fix the errors in the joints (i.e. drift errors caused by numercial integration). At some future

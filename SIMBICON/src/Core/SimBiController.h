@@ -212,7 +212,7 @@ public:
 	/**
 		This method is used to compute the torques that are to be applied at the next step.
 	*/
-	virtual void computeTorques(DynamicArray<ContactPoint> *cfs);
+	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact);
 
 	/**
 		This method is used to advance the controller in time. It takes in a list of the contact points, since they might be

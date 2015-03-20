@@ -30,6 +30,9 @@
 #include <Utils/Utils.h>
 
 Joint::Joint(void){
+	static uint idx_count = 0;
+	idx = idx_count;
+	idx_count++;
 	this->parent = NULL;
 	this->child = NULL;
 	useJointLimits = false;

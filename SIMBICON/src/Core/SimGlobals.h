@@ -74,6 +74,8 @@ public:
 	static double COMOffsetX;
 	static double COMOffsetZ;
 
+	static double time_factor;
+
 	//memebers for the water force
 	static double force_alpha;
 	static double water_level;
@@ -83,7 +85,7 @@ public:
 	static double left_stance_factor;//0 or 1 
 
 	//I'll use the contact point structure but all I want is the position and the force
-	static std::vector<ContactPoint> vect_forces;
+	static std::vector<ForceStruct> vect_forces;
 
 
 	SimGlobals(void){

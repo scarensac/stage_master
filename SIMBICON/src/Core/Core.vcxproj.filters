@@ -82,5 +82,8 @@
     <ClInclude Include="SimBiController.h">
       <Filter>Header Files\Control</Filter>
     </ClInclude>
+    <ClInclude Include="ForcesUtilitary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

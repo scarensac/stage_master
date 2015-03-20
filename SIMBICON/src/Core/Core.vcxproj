@@ -92,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
+    <ClInclude Include="ForcesUtilitary.h" />
     <ClInclude Include="SimGlobals.h" />
     <ClInclude Include="Trajectory.h" />
     <ClInclude Include="BalanceFeedback.h" />

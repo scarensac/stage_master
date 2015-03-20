@@ -170,6 +170,9 @@ scale .liquiddensity -label "Liquid Density" -orient h -digit 4 -from 0.0 -to 12
 #### heading control
 scale .desiredheading -label "desired heading" -orient h -digit 4 -from -1.54 -to 1.54 -variable desiredHeading -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
+#### others
+scale .timefactor -label "time factor" -orient h -digit 4 -from 0 -to 3 -variable time_factor -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+
 
 
 #### other commands
@@ -191,4 +194,5 @@ pack .waterlvl -in .mainframe -side top -fill x
 pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
 pack .desiredheading -in .mainframe -side top -fill x
+pack .timefactor -in .mainframe -side top -fill x
 pack .buttonframe -in .mainframe -side top -fill x

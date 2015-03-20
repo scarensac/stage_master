@@ -186,7 +186,7 @@ public:
 		Quaternion q = Quaternion(1, 0, 0, 0);
 
 		for (uint i=0;i<components.size();i++)
-			q *= components[i]->evaluateTrajectoryComponent(con, j, stance, phi, d, v) * q;
+			q = components[i]->evaluateTrajectoryComponent(con, j, stance, phi, d, v) * q;
 
 		return q;
 	}
@@ -249,6 +249,7 @@ private:
 	int nextStateIndex;
 	//this is the ammount of time that it is expected the biped will spend in this state
 	double stateTime;
+	double time_ratio;
 
 	//upon a transition to a new FSM state, it is assumed that the stance of the character either will be given stance, it will be reverseed , or keept the same.
 	//if a state is designed for a certain stance, it is given by this variable
@@ -286,8 +287,9 @@ public:
 		strcpy(description, "Uninitialized state");
 		nextStateIndex = -1;
 		this->stateTime = 0;
+		time_ratio = 1;
 		transitionOnFootContact = true;
-		minPhiBeforeTransitionOnFootContact = 0.7;
+		minPhiBeforeTransitionOnFootContact = 0.4;
 		minSwingFootForceForContact = 100.0;
 		reverseStance = false;
 		keepStance = false;
@@ -323,8 +325,16 @@ public:
 		Returns the time we're expecting to spend in this state
 	*/
 	inline double getStateTime(){
-		return stateTime;
+		return stateTime*time_ratio;
 	}
+
+	/**
+		this is a test to try to adapt when we are underwater
+	*/
+	inline void adapt_state_time(double ratio){
+		time_ratio = ratio;
+	}
+
 
 	/**
 		this method is used to retrieve the index of the next state 

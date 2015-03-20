@@ -389,6 +389,55 @@ Vector3d Character::getBottomCOM(){
 }
 
 /**
+This method is used to get the part of the sqeleton on whihch we have to have an effect to control the speed
+following Coros 2010 paper. I is conposed of the standing leg (except the toes), the torso and the head.
+*/
+void Character::getSpeedControlSqueleton(int cur_stance, std::vector<Joint*>& vect_squeleton){
+	//first I need to find the torso
+	for (uint i = 0; i < joints.size(); ++i){
+		if (joints[i]->getParent() == getRoot()){
+			if (strcmp(joints[i]->child->name, "torso") == 0){
+				//we store it and add it to the COM
+				vect_squeleton.push_back(joints[i]);
+
+			}
+			if (cur_stance<=0){
+				if (strcmp(joints[i]->child->name, "lUpperLeg") == 0){
+					//we store it and add it to the COM
+					vect_squeleton.push_back(joints[i]);
+					Joint* cur_joint = joints[i];
+					for (;;){
+						//here I use the fact that i know there is only 1 child after each joint on the leg
+						std::vector<Joint*> child_joints= cur_joint->getChild()->getChildJoints();
+						cur_joint = child_joints[0];
+						if (strcmp(cur_joint->child->name, "lToes") == 0){
+							break;
+						}
+						vect_squeleton.push_back(cur_joint);
+					}
+				}
+			}
+			if (cur_stance >= 0){
+				if (strcmp(joints[i]->child->name, "rUpperLeg") == 0){
+					//we store it and add it to the COM
+					vect_squeleton.push_back(joints[i]);
+					Joint* cur_joint = joints[i];
+					for (;;){
+						//here I use the fact that i know there is only 1 child after each joint on the leg
+						std::vector<Joint*> child_joints = cur_joint->getChild()->getChildJoints();
+						cur_joint = child_joints[0];
+						if (strcmp(cur_joint->child->name, "rToes") == 0){
+							break;
+						}
+						vect_squeleton.push_back(cur_joint);
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
 this function can be used to have an easy access to the top of the body (meaning above the root)
 */
 void Character::getCharacterTop(std::vector<Joint*>& body_top){
@@ -435,10 +484,12 @@ void Character::getCharacterBottom(std::vector<Joint*>& body_bottom){
 
 	//first I need to find the torso
 	for (uint i = 0; i < joints.size(); ++i){
-		if (strcmp(joints[i]->child->name, "torso") != 0){
-			//we store it and add it to the COM
-			body_bottom.push_back(joints[i]);
-			body_buffer.push_back(joints[i]->child);
+		if (joints[i]->getParent() == getRoot()){
+			if (strcmp(joints[i]->child->name, "torso") != 0){
+				//we store it and add it to the COM
+				body_bottom.push_back(joints[i]);
+				body_buffer.push_back(joints[i]->child);
+			}
 		}
 	}
 

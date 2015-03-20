@@ -40,6 +40,9 @@ typedef struct {
 	Point3d lastFootPos;
 	//and this is used to hold the contact force information
 	DynamicArray<ContactPoint> cfi;
+
+
+
 } SimBiConFrameworkState;
 
 /**
@@ -56,6 +59,11 @@ private:
 	Vector3d lastStepTaken;
 	//this is the position of the foot at the previous state
 	Point3d lastFootPos;
+
+	//I'll store the COM displacement on the previouses steps so I can estimate the deviation from
+	//the correct movement direction
+	Vector3d com_displacement_last_step;
+	Vector3d com_displacement_previous_to_last_step;
 
 public:
 	SimBiConFramework(char* input, char* conFile = NULL);
