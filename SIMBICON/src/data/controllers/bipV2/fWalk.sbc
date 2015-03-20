@@ -54,6 +54,16 @@ ConState 0
 			/baseTrajectory
 		/component
 		
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.0 0.0
+				0.5 0.0
+				1.0 0.0
+			/baseTrajectory
+		/component
+		
 	/trajectory
 
 	trajectory SWING_Hip

@@ -299,6 +299,8 @@ int Tcl_AppInit(Tcl_Interp *interp){
 	Tcl_LinkVar(interp, "liquidDensity", (char *)&SimGlobals::liquid_density, TCL_LINK_DOUBLE);
 	Tcl_LinkVar(interp, "desiredHeading", (char *)&SimGlobals::desiredHeading, TCL_LINK_DOUBLE);
 
+	Tcl_LinkVar(interp, "time_factor", (char *)&SimGlobals::time_factor, TCL_LINK_DOUBLE);
+
 
 	Tcl_EvalFile(interp, "init/setup.tcl");
 

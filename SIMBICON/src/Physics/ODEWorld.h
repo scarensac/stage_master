@@ -33,6 +33,10 @@
 #include <Physics/PlaneCDP.h>
 #include <Physics/PreCollisionQuery.h>
 
+
+#include "Core\ForcesUtilitary.h"
+
+
 #define MAX_CONTACT_FEEDBACK 200
 
 
@@ -197,7 +201,7 @@ public:
 	/**
 		this method is used to compute the effect of water (it convert a level of water into the induced forces
 	*/
-	void compute_water_impact(float water_level);
+	void compute_water_impact(Character* character,float water_level,std::map<uint,WaterImpact>& resulting_impact);
 
 
 
@@ -205,9 +209,9 @@ public:
 		this function is a children function of the above one (it prevent mass duplication of code for similar body parts
 		this function handle
 	*/
-	void compute_liquid_drag_on_toes(uint object_id, float water_level);
-	void compute_liquid_drag_on_feet(uint object_id, float water_level);
-	void compute_liquid_drag_on_legs(uint object_id, float water_level);
+	Vector3d compute_liquid_drag_on_toes(Joint* joint, float water_level);
+	Vector3d compute_liquid_drag_on_feet(Joint* joint, float water_level);
+	Vector3d compute_liquid_drag_on_legs(Joint* joint, float water_level);
 
 	/**
 		this function is an utilitary that is used to compute the liquid forces on a rectangular plane
@@ -221,7 +225,7 @@ public:
 		nbr_interval_x, nbr_interval_x, nbr_interval_x: number of interval in each direction (same logic as the l_*)
 
 	*/
-	void compute_liquid_drag_on_plane(RigidBody* body, double l_x, double l_y, double l_z, Point3d pos,
+	Vector3d compute_liquid_drag_on_plane(Joint* joint, double l_x, double l_y, double l_z, Point3d pos,
 		Vector3d normal, float water_level, int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
 
 
@@ -229,12 +233,10 @@ public:
 	This method compute and apply the forces caused by buoyancy.
 	this version uses the physic representation of the objects to compute the immersed volume
 	*/
-	void compute_buoyancy(uint object_id, float water_level);
-
-
-	void compute_buoyancy_on_sphere(uint object_id, float water_level, double gravity, double density);
-	void compute_buoyancy_on_box(uint object_id, float water_level, double gravity, double density);
-	void compute_buoyancy_on_capsule(uint object_id, float water_level, double gravity, double density);
+	ForceStruct compute_buoyancy(Joint* joint, float water_level);
+	ForceStruct compute_buoyancy_on_sphere(RigidBody* body, float water_level, double gravity, double density);
+	ForceStruct compute_buoyancy_on_box(RigidBody* body, float water_level, double gravity, double density);
+	ForceStruct compute_buoyancy_on_capsule(RigidBody* body, float water_level, double gravity, double density);
 
 	
 };

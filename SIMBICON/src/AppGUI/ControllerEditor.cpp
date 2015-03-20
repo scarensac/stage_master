@@ -169,11 +169,11 @@ void ControllerEditor::draw(bool shadowMode){
 				GLUtils::drawCylinder(0.01, c->f * 0.09, c->cp);
 				GLUtils::drawCone(0.03, c->f * 0.01, c->cp+c->f*0.09);
 			}*/
-			std::vector<ContactPoint> vect = SimGlobals::vect_forces;
-			double factor = 10;
+			std::vector<ForceStruct> vect = SimGlobals::vect_forces;
+			double factor = 0.01;
 			for (uint i = 0; i < vect.size(); ++i){
-				GLUtils::drawCylinder(0.005, vect[i].f * 9*factor, vect[i].cp);
-				GLUtils::drawCone(0.015, vect[i].f * 1 * factor, vect[i].cp + vect[i].f * 9 * factor);
+				GLUtils::drawCylinder(0.005, vect[i].F * 9*factor, vect[i].pt);
+				GLUtils::drawCone(0.015, vect[i].F * 1 * factor, vect[i].pt + vect[i].F * 9 * factor);
 			}
 
 		}
@@ -347,6 +347,11 @@ void ControllerEditor::processTask(){
 
 	static double step_time_end = 0;
 
+	static double initial_phi = 0;
+	static double last_phi = 0;
+	static double ratio = 1;
+	
+
 	double cur_height = 0;
 
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
@@ -361,6 +366,13 @@ void ControllerEditor::processTask(){
 
 			//get the current phase, pose and state and update the GUI
 			double phi = conF->getController()->getPhase();
+
+			if (ratio > 0){
+				//phi *= ratio;
+				
+			}
+
+
 			lastFSMState = conF->getController()->getFSMState();
 			double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
 			if (count_step >= 10&&phi>0.1){
@@ -387,6 +399,14 @@ void ControllerEditor::processTask(){
 				dTrajZ.clear();
 				vTrajX.clear();
 				vTrajZ.clear();
+				if (count_step == 10){
+					initial_phi = last_phi;
+				}
+				if (count_step > 10){
+					ratio += initial_phi/last_phi - 1;
+
+					//conF->getController()->getState(conF->getController()->getFSMState())->adapt_state_time(SimGlobals::time_factor);
+				}				
 			}
 
 			//we add the current position to the trajectory
@@ -404,7 +424,9 @@ void ControllerEditor::processTask(){
 
 			//we can now advance the simulation
 			bool newStep = conF->advanceInTime(SimGlobals::dt);
+
 			
+			last_phi = phi;
 
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
@@ -418,21 +440,22 @@ void ControllerEditor::processTask(){
 
 				if (count_step == 10){
 					avg_speed = avgSpeed;
+
+					initial_phi = phi;
 					tprintf("ref speed = %lf \n", avg_speed);
 				}
 				if (count_step > 10){
 					double epsilon = avgSpeed - avg_speed;
 					epsilon *= 10;
 					if (conF->getController()->getStance() == RIGHT_STANCE){
-						//SimGlobals::balance_force_factor_right += epsilon;
+						SimGlobals::balance_force_factor_right += epsilon;
 					}
 					else{
-						//SimGlobals::balance_force_factor_left += epsilon;
+						SimGlobals::balance_force_factor_left += epsilon;
 					}
 				}
 
-
-
+				
 
 
 				Vector3d v = conF->getLastStepTaken();

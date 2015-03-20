@@ -373,11 +373,35 @@ RigidBody* SimBiController::getRBBySymbolicName(char* sName){
 /**
 	This method is used to compute the torques that are to be applied at the next step.
 */
-void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs){
+void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact){
 	if (FSMStateIndex >= (int)states.size()){
 		tprintf("Warning: no FSM state was selected in the controller!\n");
 		return;
 	}
+
+	//first I check if we are near to fall (or even already on the ground
+	double h = character->getRoot()->getCMPosition().y;
+
+	double hMax = 0.4;
+	double hMin = 0.2;
+
+	if (h > hMax)
+		h = hMax;
+
+	if (h < hMin)
+		h = hMin;
+
+	h = (h - hMin) / (hMax - hMin);
+
+	//if we are on the ground I can just skip everything
+	if (h <= 0.00001){
+		for (uint i = 0; i < torques.size(); i++){
+			torques[i] = Vector3d(0, 0, 0);
+		}
+		return;
+	}
+
+
 
 	ReducedCharacterState poseRS(&desiredPose);
 
@@ -439,30 +463,22 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs){
 	}
 
 	//compute the torques now, using the desired pose information - the hip torques will get overwritten below
-	PoseController::computeTorques(cfs);
-
+	PoseController::computeTorques(cfs,swingHipIndex,resulting_impact);
 	double stanceHipToSwingHipRatio = getStanceFootWeightRatio(cfs);
+
+	//now we can add the torques to control the speed
+	//actualy this part is currently done in another function because I still haven't implemented the force==>torque function
+
 
 	if (stanceHipToSwingHipRatio < 0)
 		rootControlParams.strength = 0;
 	//and now separetely compute the torques for the hips - together with the feedback term, this is what defines simbicon
 	computeHipTorques(qRootD, poseRS.getJointRelativeOrientation(swingHipIndex), stanceHipToSwingHipRatio);
 
-	double h = character->getRoot()->getCMPosition().y;
-
-	double hMax = 0.4;
-	double hMin = 0.2;
-
-	if (h > hMax)
-		h = hMax;
-
-	if ( h < hMin)
-		h = hMin;
-
-	h = (h-hMin) / (hMax-hMin);
-
+	
+	//this is a ponderation if we are near to fall
 	for (uint i=0;i<torques.size();i++){
-		torques[i] = torques[i]*h + Vector3d(0,0,0) * (1-h);
+		torques[i] = torques[i] * h;// +Vector3d(0, 0, 0) * (1 - h);
 	}
 
 
@@ -484,7 +500,8 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 
 	if (SimGlobals::forceHeadingControl == false){
 		//qRootD is specified in the character frame, so just maintain the current heading
-		qRootDW = characterFrame * qRootD;
+		qRootDW = qRootD;
+		//qRootDW = characterFrame * qRootD;
 	}else{
 		//qRootDW needs to also take into account the desired heading
 		qRootDW = Quaternion::getRotationQuaternion(SimGlobals::desiredHeading, SimGlobals::up) * qRootD;
@@ -523,6 +540,9 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	//to the two hips, to make up the root makeup torque - which means the final torque the root sees is rootTorque!
 	stanceHipTorque += rootMakeupTorque * stanceHipToSwingHipRatio * rootStrength;
 	swingHipTorque += rootMakeupTorque * (1-stanceHipToSwingHipRatio) * rootStrength;
+
+	
+
 
 
 	if( stanceHipDamping > 0 ) {

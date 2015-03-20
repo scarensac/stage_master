@@ -27,6 +27,7 @@
 #include <Core/SimBiController.h>
 #include "SimGlobals.h"
 #include <Physics/ODEWorld.h>
+#include "Core\ForcesUtilitary.h"
 
 SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	//create the physical world...
@@ -34,6 +35,9 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	con = NULL;
 	bip = NULL;
 	bool conLoaded = false;
+
+	com_displacement_last_step = Vector3d(0, 0, 0);
+	com_displacement_previous_to_last_step = Vector3d(0, 0, 0);
 
 
 	//now we'll interpret the input file...
@@ -112,24 +116,51 @@ SimBiConFramework::~SimBiConFramework(void){
 */
 
 bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recomputeTorques, bool advanceWorldInTime){
+
+	//some static var for later use
+	static Vector3d cur_com = Vector3d(0, 0, 0);
+
+	ODEWorld* world = dynamic_cast<ODEWorld*>(pw);
+
+	//we simulate the effect of the liquid
+	SimGlobals::vect_forces.clear();
+	std::map<uint, WaterImpact> resulting_impact;
+	world->compute_water_impact(con->get_character(),SimGlobals::water_level, resulting_impact);
+
+	//I'll add a force for the control of the speed (only for now, I will have to convert it to virtual torques)
+	Joint* torso_joint = con->get_character()->getJointByNameOfChild("torso");
+	RigidBody* body = torso_joint->getChild();
+
+	double factor;
+	factor = (SimGlobals::left_stance_factor*SimGlobals::balance_force_factor_left +
+		(1 - SimGlobals::left_stance_factor)*SimGlobals::balance_force_factor_right);
+	//factor = (SimGlobals::balance_force_factor_right + SimGlobals::balance_force_factor_left) / 2;
+	Vector3d F = -Vector3d(0, 0, 1)*SimGlobals::liquid_density / 3000.0* 5.0 * factor;
+	world->applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+
+	//I'll also add a force to help the caracter follow the heading 
+	//don't work
+	/*if (!com_displacement_previous_to_last_step.isZeroVector()){
+		Vector3d displacement = com_displacement_last_step + com_displacement_previous_to_last_step;
+		Vector3d F2 = Vector3d(displacement.x / displacement.z, 0, 0);
+		world->applyForceTo(body, F2, body->getLocalCoordinates(body->getCMPosition()));
+	}*/
+
+
+	
 	//compute te new torques and apply them 
 	if (applyControl == false){
 		con->resetTorques();
 	}
 	else{
 		if (recomputeTorques == true){
-			con->computeTorques(pw->getContactForces());
+			con->computeTorques(pw->getContactForces(),resulting_impact);
 		}
 	}
 	con->applyTorques();
 	
-	ODEWorld* world = dynamic_cast<ODEWorld*>(pw);
+	
 
-	
-	//we now simulate the effect of the liquid
-	SimGlobals::vect_forces.clear();
-	world->compute_water_impact(SimGlobals::water_level);
-	
 	if (advanceWorldInTime)
 		pw->advanceInTime(dt);
 
@@ -143,6 +174,13 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		//now express this in the 'relative' character coordinate frame instead of the world frame
 		lastStepTaken = con->getCharacterFrame().getComplexConjugate().rotate(lastStepTaken);
 		lastFootPos = con->getStanceFootPos();
+
+		Vector3d old_com = cur_com;
+		cur_com = getCharacter()->getCOM();
+
+		com_displacement_previous_to_last_step = com_displacement_last_step;
+		com_displacement_last_step = cur_com - old_com;
+		
 	}
 
 	return newFSMState;

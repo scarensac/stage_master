@@ -176,6 +176,17 @@ public:
 	}
 
 	/**
+	this method is used to return a reference to the joint whose name is passed as a parameter, or NULL
+	if it is not found.
+	*/
+	inline Joint* getJointByNameOfChild(char* jName){
+		for (uint i = 0; i<joints.size(); i++)
+			if (strcmp(joints[i]->getChild()->name, jName) == 0)
+				return joints[i];
+		return NULL;
+	}
+
+	/**
 		this method is used to return the index of the joint (whose name is passed as a parameter) in the articulated figure hierarchy.
 	*/
 	inline int getJointIndex(char* jName){
@@ -237,6 +248,12 @@ public:
 	I supose anything but the torso can lead to the bottom of the body.
 	*/
 	Vector3d getBottomCOM();
+
+	/**
+	This method is used to get the part of the sqeleton on whihch we have to have an effect to control the speed
+	following Coros 2010 paper. I is conposed of the standing leg (except the toes), the torso and the head.
+	*/
+	void getSpeedControlSqueleton(int cur_stance, std::vector<Joint*>& vect_squeleton);
 
 	/**
 	this function can be used to have an easy access to the top of the body (meaning above the root)

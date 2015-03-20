@@ -143,29 +143,58 @@ void PoseController::scaleAndLimitTorque(Vector3d* torque, ControlParams* cParam
 /**
 	This method is used to compute the torques that are to be applied at the next step.
 */
-void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs){
+void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact){
 	Quaternion qRelD;
 	Vector3d relAngVelD;
 
 	Quaternion qRel;
 	Vector3d wRel;
-
+	
 	ReducedCharacterState rs(&desiredPose);
 
+
+	static std::vector<uint> idx_vect;
+	if (idx_vect.empty()){
+		std::vector<Joint*> lower_body;
+		character->getCharacterBottom(lower_body);
+		for (int i = 0; i < lower_body.size();++i){
+			idx_vect.push_back(lower_body[i]->get_idx());
+		}
+	}
+	
+	
 	for (int i=0;i<jointCount;i++){
 		if (controlParams[i].controlled == true){
+			ControlParams params = controlParams[i];
+
+			//*
+			uint idx = character->getJoint(i)->get_idx();
+			/*if (resulting_impact.find(idx) != resulting_impact.end()){
+			double length = resulting_impact[idx].drag_torque.length();
+			if (!IS_ZERO(length)){
+			params.kp *= 1 + length*SimGlobals::time_factor;
+			params.kd =std::sqrt(params.kd*params.kd/4* 1 + length*SimGlobals::time_factor)*2;
+			}//*/
+			if (std::find(idx_vect.begin(), idx_vect.end(), idx) != idx_vect.end()){
+				params.kp *= 1 + SimGlobals::time_factor;
+				params.kd = std::sqrt(params.kd*params.kd / 4 * (1 + SimGlobals::time_factor)) * 2;
+			}//*/
 			if (controlParams[i].relToCharFrame == false){
 				//get the current relative orientation between the child and parent
 				character->getRelativeOrientation(i, &qRel);
 				//and the relative angular velocity, computed in parent coordinates
 				character->getRelativeAngularVelocity(i, &wRel);
+
+				
+				
 				//now compute the torque
-				torques[i] = computePDTorque(qRel, rs.getJointRelativeOrientation(i), wRel, rs.getJointRelativeAngVelocity(i), &controlParams[i]);
+				torques[i] = computePDTorque(qRel, rs.getJointRelativeOrientation(i), wRel, rs.getJointRelativeAngVelocity(i), &params);
 				//the torque is expressed in parent coordinates, so we need to convert it to world coords now
 				torques[i] = character->getJoint(i)->getParent()->getWorldCoordinates(torques[i]);
 			}else{
 				RigidBody* childRB = character->getJoint(i)->getChild();
-				torques[i] = computePDTorque(childRB->getOrientation(), controlParams[i].charFrame * rs.getJointRelativeOrientation(i), childRB->getAngularVelocity(), rs.getJointRelativeAngVelocity(i), &controlParams[i]);
+				torques[i] = computePDTorque(childRB->getOrientation(), controlParams[i].charFrame * rs.getJointRelativeOrientation(i),
+					childRB->getAngularVelocity(), rs.getJointRelativeAngVelocity(i), &params);
 			}
 		}else{
 			torques[i].setValues(0,0,0);
