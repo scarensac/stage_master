@@ -128,6 +128,15 @@ Quaternion Quaternion::getRotationQuaternion(double angle, Vector3d &axis){
 }
 
 /**
+Just the const version of the above function
+*/
+Quaternion Quaternion::getRotationQuaternion(double angle,const Vector3d &axis){
+	Quaternion result(cos(angle / 2), axis * sin(angle / 2));
+	result.toUnit();
+	return result;
+}
+
+/**
 	This method will return a 4x4 matrix that represents an equivalent rotation as the given quaternion.
 */
 void Quaternion::getRotationMatrix(TransformationMatrix* m) const{

@@ -448,10 +448,10 @@ void ControllerEditor::processTask(){
 					double epsilon = avgSpeed - avg_speed;
 					epsilon *= 10;
 					if (conF->getController()->getStance() == RIGHT_STANCE){
-						SimGlobals::balance_force_factor_right += epsilon;
+						//SimGlobals::balance_force_factor_right += epsilon;
 					}
 					else{
-						SimGlobals::balance_force_factor_left += epsilon;
+						//SimGlobals::balance_force_factor_left += epsilon;
 					}
 				}
 

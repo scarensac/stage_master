@@ -148,6 +148,12 @@ public:
 	*/
 	static Quaternion getRotationQuaternion(double angle, Vector3d &axis);
 
+
+	/**
+	Just the const version of the above function
+	*/
+	static Quaternion Quaternion::getRotationQuaternion(double angle, const Vector3d &axis);
+
 	/**
 		This method is used to rotate the vector that is passed in as a parameter by the current quaternion (which is assumed to be a 
 		unit quaternion).

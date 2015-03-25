@@ -63,6 +63,15 @@ public:
 	~Character(void);
 
 	/**
+		This function is used to init the idxs of the joints
+	*/
+	void init_idxs(){
+		for (int i = 0; i<(int)joints.size(); ++i){
+			getJoint(i)->set_idx(i);
+		}
+	}
+
+	/**
 		This method is used to populate the relative orientation of the parent and child bodies of joint i.
 	*/
 	void getRelativeOrientation(int i, Quaternion* qRel);

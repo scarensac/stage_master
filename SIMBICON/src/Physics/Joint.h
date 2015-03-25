@@ -104,6 +104,9 @@ public:
 	//getter for the index
 	uint get_idx(){ return idx; }
 
+	//setter for the index (is used to modify the idxs so that they correcpond their position in the joint vector
+	void set_idx(uint new_idx){ idx=new_idx; }
+
 	/**
 		This method is used to automatically fix the errors in the joints (i.e. drift errors caused by numercial integration). At some future
 		point it can be changed into a proper stabilization technique.

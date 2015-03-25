@@ -47,6 +47,12 @@
     <ClCompile Include="SimBiController.cpp">
       <Filter>Source Files\Control</Filter>
     </ClCompile>
+    <ClCompile Include="TwoLinkIK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtualModelController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h">
@@ -83,6 +89,12 @@
       <Filter>Header Files\Control</Filter>
     </ClInclude>
     <ClInclude Include="ForcesUtilitary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TwoLinkIK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualModelController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

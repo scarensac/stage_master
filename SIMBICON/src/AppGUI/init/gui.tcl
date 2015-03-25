@@ -102,7 +102,8 @@ checkbutton .ground -text "Show Ground Plane" -variable drawGroundPlane -anchor 
 #.target select
 .ground select
 pack .labelView -side top -fill x -in .viewoptions -anchor w
-pack .axes .colprimitives .forces .target .fps .shadow .ground -side top -fill y -in .viewoptions -anchor w
+#pack .axes .colprimitives .forces .target .fps .shadow .ground -side top -fill y -in .viewoptions -anchor w
+pack .target .ground -side top -fill y -in .viewoptions -anchor w
 
 
 
@@ -173,6 +174,9 @@ scale .desiredheading -label "desired heading" -orient h -digit 4 -from -1.54 -t
 #### others
 scale .timefactor -label "time factor" -orient h -digit 4 -from 0 -to 3 -variable time_factor -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
+#### speed control
+scale .velCoronal -label "velCoronal" -orient h -digit 4 -from -1.5 -to 1.5 -variable vel_coronal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .velSagittal -label "velSagittal" -orient h -digit 4 -from -1.5 -to 1.5 -variable vel_sagittal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 
 #### other commands
@@ -185,7 +189,7 @@ pack .exit -in .buttonframe -pady 5 -side top
 
 wm resizable . 0 0
 
-pack .simsettings -in .mainframe -side top -fill x
+#pack .simsettings -in .mainframe -side top -fill x
 pack .viewoptions -in .mainframe -side top -fill x
 pack .camerasettings .followchar -in .mainframe -side top -fill x
 pack .simulatorlabel .simulatorframe .currPos -in .mainframe -side top -fill x
@@ -195,4 +199,6 @@ pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
 pack .desiredheading -in .mainframe -side top -fill x
 pack .timefactor -in .mainframe -side top -fill x
-pack .buttonframe -in .mainframe -side top -fill x
+pack .velCoronal -in .mainframe -side top -fill x
+pack .velSagittal -in .mainframe -side top -fill x
+#pack .buttonframe -in .mainframe -side top -fill x

@@ -62,4 +62,13 @@ public:
 		return character;
 	}
 
+	/**
+	Returns a pointer to the character's ith joint
+	*/
+	Vector3d getTorque(int i){
+		if (i < 0 || i >(int)torques.size() - 1)
+			return Vector3d(0,0,0);
+		return torques[i];
+	}
+
 };

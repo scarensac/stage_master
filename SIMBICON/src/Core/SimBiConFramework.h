@@ -65,6 +65,18 @@ private:
 	Vector3d com_displacement_last_step;
 	Vector3d com_displacement_previous_to_last_step;
 
+	//some members for IPM
+	double legLength;
+	double ankleBaseHeight;
+	double stepHeight;
+	double coronalStepWidth;
+
+	//we need to keep track of the position of the swing foot at the beginning of the step
+	Point3d swingFootStartPos;
+
+	//alternate planned foot trajectory, for cases where we need to go around the stance foot...
+	Trajectory3D alternateFootTraj;
+
 public:
 	SimBiConFramework(char* input, char* conFile = NULL);
 	virtual ~SimBiConFramework(void);
@@ -80,6 +92,40 @@ public:
 		otherwise.
 	*/
 	virtual bool advanceInTime(double dt, bool applyControl = true, bool recomputeTorques = true, bool advanceWorldInTime = true);
+
+	/**
+	this method gets called at every simulation time step
+	*/
+	virtual void simStepPlan(double dt);
+
+	virtual void adjustStepHeight();
+
+	/**
+	this method determines the degree to which the character should be panicking
+	*/
+	virtual double getPanicLevel();
+
+	/**
+	determines the desired swing foot location
+	*/
+	virtual void setDesiredSwingFootLocation();
+
+	/**
+	determine the estimate desired location of the swing foot, given the etimated position of the COM, and the phase
+	*/
+	virtual Vector3d computeSwingFootLocationEstimate(const Point3d& comPos, double phase);
+
+
+	/**
+	modify the coronal location of the step so that the desired step width results.
+	*/
+	double adjustCoronalStepLocation(double IPPrediction);
+
+	/**
+	returns a panic level which is 0 if val is between minG and maxG, 1 if it's
+	smaller than minB or larger than maxB, and linearly interpolated
+	*/
+	double getValueInFuzzyRange(double val, double minB, double minG, double maxG, double maxB);
 
 	/**
 		this method is used to load the conroller settings/states from a file.

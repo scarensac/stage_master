@@ -175,10 +175,10 @@ void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_h
 			params.kp *= 1 + length*SimGlobals::time_factor;
 			params.kd =std::sqrt(params.kd*params.kd/4* 1 + length*SimGlobals::time_factor)*2;
 			}//*/
-			if (std::find(idx_vect.begin(), idx_vect.end(), idx) != idx_vect.end()){
-				params.kp *= 1 + SimGlobals::time_factor;
-				params.kd = std::sqrt(params.kd*params.kd / 4 * (1 + SimGlobals::time_factor)) * 2;
-			}//*/
+			//if (std::find(idx_vect.begin(), idx_vect.end(), idx) != idx_vect.end()){
+				params.kp *= SimGlobals::time_factor;
+				params.kd = std::sqrt(params.kd*params.kd / 4 * (SimGlobals::time_factor)) * 2;
+			//}//*/
 			if (controlParams[i].relToCharFrame == false){
 				//get the current relative orientation between the child and parent
 				character->getRelativeOrientation(i, &qRel);
