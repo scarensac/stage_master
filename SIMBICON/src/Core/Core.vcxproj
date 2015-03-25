@@ -89,6 +89,8 @@
     <ClCompile Include="SimBiConFramework.cpp" />
     <ClCompile Include="SimBiConState.cpp" />
     <ClCompile Include="SimBiController.cpp" />
+    <ClCompile Include="TwoLinkIK.cpp" />
+    <ClCompile Include="VirtualModelController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
@@ -103,6 +105,8 @@
     <ClInclude Include="SimBiConFramework.h" />
     <ClInclude Include="SimBiConState.h" />
     <ClInclude Include="SimBiController.h" />
+    <ClInclude Include="TwoLinkIK.h" />
+    <ClInclude Include="VirtualModelController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

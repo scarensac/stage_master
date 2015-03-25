@@ -28,6 +28,8 @@
 #include <Utils/Utils.h>
 #include <Physics/RigidBody.h>
 #include "SimBiConState.h"
+#include "Trajectory.h"
+#include "VirtualModelController.h"
 
 
 /**
@@ -64,9 +66,7 @@ private:
 	RigidBody* rFoot;
 	//we will also keep a reference to the root of the figure, to be able to identify the semi-global coordinate frame quickly
 	RigidBody* root;
-	//we also need to keep track of the joint indices in the articulated figure for the two hips, since they are special
-	int lHipIndex;
-	int rHipIndex;
+
 	//this is a collection of the states that are used in the controller
 	DynamicArray<SimBiConState*> states;
 
@@ -84,12 +84,7 @@ private:
 */
 	//this value indicates which side is the stance side. 
 	int stance;
-	//a pointer to the swing and stance feet
-	RigidBody* stanceFoot;
-	RigidBody* swingFoot;
-	//keep track of the swing and stance hip indices
-	int stanceHipIndex;
-	int swingHipIndex;
+
 	//this is the index of the controller that is currently active
 	int FSMStateIndex;
 
@@ -98,6 +93,8 @@ private:
 	//this is the velocity of the cm of the character
 	Vector3d v;
 
+	//this is the distance between the COM and the midpoint between the feet
+	Vector3d doubleStanceCOMError;
 
 	//the phase parameter, phi must have values between 0 and 1, and it indicates the progress through the current state.
 	double phi;
@@ -111,6 +108,69 @@ private:
 	//this variable, updated everytime the controller state is advanced in time, is set to true if any body other than the feet are in contact
 	//with the ground, false otherwise. A higer level process can determine if the controller failed or not, based on this information.
 	bool bodyTouchedTheGround;
+
+	//this is a controller that we will be using to compute gravity-cancelling torques
+	VirtualModelController* vmc;
+
+public:
+	//keep a copy of the initial character state, starting stance and file that contains the character's initial state
+	int startingState;
+	int startingStance;
+	char initialBipState[100];
+
+	//the next members are for the implementation of the IPM
+
+	//desired velocity in the sagittal plane
+	double velDSagittal;
+	//desired velocity in the coronal plane...
+	double velDCoronal;
+
+	//this is a desired foot trajectory that we may wish to follow, expressed separately, for the 3 components,
+	//and relative to the current location of the CM
+	Trajectory1D swingFootTrajectorySagittal;
+	Trajectory1D swingFootTrajectoryCoronal;
+	Trajectory1D swingFootHeightTrajectory;
+	Trajectory1D swingFootTrajectoryDeltaSagittal;
+	Trajectory1D swingFootTrajectoryDeltaCoronal;
+	Trajectory1D swingFootTrajectoryDeltaHeight;
+
+	//this is the vector that specifies the plane of rotation for the swing leg, relative to the root...
+	Vector3d swingLegPlaneOfRotation;
+
+	//desired offset of the CM relative to the stance foot/midpoint of the feet
+	double comOffsetSagittal;
+	double comOffsetCoronal;
+
+	//this variable can be used to quickly alter the desired height, if panic ensues...
+	double panicHeight;
+	//and this should be used to add height for the leg (i.e. if it needs to step over an obstacle that wasn't planned for).
+	double unplannedForHeight;
+
+	//a pointer to the swing and stance feet
+	RigidBody* stanceFoot;
+	RigidBody* swingFoot;
+
+
+	//keep track of the legs
+	int swingHipIndex, swingKneeIndex, swingAnkleIndex;
+	int stanceHipIndex, stanceAnkleIndex, stanceKneeIndex;
+
+	Joint *swingKnee, *swingHip;
+
+	//we also keep the indices (useless and should be removed when refactoring)
+	int lHipIndex;
+	int rHipIndex;
+	int lKneeIndex, rKneeIndex, lAnkleIndex, rAnkleIndex;
+
+	//I'll store the stance I am in so i don't have to do it endlessly
+	int stance_mode;//-1 no feet on ground, 0 one foot on ground, 1 both feet on ground
+	double stanceHipToSwingHipRatio;
+
+
+protected:
+
+
+
 
 	/**
 		This method is used to parse the information passed in the string. This class knows how to read lines
@@ -161,6 +221,42 @@ private:
 	*/
 	double getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs);
 
+
+	/**
+	This method is used to compute the target angles for the swing hip and swing knee that help
+	to ensure (approximately) precise foot-placement control.
+	*/
+	void computeIKSwingLegTargets(double dt);
+
+	/**
+	This method returns a target for the location of the swing foot, based on some state information. It is assumed that the velocity v
+	is expressed in character-relative coordinates (i.e. the sagittal component is the z-component), while the com position, and the
+	initial swing foot position is expressed in world coordinates. The resulting desired foot position is also expressed in world coordinates.
+	*/
+	Point3d getSwingFootTargetLocation(double t, const Point3d& com, const Quaternion& charFrameToWorld);
+
+	Vector3d computeSwingFootDelta(double phiToUse = -1, int stanceToUse = -1);
+
+	/**
+	This method is used to compute the desired orientation and angular velocity for a parent RB and a child RB, relative to the grandparent RB and
+	parent RB repsectively. The input is:
+	- the index of the joint that connects the grandparent RB to the parent RB, and the index of the joint between parent and child
+
+	- the distance from the parent's joint with its parent to the location of the child's joint, expressed in parent coordinates
+
+	- two rotation normals - one that specifies the plane of rotation for the parent's joint, expressed in grandparent coords,
+	and the other specifies the plane of rotation between the parent and the child, expressed in parent's coordinates.
+
+	- The position of the end effector, expressed in child's coordinate frame
+
+	- The desired position of the end effector, expressed in world coordinates
+
+	- an estimate of the desired position of the end effector, in world coordinates, some dt later - used to compute desired angular velocities
+	*/
+	void computeIKQandW(int parentJIndex, int childJIndex, const Vector3d& parentAxis, const Vector3d& parentNormal, const Vector3d& childNormal, const Vector3d& childEndEffector, const Point3d& wP, bool computeAngVelocities, const Point3d& futureWP, double dt);
+
+
+
 	/**
 		This method is used to compute the torques that need to be applied to the stance and swing hips, given the
 		desired orientation for the root and the swing hip. The coordinate frame that these orientations are expressed
@@ -168,7 +264,7 @@ private:
 		between 0 and 1, and it corresponds to the percentage of the total net vertical force that rests on the stance
 		foot.
 	*/
-	void computeHipTorques(const Quaternion& qRootD, const Quaternion& qSwingHipD, double stanceHipToSwingHipRatio);
+	void computeHipTorques(const Quaternion& qRootD, const Quaternion& qSwingHipD, double stanceHipToSwingHipRatio, Vector3d& ffRootTorque);
 
 	/**
 		This method is used to resolve the names (map them to their index) of the joints
@@ -186,11 +282,7 @@ private:
 	*/
 	RigidBody* getRBBySymbolicName(char* sName);
 
-public:
-	//keep a copy of the initial character state, starting stance and file that contains the character's initial state
-	int startingState;
-	int startingStance;
-	char initialBipState[100];
+
 
 public:
 	/**
@@ -202,6 +294,16 @@ public:
 		Destructor
 	*/
 	virtual ~SimBiController(void);
+
+	
+	
+	inline Vector3d get_d(){
+		return d;
+	}
+	
+	inline Vector3d get_v(){
+		return v;
+	}
 	
 	Vector3d get_step_size(){
 		if (rFoot != NULL && lFoot != NULL){
@@ -210,9 +312,64 @@ public:
 	}
 
 	/**
+	updates the indexes of the swing and stance hip, knees and ankles
+	*/
+	void updateSwingAndStanceReferences();
+
+
+	/**
 		This method is used to compute the torques that are to be applied at the next step.
 	*/
 	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact);
+
+	/**
+	This method is used to compute the target orientations using the current FSM
+	*/
+	void evaluateJointTargets(ReducedCharacterState& poseRS, Quaternion& qRootD);
+
+	/**
+	This method is used to ensure that each RB sees the net torque that the PD controller computed for it.
+	Without it, an RB sees also the sum of -t of every child.
+	*/
+	void bubbleUpTorques();
+
+	/**
+	This method computes the torques that cancel out the effects of gravity,
+	for better tracking purposes
+	*/
+	void computeGravityCompensationTorques();
+
+	/**
+	This function simulate a force on the COM to achieve the desired speed in the sagittal and corronal pane
+	*/
+	void COMJT(DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque);
+
+	/**
+	This method is used to compute the force that the COM of the character should be applying.
+	*/
+	Vector3d computeVirtualForce();
+
+	/**
+	This method returns performes some pre-processing on the virtual torque. The torque is assumed to be in world coordinates,
+	and it will remain in world coordinates.
+	*/
+	void preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<ContactPoint> *cfs, Vector3d *ankleVTorque);
+
+	/**
+	determines if there are any heel/toe forces on the given RB
+	*/
+	void getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, bool* heelForce, bool* toeForce);
+
+	/**
+	check to see if rb is the same as whichBody or any of its children
+	*/
+	bool haveRelationBetween(RigidBody* rb, RigidBody* whichBody);
+
+	/**
+	This method is used to compute torques for the stance leg that help achieve a desired speed in the sagittal and lateral planes
+	*/
+	void computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque,double leg_ratio);
+
 
 	/**
 		This method is used to advance the controller in time. It takes in a list of the contact points, since they might be
@@ -220,6 +377,13 @@ public:
 		or the index of the state that it transitions to otherwise.
 	*/
 	int advanceInTime(double dt, DynamicArray<ContactPoint> *cfs);
+
+	/**
+	returns the required stepping location, as predicted by the inverted pendulum model. The prediction is made
+	on the assumption that the character will come to a stop by taking a step at that location. The step location
+	is expressed in the character's frame coordinates.
+	*/
+	Vector3d computeIPStepLocation();
 
 	/**
 		This method is used to populate the structure that is passed in with the current state

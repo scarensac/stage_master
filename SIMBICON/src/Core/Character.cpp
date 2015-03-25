@@ -36,6 +36,12 @@ Character::Character(ArticulatedFigure* ch){
 	//populate the joints while at it
 	joints.clear();
 	af->addJointsToList(&joints);
+
+	//and now set the idxs of the joints
+	init_idxs();
+
+	//we init the mass of the af
+	af->computeMass();
 }
 
 /**

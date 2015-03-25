@@ -30,6 +30,13 @@
 #include "Core\ForcesUtilitary.h"
 
 SimBiConFramework::SimBiConFramework(char* input, char* conFile){
+	//we should estimate these from the character info...
+	legLength = 0.94;
+	ankleBaseHeight = 0.05;
+	stepHeight = 0.05;
+	coronalStepWidth=0.2;
+
+
 	//create the physical world...
 	pw = SimGlobals::getRBEngine();
 	con = NULL;
@@ -116,6 +123,8 @@ SimBiConFramework::~SimBiConFramework(void){
 */
 
 bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recomputeTorques, bool advanceWorldInTime){
+	//init some variables
+	simStepPlan(dt);
 
 	//some static var for later use
 	static Vector3d cur_com = Vector3d(0, 0, 0);
@@ -128,7 +137,7 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 	world->compute_water_impact(con->get_character(),SimGlobals::water_level, resulting_impact);
 
 	//I'll add a force for the control of the speed (only for now, I will have to convert it to virtual torques)
-	Joint* torso_joint = con->get_character()->getJointByNameOfChild("torso");
+	/*Joint* torso_joint = con->get_character()->getJointByNameOfChild("torso");
 	RigidBody* body = torso_joint->getChild();
 
 	double factor;
@@ -136,7 +145,7 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		(1 - SimGlobals::left_stance_factor)*SimGlobals::balance_force_factor_right);
 	//factor = (SimGlobals::balance_force_factor_right + SimGlobals::balance_force_factor_left) / 2;
 	Vector3d F = -Vector3d(0, 0, 1)*SimGlobals::liquid_density / 3000.0* 5.0 * factor;
-	world->applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+	world->applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));*/
 
 	//I'll also add a force to help the caracter follow the heading 
 	//don't work
@@ -170,20 +179,243 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	//here we are assuming that each FSM state represents a new step. 
 	if (newFSMState){
+		//we save the position of the swing foot (which is the old stance foot) and of the stance foot
+		swingFootStartPos=lastFootPos;
+
 		lastStepTaken = Vector3d(lastFootPos, con->getStanceFootPos());
 		//now express this in the 'relative' character coordinate frame instead of the world frame
 		lastStepTaken = con->getCharacterFrame().getComplexConjugate().rotate(lastStepTaken);
 		lastFootPos = con->getStanceFootPos();
 
+		//we save the com displacement (to know if we deviate^^)
 		Vector3d old_com = cur_com;
 		cur_com = getCharacter()->getCOM();
 
 		com_displacement_previous_to_last_step = com_displacement_last_step;
 		com_displacement_last_step = cur_com - old_com;
 		
+		//now prepare the step information for the following step:
+		con->swingFootHeightTrajectory.clear();
+		con->swingFootTrajectoryCoronal.clear();
+		con->swingFootTrajectorySagittal.clear();
+
+		con->swingFootHeightTrajectory.addKnot(0, ankleBaseHeight);
+		con->swingFootHeightTrajectory.addKnot(0.5, ankleBaseHeight + 0.01 + stepHeight);
+		con->swingFootHeightTrajectory.addKnot(1, ankleBaseHeight + 0.01);
+
+		con->swingFootTrajectoryCoronal.addKnot(0, 0);
+		con->swingFootTrajectoryCoronal.addKnot(1, 0);
+
+		con->swingFootTrajectorySagittal.addKnot(0, 0);
+		con->swingFootTrajectorySagittal.addKnot(1, 0);
+
+		
+
 	}
 
 	return newFSMState;
+}
+
+
+/**
+this method gets called at every simulation time step
+*/
+void SimBiConFramework::simStepPlan(double dt){
+	con->updateSwingAndStanceReferences();
+	if (con->getPhase()<= 0.01)
+		swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
+
+	//compute desired swing foot location...
+	setDesiredSwingFootLocation();
+
+	//set some of these settings
+	//the commented ones are used to modify the trajectories (but srly i don't care right now)
+	//setUpperBodyPose(ubSagittalLean, ubCoronalLean, ubTwist);
+	//setKneeBend(kneeBend);
+	//setDuckWalkDegree((lowLCon->stance == LEFT_STANCE) ? (-duckWalk) : (duckWalk));
+	//setDesiredHeading(desiredHeading);
+	//this one may be usefull but I'll use constant speed for now
+	//setVelocities(velDSagittal, velDCoronal);
+
+	//adjust for panic mode or unplanned terrain...
+	adjustStepHeight();
+
+	//and see if we're really in trouble...
+	//	if (shouldAbort()) onAbort();
+}
+
+void SimBiConFramework::adjustStepHeight(){
+	con->unplannedForHeight = 0;
+	//srly fu the oracle for now
+	/*
+	if (wo != NULL){
+		//the trajectory of the foot was generated without taking the environment into account, so check to see if there are any un-planned bumps (at somepoint in the near future)
+		con->unplannedForHeight = wo->getWorldHeightAt(con->getSwingFootPos() + con->swingFoot->getCMVelocity() * 0.1) * 1.5;
+	}//*/
+
+	//if the foot is high enough, we shouldn't do much about it... also, if we're close to the start or end of the
+	//walk cycle, we don't need to do anything... the thing below is a quadratic that is 1 at 0.5, 0 at 0 and 1...
+	double panicIntensity = -4 * con->getPhase() * con->getPhase() + 4 * con->getPhase();
+	panicIntensity *= getPanicLevel();
+	con->panicHeight = panicIntensity * 0.05;
+}
+
+
+
+/**
+this method determines the degree to which the character should be panicking
+*/
+double SimBiConFramework::getPanicLevel(){
+	//the estimate of the panic is given, roughly speaking by the difference between the desired and actual velocities
+	double panicEstimate = 0;
+	panicEstimate += getValueInFuzzyRange(con->get_v().z, con->velDSagittal - 0.4, con->velDSagittal - 0.3, con->velDSagittal + 0.3, con->velDSagittal + 0.4);
+	panicEstimate += getValueInFuzzyRange(con->get_v().x, con->velDCoronal - 0.3, con->velDCoronal - 0.2, con->velDCoronal + 0.2, con->velDCoronal + 0.3);
+	//	boundToRange(&panicEstimate, 0, 1);
+	return panicEstimate / 2;
+}
+
+/**
+determines the desired swing foot location
+*/
+void SimBiConFramework::setDesiredSwingFootLocation(){
+	Point3d com_pos = con->get_character()->getCOM();
+	Point3d com_vel = con->get_character()->getCOMVelocity();
+	double phi = con->getPhase();
+	Vector3d step = computeSwingFootLocationEstimate(com_pos, phi);
+	con->swingFootTrajectoryCoronal.setKnotValue(0, step.x);
+	con->swingFootTrajectorySagittal.setKnotValue(0, step.z);
+
+	double dt = 0.001;
+	step = computeSwingFootLocationEstimate(com_pos + Vector3d(com_vel) * dt, phi + dt);
+	con->swingFootTrajectoryCoronal.setKnotValue(1, step.x);
+	con->swingFootTrajectorySagittal.setKnotValue(1, step.z);
+	//to give some gradient information, here's what the position will be a short time later...
+
+	con->swingFootTrajectorySagittal.setKnotPosition(0, phi);
+	con->swingFootTrajectorySagittal.setKnotPosition(1, phi + dt);
+
+	con->swingFootTrajectoryCoronal.setKnotPosition(0, phi);
+	con->swingFootTrajectoryCoronal.setKnotPosition(1, phi + dt);
+}
+
+
+/**
+determine the estimate desired location of the swing foot, given the etimated position of the COM, and the phase
+*/
+Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comPos, double phase){
+	Vector3d step = con->computeIPStepLocation();
+
+	//applying the IP prediction would make the character stop, so take a smaller step if you want it to walk faster, or larger
+	//if you want it to go backwards
+	step.z -= con->velDSagittal / 20;
+	//and adjust the stepping in the coronal plane in order to account for desired step width...
+	step.x = adjustCoronalStepLocation(step.x);
+
+	boundToRange(&step.z, -0.4 * legLength, 0.4 * legLength);
+	boundToRange(&step.x, -0.4 * legLength, 0.4 * legLength);
+
+	Vector3d result;
+	Vector3d initialStep(comPos, swingFootStartPos);
+	initialStep = con->getCharacterFrame().inverseRotate(initialStep);
+	//when phi is small, we want to be much closer to where the initial step is - so compute this quantity in character-relative coordinates
+	//now interpolate between this position and initial foot position - but provide two estimates in order to provide some gradient information
+	double t = (1 - phase);
+	t = t * t;
+	boundToRange(&t, 0, 1);
+
+	Vector3d suggestedViaPoint;
+	alternateFootTraj.clear();
+	bool needToStepAroundStanceAnkle = false;
+
+	//TODO integrate the leg intersection.
+	//FOr now let's forget the legs intersections
+	//if (phase < 0.8 && shouldPreventLegIntersections && getPanicLevel() < 0.5)
+	//	needToStepAroundStanceAnkle = detectPossibleLegCrossing(step, &suggestedViaPoint);
+	
+	
+	if (needToStepAroundStanceAnkle){
+		//use the via point...
+		Vector3d currentSwingStepPos(comPos, con->getSwingFootPos());
+		currentSwingStepPos = con->getCharacterFrame().inverseRotate(initialStep); currentSwingStepPos.y = 0;
+		//compute the phase for the via point based on: d1/d2 = 1-x / x-phase, where d1 is the length of the vector from
+		//the via point to the final location, and d2 is the length of the vector from the swing foot pos to the via point...
+		double d1 = (step - suggestedViaPoint).length(); double d2 = (suggestedViaPoint - currentSwingStepPos).length(); if (d2 < 0.0001) d2 = d1 + 0.001;
+		double c = d1 / d2;
+		double viaPointPhase = (1 + phase*c) / (1 + c);
+		//now create the trajectory...
+		alternateFootTraj.addKnot(0, initialStep);
+		alternateFootTraj.addKnot(viaPointPhase, suggestedViaPoint);
+		alternateFootTraj.addKnot(1, step);
+		//and see what the interpolated position is...
+		result = alternateFootTraj.evaluate_catmull_rom(1.0 - t);
+		//		tprintf("t: %lf\n", 1-t);
+	}
+	else{
+		result.addScaledVector(step, 1.0 - t);
+		result.addScaledVector(initialStep, t);
+	}
+
+	result.y = 0;
+
+	/*
+	suggestedFootPosDebug = result;
+	*/
+	return result;
+}
+
+
+/**
+modify the coronal location of the step so that the desired step width results.
+*/
+double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
+	//nothing to do if it's the default value...
+	if (coronalStepWidth < 0.01)
+		return IPPrediction;
+
+	double stepWidth = coronalStepWidth / 2;
+	stepWidth = (con->getStance() == LEFT_STANCE) ? (-stepWidth) : (stepWidth);
+
+	//now for the step in the coronal direction - figure out if the character is still doing well - panic = 0 is good, panic = 1 is bad...
+	double panicLevel = 1;
+	
+	if (con->getStance() == LEFT_STANCE){
+		panicLevel = getValueInFuzzyRange(con->get_d().x, 1.15 * stepWidth, 0.5 * stepWidth, 0.25 * stepWidth, -0.25 * stepWidth);
+		panicLevel += getValueInFuzzyRange(con->get_v().x, 2 * stepWidth, stepWidth, -stepWidth, -stepWidth*1.5);
+	}
+	else{
+		panicLevel = getValueInFuzzyRange(con->get_d().x, -0.25 * stepWidth, 0.25 * stepWidth, 0.5 * stepWidth, 1.15 * stepWidth);
+		panicLevel += getValueInFuzzyRange(con->get_v().x, -stepWidth*1.5, -stepWidth, stepWidth, 2 * stepWidth);
+	}
+	boundToRange(&panicLevel, 0, 1);
+	Trajectory1D offsetMultiplier;
+	offsetMultiplier.addKnot(0.05, 0); offsetMultiplier.addKnot(0.075, 1 / 2.0);
+	double offset = stepWidth * offsetMultiplier.evaluate_linear(fabs(stepWidth));
+	//	if (IPPrediction * stepWidth < 0) offset = 0;
+	//if it's doing well, use the desired step width...
+	IPPrediction = panicLevel * (IPPrediction + offset) + (1 - panicLevel) * stepWidth;
+	con->comOffsetCoronal = (1 - panicLevel) * stepWidth;
+
+	//	if (panicLevel >= 1)
+	//		tprintf("panic level: %lf; d.x = %lf\n", panicLevel, lowLCon->d.x);
+
+	return IPPrediction;
+}
+
+/**
+returns a panic level which is 0 if val is between minG and maxG, 1 if it's
+smaller than minB or larger than maxB, and linearly interpolated
+*/
+double SimBiConFramework::getValueInFuzzyRange(double val, double minB, double minG, double maxG, double maxB){
+	if (val <= minB || val >= maxB)
+		return 1;
+	if (val >= minG && val <= maxG)
+		return 0;
+	if (val > minB && val < minG)
+		return (minG - val) / (minG - minB);
+	if (val > maxG && val < maxB)
+		return (val - maxG) / (maxB - maxG);
+	//the input was probably wrong, so return panic...
+	return 1;
 }
 
 /**

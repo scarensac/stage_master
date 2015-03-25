@@ -59,7 +59,7 @@ double SimGlobals::stanceKnee = 0;
 double SimGlobals::COMOffsetX = 0;
 double SimGlobals::COMOffsetZ = 0;
 
-double SimGlobals::time_factor = 0;
+double SimGlobals::time_factor = 1;
 
 double SimGlobals::force_alpha = 0;
 double SimGlobals::water_level = 0;
@@ -68,3 +68,8 @@ double SimGlobals::balance_force_factor_left = 0;
 double SimGlobals::balance_force_factor_right = 0;
 double SimGlobals::left_stance_factor = 0;
 std::vector<ForceStruct> SimGlobals::vect_forces = std::vector<ForceStruct>();
+
+//for the deplacement direction control
+double SimGlobals::velDSagittal = 0.95;
+double SimGlobals::velDCoronal = 0;
+

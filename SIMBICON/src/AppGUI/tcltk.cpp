@@ -301,6 +301,10 @@ int Tcl_AppInit(Tcl_Interp *interp){
 
 	Tcl_LinkVar(interp, "time_factor", (char *)&SimGlobals::time_factor, TCL_LINK_DOUBLE);
 
+	//speed control variables
+	Tcl_LinkVar(interp, "vel_coronal", (char *)&SimGlobals::velDCoronal, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "vel_sagittal", (char *)&SimGlobals::velDSagittal, TCL_LINK_DOUBLE);
+
 
 	Tcl_EvalFile(interp, "init/setup.tcl");
 
