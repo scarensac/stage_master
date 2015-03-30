@@ -145,7 +145,7 @@ A_RigidBody
 #	CDP_Sphere 0.02 -0.025 0.045 0.01
 #	CDP_Sphere -0.02 -0.025 0.045 0.01		
 	
-	frictionCoefficient 0.8
+	frictionCoefficient  0.8
 	restitutionCoefficient 0.35	
 	
 	ODEGroundParameters 0.0002 0.2
@@ -167,10 +167,11 @@ A_RigidBody
 #	CDP_Sphere 0.02 -0.025 0.045 0.01
 #	CDP_Sphere -0.02 -0.025 0.045 0.01		
 
-	frictionCoefficient 0.8
+	frictionCoefficient  0.8
 	restitutionCoefficient 0.35	
 	
 	ODEGroundParameters 0.0002 0.2
+
 /End
 
 A_RigidBody

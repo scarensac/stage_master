@@ -31,10 +31,10 @@
 
 SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	//we should estimate these from the character info...
-	legLength = 0.94;
+	legLength = 0.90;//the leg does 0.94 but since the leg ain't centered on the pelvis the effective length is a bit lower
 	ankleBaseHeight = 0.05;
-	stepHeight = 0.05;
-	coronalStepWidth=0.2;
+	stepHeight = 0.15;
+	coronalStepWidth=0.1;
 
 
 	//create the physical world...
@@ -221,6 +221,9 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 this method gets called at every simulation time step
 */
 void SimBiConFramework::simStepPlan(double dt){
+	//we start by initializing the speed
+	con->calc_desired_velocities(con->getPhase());
+
 	con->updateSwingAndStanceReferences();
 	if (con->getPhase()<= 0.01)
 		swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
@@ -285,17 +288,19 @@ void SimBiConFramework::setDesiredSwingFootLocation(){
 	con->swingFootTrajectoryCoronal.setKnotValue(0, step.x);
 	con->swingFootTrajectorySagittal.setKnotValue(0, step.z);
 
-	double dt = 0.001;
-	step = computeSwingFootLocationEstimate(com_pos + Vector3d(com_vel) * dt, phi + dt);
+	double dt = SimGlobals::dt;
+	double nphi= phi+ dt/con->get_cur_state_time();
+	step = computeSwingFootLocationEstimate(com_pos + Vector3d(com_vel) * dt, nphi);
 	con->swingFootTrajectoryCoronal.setKnotValue(1, step.x);
 	con->swingFootTrajectorySagittal.setKnotValue(1, step.z);
 	//to give some gradient information, here's what the position will be a short time later...
 
+
 	con->swingFootTrajectorySagittal.setKnotPosition(0, phi);
-	con->swingFootTrajectorySagittal.setKnotPosition(1, phi + dt);
+	con->swingFootTrajectorySagittal.setKnotPosition(1, nphi);
 
 	con->swingFootTrajectoryCoronal.setKnotPosition(0, phi);
-	con->swingFootTrajectoryCoronal.setKnotPosition(1, phi + dt);
+	con->swingFootTrajectoryCoronal.setKnotPosition(1, nphi);
 }
 
 
@@ -320,6 +325,8 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 	//when phi is small, we want to be much closer to where the initial step is - so compute this quantity in character-relative coordinates
 	//now interpolate between this position and initial foot position - but provide two estimates in order to provide some gradient information
 	double t = (1 - phase);
+	
+	//I comment this line cose I want the linear model back
 	t = t * t;
 	boundToRange(&t, 0, 1);
 
@@ -368,12 +375,30 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 modify the coronal location of the step so that the desired step width results.
 */
 double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
-	//nothing to do if it's the default value...
-	if (coronalStepWidth < 0.01)
-		return IPPrediction;
 
+
+	//when the caracter ain't in a falling situation
+	// double speed_control= con->get_v().x;
+
+
+	//this addjust to the specifed step width
 	double stepWidth = coronalStepWidth / 2;
 	stepWidth = (con->getStance() == LEFT_STANCE) ? (-stepWidth) : (stepWidth);
+
+	if (con->getPhase() > 0.8){
+		//IPPrediction += IPPrediction / 20;
+	}
+
+	//if (stepWidth*speed_control > 0){
+		IPPrediction += stepWidth;
+	//}
+	//else{
+	//	IPPrediction += speed_control;
+	//}
+
+
+	//I'll disable all the panic system for now ...
+	/**
 
 	//now for the step in the coronal direction - figure out if the character is still doing well - panic = 0 is good, panic = 1 is bad...
 	double panicLevel = 1;
@@ -397,6 +422,7 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 
 	//	if (panicLevel >= 1)
 	//		tprintf("panic level: %lf; d.x = %lf\n", panicLevel, lowLCon->d.x);
+	//*/
 
 	return IPPrediction;
 }

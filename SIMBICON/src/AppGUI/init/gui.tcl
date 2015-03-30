@@ -103,7 +103,7 @@ checkbutton .ground -text "Show Ground Plane" -variable drawGroundPlane -anchor 
 .ground select
 pack .labelView -side top -fill x -in .viewoptions -anchor w
 #pack .axes .colprimitives .forces .target .fps .shadow .ground -side top -fill y -in .viewoptions -anchor w
-pack .target .ground -side top -fill y -in .viewoptions -anchor w
+pack .target .ground .forces -side top -fill y -in .viewoptions -anchor w
 
 
 
@@ -165,7 +165,7 @@ pack .push .curve .controlHeading -side top -fill y -in .characterframe -anchor 
 
 #### water simulation control
 scale .waterlvl -label "Water level" -orient h -digit 4 -from 0.0 -to 3.0 -variable waterLevel -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
-scale .waterstr -label "Water strength" -orient h -digit 7 -from 0.0 -to 1000000.0 -variable forceAlpha -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .waterstr -label "Water strength" -orient h -digit 7 -from 0.0 -to 300000.0 -variable forceAlpha -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 scale .liquiddensity -label "Liquid Density" -orient h -digit 4 -from 0.0 -to 12000.0 -variable liquidDensity -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 #### heading control

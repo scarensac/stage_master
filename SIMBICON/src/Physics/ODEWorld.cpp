@@ -1329,7 +1329,7 @@ ForceStruct ODEWorld::compute_buoyancy(Joint* joint, float water_level){
 
 	if (!result_force.F.isZeroVector()){
 		applyForceTo(body, result_force.F, result_force.pt);
-		//*
+		/*
 		//this can be used to show the forces
 		ForceStruct show_force = result_force;
 		result_force.pt = body->getWorldCoordinates(result_force.pt);
@@ -1729,6 +1729,7 @@ ForceStruct ODEWorld::compute_buoyancy_on_capsule(RigidBody* body, float water_l
 					Vector3d F = Vector3d(0, 1, 0)*V*density*gravity;
 					Point3d inter = Vector3d(wA + wB) / 2;
 					Point3d pt = body->getLocalCoordinates(inter);
+					Point3d pt2 = body->getLocalCoordinates(body->getCMPosition());
 
 					//applyForceTo(body, F, pt);
 
