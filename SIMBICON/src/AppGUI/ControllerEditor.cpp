@@ -106,9 +106,11 @@ void ControllerEditor::drawDesiredTarget(){
 	glPushMatrix();
 	Point3d p = ch->getRoot()->getCMPosition();
 	//this is where we will be drawing the target pose
-	p.x += 2;
-	p.y = 1.35;
+	p.x += 1;
+	p.y = 1;
 	p.z += 0;
+
+	Globals::window->setCameraTarget(p);
 
 	worldState.clear();
 	conF->getWorld()->getState(&worldState);
@@ -170,7 +172,7 @@ void ControllerEditor::draw(bool shadowMode){
 				GLUtils::drawCone(0.03, c->f * 0.01, c->cp+c->f*0.09);
 			}*/
 			std::vector<ForceStruct> vect = SimGlobals::vect_forces;
-			double factor = 0.01;
+			double factor = 0.001;
 			for (uint i = 0; i < vect.size(); ++i){
 				GLUtils::drawCylinder(0.005, vect[i].F * 9*factor, vect[i].pt);
 				GLUtils::drawCone(0.015, vect[i].F * 1 * factor, vect[i].pt + vect[i].F * 9 * factor);
@@ -367,20 +369,14 @@ void ControllerEditor::processTask(){
 			//get the current phase, pose and state and update the GUI
 			double phi = conF->getController()->getPhase();
 
-			if (ratio > 0){
-				//phi *= ratio;
-				
-			}
+			
 
 
 			lastFSMState = conF->getController()->getFSMState();
 			double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
-			if (count_step >= 10&&phi>0.1){
-				//Globals::targetPosePhase = phi;
-				if (cur_height>conF->getController()->getSwingFootPos().y){
-					Globals::targetPosePhase = phi;
-				}
-			}
+
+			Globals::targetPosePhase = phi;
+
 			
 			cur_height = conF->getController()->getSwingFootPos().y;
 			
@@ -399,14 +395,7 @@ void ControllerEditor::processTask(){
 				dTrajZ.clear();
 				vTrajX.clear();
 				vTrajZ.clear();
-				if (count_step == 10){
-					initial_phi = last_phi;
-				}
-				if (count_step > 10){
-					ratio += initial_phi/last_phi - 1;
-
-					//conF->getController()->getState(conF->getController()->getFSMState())->adapt_state_time(SimGlobals::time_factor);
-				}				
+							
 			}
 
 			//we add the current position to the trajectory
@@ -441,7 +430,6 @@ void ControllerEditor::processTask(){
 				if (count_step == 10){
 					avg_speed = avgSpeed;
 
-					initial_phi = phi;
 					tprintf("ref speed = %lf \n", avg_speed);
 				}
 				if (count_step > 10){

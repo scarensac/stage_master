@@ -38,7 +38,9 @@ public:
 		if (r > (r1 + r2) * 0.993)
 			r = (r1 + r2) * 0.993;
 		//this is the length of the vector starting at p1 and going to the midpoint between p1 and p2
-		double a = (r1 * r1 - r2 * r2 + r * r) / (2 * r);
+		//I commented the old formula for 'a' because I relay don't get what they tried  and their calculation don't give the middle for sure
+		double a = r / 2;
+		//double a = (r1 * r1 - r2 * r2 + r * r) / (2 * r);
 		double tmp = r1*r1 - a*a;
 		if (tmp < 0)
 			tmp = 0;

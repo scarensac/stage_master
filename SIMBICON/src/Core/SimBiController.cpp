@@ -26,6 +26,7 @@
 #include "SimGlobals.h"
 #include "ConUtils.h"
 #include "TwoLinkIK.h"
+#include <MathLib/Point3d.h>
 
 SimBiController::SimBiController(Character* b) : PoseController(b){
 	if (b == NULL)
@@ -75,10 +76,24 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	initialBipState[0] = '\0';
 
 
-	velDSagittal = 0.95;
-	velDCoronal = 0;// 0.95;
+
 	comOffsetSagittal=0;
 	comOffsetCoronal=0;
+
+	//init the speed trajecotries
+	velDSagittal = 0.95;
+	velDCoronal = 0;
+
+	traj_vel_sagittal.clear();
+	traj_vel_corronal.clear();
+
+	swingFootHeightTrajectory.addKnot(0, 0.1);
+	swingFootHeightTrajectory.addKnot(0.5, 0.95);
+	swingFootHeightTrajectory.addKnot(1, 0.95);
+
+	traj_vel_corronal.addKnot(0, 0);
+	traj_vel_sagittal.addKnot(1, 0);
+
 
 
 	lKneeIndex = character->getJointIndex("lKnee");
@@ -298,10 +313,10 @@ int SimBiController::advanceInTime(double dt, DynamicArray<ContactPoint> *cfs){
 	}
 
 	//advance the phase of the controller
-	this->phi += dt/states[FSMStateIndex]->getStateTime();
+	this->phi += dt/get_cur_state_time();
 
 	//see if we have to transition to the next state in the FSM, and do it if so...
-	if (states[FSMStateIndex]->needTransition(phi, fabs(getForceOnFoot(swingFoot, cfs).dotProductWith(SimGlobals::up)), fabs(getForceOnFoot(stanceFoot, cfs).dotProductWith(SimGlobals::up)))){
+	if (states[FSMStateIndex]->needTransition(getPhase(), fabs(getForceOnFoot(swingFoot, cfs).dotProductWith(SimGlobals::up)), fabs(getForceOnFoot(stanceFoot, cfs).dotProductWith(SimGlobals::up)))){
 		int newStateIndex = states[FSMStateIndex]->getNextStateIndex();
 		transitionToState(newStateIndex);
 		return newStateIndex;
@@ -317,11 +332,19 @@ on the assumption that the character will come to a stop by taking a step at tha
 is expressed in the character's frame coordinates.
 */
 Vector3d SimBiController::computeIPStepLocation(){
+
 	Vector3d step;
 	double h = fabs(character->getCOM().y - stanceFoot->getCMPosition().y);
+	step.x = v.x * sqrt(h / 9.8 + v.x * v.x / (4 * 9.8*9.8));
+	step.z = v.z * sqrt(h / 9.8 + v.z * v.z / (4 * 9.8*9.8));
+	step.y = 0;
+
+	/*
+	//original equations
 	step.x = v.x * sqrt(h / 9.8 + v.x * v.x / (4 * 9.8*9.8)) * 1.3;
 	step.z = v.z * sqrt(h / 9.8 + v.z * v.z / (4 * 9.8*9.8)) * 1.1;
 	step.y = 0;
+	//*/
 	return step;
 }
 
@@ -349,7 +372,7 @@ double SimBiController::getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs
 */
 void SimBiController::updateTrackingPose(DynamicArray<double>& trackingPose, double phiToUse){
 	if( phiToUse < 0 )
-		phiToUse = phi;
+		phiToUse = getPhase();
 	if( phiToUse > 1 )
 		phiToUse = 1;
 	trackingPose.clear();
@@ -514,7 +537,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	//Now we modify the target of the swing leg to follow the IPM
 	//TODO find the problem with this.
 	if (stance_mode == 0){
-		//computeIKSwingLegTargets(SimGlobals::dt);
+		computeIKSwingLegTargets(SimGlobals::dt);
 	}
 		
 
@@ -527,7 +550,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 
 
 	//we'll also compute the torques that cancel out the effects of gravity, for better tracking purposes
-	//computeGravityCompensationTorques();
+	computeGravityCompensationTorques(resulting_impact);
 
 
 	//now we can add the torques to control the speed
@@ -569,7 +592,7 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 		controlParams[i].relToCharFrame = false;
 	}
 
-	double phiToUse = phi;
+	double phiToUse = getPhase();
 	//make sure that we only evaluate trajectories for phi values between 0 and 1
 	if (phiToUse>1)
 		phiToUse = 1;
@@ -627,11 +650,29 @@ void SimBiController::bubbleUpTorques(){
 This method computes the torques that cancel out the effects of gravity,
 for better tracking purposes
 */
-void SimBiController::computeGravityCompensationTorques(){
+void SimBiController::computeGravityCompensationTorques(std::map<uint, WaterImpact>& resulting_impact){
 	vmc->resetTorques();
 	for (uint i = 0; i<character->joints.size(); i++){
-		if (i != stanceHipIndex && i != stanceKneeIndex && i != stanceAnkleIndex)
-			vmc->computeJointTorquesEquivalentToForce(character->joints[i], Point3d(), Vector3d(0, character->joints[i]->child->props.mass*9.8, 0), NULL);
+		if (i != stanceHipIndex && i != stanceKneeIndex && i != stanceAnkleIndex){
+			//I need to diminish the force depending on the water boyancy
+
+			Point3d pt1=character->joints[i]->getChild()->getCMPosition();
+			Vector3d F1 = Vector3d(0, character->joints[i]->child->props.mass*9.8, 0);
+
+			if (resulting_impact.find(character->joints[i]->get_idx())!=resulting_impact.end()){
+				ForceStruct  boyancy = resulting_impact[character->joints[i]->get_idx()].boyancy;
+				if (!boyancy.F.isZeroVector()){
+					Vector3d vect_support = pt1 - character->joints[i]->getChild()->getWorldCoordinates(boyancy.pt);
+					double L2 = vect_support.length()*boyancy.F.length() / (F1.length() - boyancy.F.length());
+					pt1 = pt1 + vect_support / vect_support.length()*L2;
+					F1 -= boyancy.F;
+				}
+			}
+			pt1 = character->joints[i]->getChild()->getLocalCoordinates(pt1);
+
+			vmc->computeJointTorquesEquivalentToForce(character->joints[i], pt1, F1, NULL);
+
+		}
 	}
 
 	for (uint i = 0; i<character->joints.size(); i++){
@@ -641,10 +682,7 @@ void SimBiController::computeGravityCompensationTorques(){
 
 
 void SimBiController::COMJT(DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque){
-	//read the parameters from the gui
-	velDSagittal = SimGlobals::velDSagittal;
-	velDCoronal = SimGlobals::velDCoronal;
-
+	
 
 	if (stance_mode < 0){
 		return;
@@ -666,13 +704,14 @@ This method is used to compute the force that the COM of the character should be
 Vector3d SimBiController::computeVirtualForce(){
 	//this is the desired acceleration of the center of mass
 	Vector3d desA = Vector3d();
-	desA.z = (velDSagittal - v.z) * 30;
-	desA.x = (-d.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
+	desA.z = (velDSagittal - v.z);// *(30 + SimGlobals::force_alpha / 1000);
+	desA.x = (velDCoronal - v.x) * 20 + (comOffsetCoronal - d.x) * 2;
+	//desA.x = (-d.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
 
 	if (stance == 1){
-		Vector3d errV = characterFrame.inverseRotate(doubleStanceCOMError*-1);
-		desA.x = (-errV.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
-		desA.z = (-errV.z + comOffsetSagittal) * 10 + (velDSagittal - v.z) * 150;
+		//Vector3d errV = characterFrame.inverseRotate(doubleStanceCOMError*-1);
+		//desA.x = (-errV.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
+		//desA.z = (-errV.z + comOffsetSagittal) * 10 + (velDSagittal - v.z) * 150;
 	}
 
 	//and this is the force that would achieve that - make sure it's not too large...
@@ -697,7 +736,7 @@ void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<C
 	getForceInfoOn(foot, cfs, &heelInContact, &toeInContact);
 	*ankleVTorque = foot->getLocalCoordinates(*ankleVTorque);
 
-	if (toeInContact == false || phi < 0.2 || phi > 0.8) ankleVTorque->x = 0;
+	if (toeInContact == false || getPhase() < 0.2 || getPhase() > 0.8) ankleVTorque->x = 0;
 
 	Vector3d footRelativeAngularVel = foot->getLocalCoordinates(foot->getAngularVelocity());
 	if ((footRelativeAngularVel.z < -0.2 && ankleVTorque->z > 0) || (footRelativeAngularVel.z > 0.2 && ankleVTorque->z < 0))
@@ -705,6 +744,7 @@ void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<C
 
 	if (fabs(footRelativeAngularVel.z) > 1.0) ankleVTorque->z = 0;
 	if (fabs(footRelativeAngularVel.x) > 1.0) ankleVTorque->x = 0;
+
 
 	boundToRange(&ankleVTorque->z, -20, 20);
 
@@ -772,6 +812,14 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 
 	Vector3d fA = computeVirtualForce();
 
+	//*
+	//this can be used to show the forces
+	ForceStruct show_force;
+	show_force.F = fA;
+	show_force.pt = character->getCOM();
+	SimGlobals::vect_forces.push_back(show_force);
+	//*/
+
 	Vector3d f1 = Vector3d(anklePos, tibia->state.position) * tibia->props.mass +
 		Vector3d(anklePos, femur->state.position) * femur->props.mass +
 		Vector3d(anklePos, pelvis->state.position) * pelvis->props.mass +
@@ -791,18 +839,59 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	f4 /= m;
 
 
-	Vector3d ankleTorque = f1.crossProductWith(fA)*leg_ratio;
-	preprocessAnkleVTorque(ankleIndex, cfs, &ankleTorque);
+	//I'll separate the 2 component for the force to see if I can learn anything ...
+	//I'll start with the z component
+	double x_back = fA.x;
+	fA.x = 0;
 
-	torques[ankleIndex] += ankleTorque;
-	torques[kneeIndex] += f2.crossProductWith(fA)*leg_ratio;
-	torques[hipIndex] += f3.crossProductWith(fA)*leg_ratio;
+	Vector3d torque = f1.crossProductWith(fA)*leg_ratio;
+	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
+	//torque.y = 0;
+	torques[ankleIndex] += torque;
 
+	torque = f2.crossProductWith(fA)*leg_ratio;
+	//torque.y = 0;
+	torques[kneeIndex] += torque;
+
+	torque = f3.crossProductWith(fA)*leg_ratio;
+	//torque.y = 0;
+	torques[hipIndex] += torque;
 	//the torque on the stance hip is cancelled out, so pass it in as a torque that the root wants to see!
-	ffRootTorque -= f3.crossProductWith(fA)*leg_ratio;
+	ffRootTorque -= torque;
 
-	torques[backIndex] -= f4.crossProductWith(fA)*leg_ratio*0.5;
+	torque= f4.crossProductWith(fA)*leg_ratio*0.5;
+	//torque.y = 0;
+	torques[backIndex] -= torque;
 	
+
+	//*
+	//Now I'll study the component following x
+	fA.z=0;
+	fA.x=x_back*SimGlobals::time_factor;
+
+	torque = f1.crossProductWith(fA)*leg_ratio;
+	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
+	//torque.y = 0;
+	torques[ankleIndex] += torque;
+
+	torque = f2.crossProductWith(fA)*leg_ratio;
+	//torque.y = 0;
+	torques[kneeIndex] += torque;
+
+	torque = f3.crossProductWith(fA)*leg_ratio;
+	//torque.y = 0;
+	torques[hipIndex] += torque;
+	//the torque on the stance hip is cancelled out, so pass it in as a torque that the root wants to see!
+	ffRootTorque -= torque;
+
+	torque= f4.crossProductWith(fA)*leg_ratio*0.5;
+	//torque.y = 0;
+	torques[backIndex] -= torque;
+	
+	//*/
+
+
+
 	
 	/*
 	//old code
@@ -853,8 +942,8 @@ void SimBiController::computeIKSwingLegTargets(double dt){
 	Point3d com_pos = character->getCOM();
 
 	//note, V is already expressed in character frame coordinates.
-	pNow = getSwingFootTargetLocation(phi, com_pos, characterFrame);
-	pFuture = getSwingFootTargetLocation(MIN(phi + dt, 1), com_pos + character->getCOMVelocity() * dt, characterFrame);
+	pNow = getSwingFootTargetLocation(getPhase(), com_pos, characterFrame);
+	pFuture = getSwingFootTargetLocation(MIN(getPhase() + dt / get_cur_state_time(), 1), com_pos + character->getCOMVelocity() * dt, characterFrame);
 
 
 	Vector3d parentAxis(character->joints[swingHipIndex]->cJPos, character->joints[swingKneeIndex]->pJPos);
@@ -878,7 +967,8 @@ Point3d SimBiController::getSwingFootTargetLocation(double t, const Point3d& com
 	//add it to the com location
 	step = com + step;
 	//finally, set the desired height of the foot
-	step.y = swingFootHeightTrajectory.evaluate_catmull_rom(t) + panicHeight + unplannedForHeight;
+	//TODO reactivate the panicheight an the unplanned height
+	step.y = swingFootHeightTrajectory.evaluate_catmull_rom(t);// + panicHeight + unplannedForHeight;
 
 	step += computeSwingFootDelta(t);
 
@@ -888,7 +978,7 @@ Point3d SimBiController::getSwingFootTargetLocation(double t, const Point3d& com
 Vector3d SimBiController::computeSwingFootDelta(double phiToUse, int stanceToUse) {
 
 	if (phiToUse < 0)
-		phiToUse = phi;
+		phiToUse = getPhase();
 	if (phiToUse > 1)
 		phiToUse = 1;
 	if (stanceToUse < 0)
@@ -920,7 +1010,9 @@ and the other specifies the plane of rotation between the parent and the child, 
 
 - an estimate of the desired position of the end effector, in world coordinates, some dt later - used to compute desired angular velocities
 */
-void SimBiController::computeIKQandW(int parentJIndex, int childJIndex, const Vector3d& parentAxis, const Vector3d& parentNormal, const Vector3d& childNormal, const Vector3d& childEndEffector, const Point3d& wP, bool computeAngVelocities, const Point3d& futureWP, double dt){
+void SimBiController::computeIKQandW(int parentJIndex, int childJIndex, const Vector3d& parentAxis, const Vector3d& parentNormal, 
+											const Vector3d& childNormal, const Vector3d& childEndEffector, const Point3d& wP,
+											bool computeAngVelocities, const Point3d& futureWP, double dt){
 	//this is the joint between the grandparent RB and the parent
 	Joint* parentJoint = character->joints[parentJIndex];
 	//this is the grandparent - most calculations will be done in its coordinate frame

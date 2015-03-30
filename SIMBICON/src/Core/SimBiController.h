@@ -125,6 +125,10 @@ public:
 	//desired velocity in the coronal plane...
 	double velDCoronal;
 
+	//here the trajectories for the velocity
+	Trajectory1D traj_vel_sagittal;
+	Trajectory1D traj_vel_corronal;
+
 	//this is a desired foot trajectory that we may wish to follow, expressed separately, for the 3 components,
 	//and relative to the current location of the CM
 	Trajectory1D swingFootTrajectorySagittal;
@@ -304,6 +308,17 @@ public:
 	inline Vector3d get_v(){
 		return v;
 	}
+
+	inline void calc_desired_velocities(double phi){
+		//read the parameter from the trajectory
+		//velDSagittal = traj_vel_sagittal.evaluate_catmull_rom(phi);
+		//velDCoronal= traj_vel_corronal.evaluate_catmull_rom(phi);
+
+		//read the parameters from the gui
+		velDSagittal = SimGlobals::velDSagittal;
+		velDCoronal = SimGlobals::velDCoronal;
+
+	}
 	
 	Vector3d get_step_size(){
 		if (rFoot != NULL && lFoot != NULL){
@@ -337,7 +352,7 @@ public:
 	This method computes the torques that cancel out the effects of gravity,
 	for better tracking purposes
 	*/
-	void computeGravityCompensationTorques();
+	void computeGravityCompensationTorques(std::map<uint, WaterImpact>& resulting_impact);
 
 	/**
 	This function simulate a force on the COM to achieve the desired speed in the sagittal and corronal pane
@@ -379,6 +394,13 @@ public:
 	int advanceInTime(double dt, DynamicArray<ContactPoint> *cfs);
 
 	/**
+	this funtion is just an easy way to now the current state time length
+	*/
+	inline double get_cur_state_time(){
+		return states[FSMStateIndex]->getStateTime();
+	}
+
+	/**
 	returns the required stepping location, as predicted by the inverted pendulum model. The prediction is made
 	on the assumption that the character will come to a stop by taking a step at that location. The step location
 	is expressed in the character's frame coordinates.
@@ -413,7 +435,7 @@ public:
 		This method is used to return the value of the phase (phi) in the current FSM state.
 	*/
 	inline double getPhase(){
-		return phi;
+		return phi*(SimGlobals::force_alpha/100000);
 	}
 
 	/**
