@@ -73,3 +73,6 @@ std::vector<ForceStruct> SimGlobals::vect_forces = std::vector<ForceStruct>();
 double SimGlobals::velDSagittal = 0.95;
 double SimGlobals::velDCoronal = 0;
 
+
+double SimGlobals::step_width = 0.1;
+

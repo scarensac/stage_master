@@ -164,19 +164,24 @@ void ControllerEditor::draw(bool shadowMode){
 		if (Globals::drawContactForces){
 			//figure out if we should draw the contacts, desired pose, etc.
 			glColor3d(0, 0, 1);
+			double factor = 1;
+			//*
 			DynamicArray<ContactPoint>* cfs = conF->getWorld()->getContactForces();
-			/*for (uint i=0;i<cfs->size();i++){
+			for (uint i=0;i<cfs->size();i++){
 				ContactPoint *c = &((*cfs)[i]);
 				
-				GLUtils::drawCylinder(0.01, c->f * 0.09, c->cp);
-				GLUtils::drawCone(0.03, c->f * 0.01, c->cp+c->f*0.09);
-			}*/
+				GLUtils::drawCylinder(0.005, c->f * 9 *factor, c->cp);
+				GLUtils::drawCone(0.015, c->f * 1 *factor, c->cp+c->f*9*factor);
+			}
+			//*/
+			/*
 			std::vector<ForceStruct> vect = SimGlobals::vect_forces;
-			double factor = 0.001;
+			
 			for (uint i = 0; i < vect.size(); ++i){
 				GLUtils::drawCylinder(0.005, vect[i].F * 9*factor, vect[i].pt);
 				GLUtils::drawCone(0.015, vect[i].F * 1 * factor, vect[i].pt + vect[i].F * 9 * factor);
 			}
+			//*/
 
 		}
 	}
@@ -354,7 +359,12 @@ void ControllerEditor::processTask(){
 	static double ratio = 1;
 	
 
+
 	double cur_height = 0;
+
+	static double phi_it = 0;
+	std::vector<double> phi_vect;
+	std::vector<Vector3d> speed_vect;
 
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
 	while (simulationTime/maxRunningTime < Globals::animationTimeToRealTimeRatio){
@@ -365,11 +375,22 @@ void ControllerEditor::processTask(){
 		//we just make sure that we don't try anything before the initialisation of the physical world
 		if (conF) { 
 			
-
 			//get the current phase, pose and state and update the GUI
 			double phi = conF->getController()->getPhase();
 
-			
+			//init some variables
+			conF->simStepPlan(SimGlobals::dt);
+
+
+			/*
+			if (phi>phi_it){
+				phi_it += 0.1;
+				//phi_vect.push_back(phi);
+				//speed_vect.push_back();
+				Vector3d v = conF->getController()->get_v();
+				tprintf("%lf, %lf, %lf, %lf\n",
+					phi, v.x, v.y, v.z);					
+			}*/
 
 
 			lastFSMState = conF->getController()->getFSMState();
@@ -420,6 +441,7 @@ void ControllerEditor::processTask(){
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
 
+				phi_it = 0;
 				//compute the speed and show it to the user
 
 				avgSpeed /= timesVelSampled;
@@ -444,12 +466,9 @@ void ControllerEditor::processTask(){
 				}
 
 				
-
-
 				Vector3d v = conF->getLastStepTaken();
-				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, balance_factor = %lf::%lf)\n",
-					v.x, v.y, v.z, phi, avgSpeed, step_time_end, SimGlobals::balance_force_factor_left,
-					SimGlobals::balance_force_factor_right);
+				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
+					v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
 //				Globals::animationRunning = false;
 
 				//reset the speed for the next step

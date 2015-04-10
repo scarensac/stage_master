@@ -96,6 +96,8 @@ checkbutton .target -text "Show Target Pose" -variable drawDesiredPose -anchor w
 checkbutton .fps -text "Show FPS" -variable drawFPS -anchor w
 checkbutton .shadow -text "Show Shadows" -variable drawShadows -anchor w
 checkbutton .ground -text "Show Ground Plane" -variable drawGroundPlane -anchor w
+checkbutton .camerafollowup -text "Follow Character" -variable followCharacter -anchor w
+.camerafollowup select
 .fps select
 .shadow select
 .axes select
@@ -103,7 +105,7 @@ checkbutton .ground -text "Show Ground Plane" -variable drawGroundPlane -anchor 
 .ground select
 pack .labelView -side top -fill x -in .viewoptions -anchor w
 #pack .axes .colprimitives .forces .target .fps .shadow .ground -side top -fill y -in .viewoptions -anchor w
-pack .target .ground .forces -side top -fill y -in .viewoptions -anchor w
+pack .target .ground .forces .colprimitives .camerafollowup -side top -fill y -in .viewoptions -anchor w
 
 
 
@@ -116,13 +118,12 @@ button .v3 -text "  45" -anchor w -width 5 -command {camera c_45}
 button .v4 -text " -45" -anchor w -width 5 -command {camera c_n45}
 button .v8 -text Back  -anchor w -width 5 -command {camera c_back}
 label .labelcamera -text "Camera:" -relief raised
-checkbutton .camerafollowup -text "Follow Character" -variable followCharacter -anchor s
 
 .camerafollowup select
 
 pack .labelcamera -side top -fill x -in .camerasettings -anchor w
 pack .v1 .v3 .v2 .v4 .v8 -side left -pady 3 -padx 4 -fill x -in .camerasettings -anchor e
-pack .camerafollowup -side left -in .followchar -anchor n
+#pack .camerafollowup -side left -in .followchar -anchor n
 
 
 
@@ -173,10 +174,11 @@ scale .desiredheading -label "desired heading" -orient h -digit 4 -from -1.54 -t
 
 #### others
 scale .timefactor -label "time factor" -orient h -digit 4 -from 0 -to 3 -variable time_factor -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .stepwidth -label "step with" -orient h -digit 4 -from 0 -to 1.0 -variable step_width -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 #### speed control
-scale .velCoronal -label "velCoronal" -orient h -digit 4 -from -1.5 -to 1.5 -variable vel_coronal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
-scale .velSagittal -label "velSagittal" -orient h -digit 4 -from -1.5 -to 1.5 -variable vel_sagittal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .velCoronal -label "velCoronal" -orient h -digit 4 -from -1.5 -to 2.5 -variable vel_coronal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .velSagittal -label "velSagittal" -orient h -digit 4 -from -1.5 -to 2.5 -variable vel_sagittal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 
 #### other commands
@@ -191,14 +193,15 @@ wm resizable . 0 0
 
 #pack .simsettings -in .mainframe -side top -fill x
 pack .viewoptions -in .mainframe -side top -fill x
-pack .camerasettings .followchar -in .mainframe -side top -fill x
+#pack .camerasettings .followchar -in .mainframe -side top -fill x
 pack .simulatorlabel .simulatorframe .currPos -in .mainframe -side top -fill x
 pack .characterframe -in .mainframe -side top -fill x
 pack .waterlvl -in .mainframe -side top -fill x
 pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
-pack .desiredheading -in .mainframe -side top -fill x
+#pack .desiredheading -in .mainframe -side top -fill x
 pack .timefactor -in .mainframe -side top -fill x
 pack .velCoronal -in .mainframe -side top -fill x
 pack .velSagittal -in .mainframe -side top -fill x
+pack .stepwidth -in .mainframe -side top -fill x
 #pack .buttonframe -in .mainframe -side top -fill x

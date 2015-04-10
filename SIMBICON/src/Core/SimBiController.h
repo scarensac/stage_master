@@ -169,7 +169,7 @@ public:
 	//I'll store the stance I am in so i don't have to do it endlessly
 	int stance_mode;//-1 no feet on ground, 0 one foot on ground, 1 both feet on ground
 	double stanceHipToSwingHipRatio;
-
+	bool stanceHeelInContact, stanceToeInContact;
 
 protected:
 
@@ -373,8 +373,7 @@ public:
 	/**
 	determines if there are any heel/toe forces on the given RB
 	*/
-	void getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, bool* heelForce, bool* toeForce);
-
+	void getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, ForceStruct& heelForce, ForceStruct& frontFeetForce,ForceStruct& toeForce);
 	/**
 	check to see if rb is the same as whichBody or any of its children
 	*/
@@ -541,5 +540,17 @@ public:
 		}
 	}
 
+	/**
+	those functions are here to get the desired speed affected by the variations defined by the trajectories
+	*/
+	inline double get_effective_desired_sagittal_velocity(double phi){
+		return velDSagittal*traj_vel_sagittal.evaluate_catmull_rom(phi);
+	}
+
+	inline double get_effective_desired_coronal_velocity(double phi){
+		double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
+		return velDCoronal + traj_vel_corronal.evaluate_catmull_rom(phi)*signChange;
+
+	}
 
 };

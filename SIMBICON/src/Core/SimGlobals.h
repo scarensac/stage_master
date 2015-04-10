@@ -91,6 +91,8 @@ public:
 	static double velDSagittal;
 	static double velDCoronal;
 
+	static double step_width;
+
 
 	SimGlobals(void){
 	}

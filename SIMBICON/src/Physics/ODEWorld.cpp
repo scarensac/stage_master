@@ -889,7 +889,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level){
 
 
 
-		/*
+		//*
 		//this can be used to show the forces
 		ForceStruct cp;
 		cp.F = F;
@@ -1068,11 +1068,11 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					/*
+					//*
 					//this can be used to show the forces
 					ForceStruct cp;
-					cp.F = body->getWorldCoordinates(F);
-					cp.cp = body->getWorldCoordinates(pos);
+					cp.F = F;
+					cp.pt = body->getWorldCoordinates(pos);
 					SimGlobals::vect_forces.push_back(cp);
 					//*/
 
@@ -1117,11 +1117,11 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					/*
+					//*
 					//this can be used to show the forces
 					ForceStruct cp;
-					cp.F = body->getWorldCoordinates(F);
-					cp.cp = body->getWorldCoordinates(pos);
+					cp.F = F;
+					cp.pt = body->getWorldCoordinates(pos);
 					SimGlobals::vect_forces.push_back(cp);
 					//*/
 
@@ -1163,11 +1163,11 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					/*
+					//*
 					//this can be used to show the forces
 					ForceStruct cp;
-					cp.F = body->getWorldCoordinates(F);
-					cp.cp = body->getWorldCoordinates(pos);
+					cp.F = F;
+					cp.pt = body->getWorldCoordinates(pos);
 					SimGlobals::vect_forces.push_back(cp);
 					//*/
 				}
@@ -1283,11 +1283,11 @@ Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level){
 					Vector3d op = cur_pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					/*
+					//*
 					//this can be used to show the forces
 					ForceStruct cp;
-					cp.F = body->getWorldCoordinates(F);
-					cp.cp = body->getWorldCoordinates(cur_pos);
+					cp.F = F;
+					cp.pt = body->getWorldCoordinates(cur_pos);
 					SimGlobals::vect_forces.push_back(cp);
 					//*/
 

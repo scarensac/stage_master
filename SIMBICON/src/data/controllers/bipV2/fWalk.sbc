@@ -169,9 +169,9 @@ ConState 0
 				cv 0.200000
 			/feedback
 			baseTrajectory
-				0.016722 -0.203606
-				0.551839 -0.217268
-				1.000000 0.030252
+				0.00 0.3
+				0.10 0.12
+				1.000000 0.1
 			/baseTrajectory
 		/component
 	/trajectory
