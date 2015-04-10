@@ -78,6 +78,9 @@ private:
 	Trajectory3D alternateFootTraj;
 
 public:
+	double step_delta;
+
+public:
 	SimBiConFramework(char* input, char* conFile = NULL);
 	virtual ~SimBiConFramework(void);
 	

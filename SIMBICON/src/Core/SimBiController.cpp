@@ -87,13 +87,15 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	traj_vel_sagittal.clear();
 	traj_vel_corronal.clear();
 
-	swingFootHeightTrajectory.addKnot(0, 0.1);
-	swingFootHeightTrajectory.addKnot(0.5, 0.95);
-	swingFootHeightTrajectory.addKnot(1, 0.95);
+	double cur_phi = 0;
+	for (int i = 0; i < 13; ++i){
+		traj_vel_corronal.addKnot(cur_phi, (-0.1 + 0.2 * cur_phi));
+		traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
+		cur_phi += 0.1;
+	}
 
-	traj_vel_corronal.addKnot(0, 0);
-	traj_vel_sagittal.addKnot(1, 0);
 
+	
 
 
 	lKneeIndex = character->getJointIndex("lKnee");
@@ -177,6 +179,8 @@ void SimBiController::setStance(int newStance){
 		swingHipIndex = lHipIndex;
 		stanceHipIndex = rHipIndex;
 	}
+	stanceFoot->set_mesh_color(0, 0, 1, 1);
+	swingFoot->set_mesh_color(1, 1, 1, 1);
 }
 
 /**
@@ -338,6 +342,7 @@ Vector3d SimBiController::computeIPStepLocation(){
 	step.x = v.x * sqrt(h / 9.8 + v.x * v.x / (4 * 9.8*9.8));
 	step.z = v.z * sqrt(h / 9.8 + v.z * v.z / (4 * 9.8*9.8));
 	step.y = 0;
+
 
 	/*
 	//original equations
@@ -566,6 +571,18 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	//and now separetely compute the torques for the hips - together with the feedback term, this is what defines simbicon
 	computeHipTorques(qRootD, poseRS.getJointRelativeOrientation(swingHipIndex), stanceHipToSwingHipRatio,ffRootTorque);
 
+	int stance_factor = 1;
+	if (getStance() == RIGHT_STANCE){
+		stance_factor = -1;
+	}
+
+	//this is a test here I'll try to simulate the foot rotation by adding torques on some joints
+	double cur_phi = getPhase();
+	
+	if (cur_phi > 0.1&&cur_phi < 0.3){
+		//torques[stanceHipIndex] += Vector3d(0, 750, 0)*stance_factor;
+	}
+
 	
 	//this is a ponderation if we are near to fall
 	for (uint i=0;i<torques.size();i++){
@@ -578,7 +595,8 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 
 	
 	//d and v are specified in the rotation (heading) invariant coordinate frame
-	updateDAndV();
+	//already done before
+	//updateDAndV();
 
 	//there are two stages here. First we will compute the pose (i.e. relative orientations), using the joint trajectories for the current state
 	//and then we will compute the PD torques that are needed to drive the links towards their orientations - here the special case of the
@@ -688,6 +706,9 @@ void SimBiController::COMJT(DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTor
 		return;
 	}
 
+	//ArticulatedRigidBody* foot = character->joints[stanceAnkleIndex]->child;
+	//getForceInfoOn(foot, cfs, &stanceHeelInContact, &stanceToeInContact);
+
 	//in the case of the dual stance mode (I'll apply the torques proportionally to their impact to the ground)
 	computeLegTorques(stanceAnkleIndex, stanceKneeIndex, stanceHipIndex, cfs, ffRootTorque, stanceHipToSwingHipRatio);
 
@@ -704,8 +725,15 @@ This method is used to compute the force that the COM of the character should be
 Vector3d SimBiController::computeVirtualForce(){
 	//this is the desired acceleration of the center of mass
 	Vector3d desA = Vector3d();
-	desA.z = (velDSagittal - v.z);// *(30 + SimGlobals::force_alpha / 1000);
-	desA.x = (velDCoronal - v.x) * 20 + (comOffsetCoronal - d.x) * 2;
+
+	Vector3d vw = characterFrame.rotate(v);
+
+
+	double eff_velDSagittal = get_effective_desired_sagittal_velocity(phi); 
+	double eff_velDCoronal = get_effective_desired_coronal_velocity(phi);
+
+	desA.z = (eff_velDSagittal - vw.z) *30;// +SimGlobals::force_alpha / 1000);
+	desA.x = (eff_velDCoronal - vw.x) * 20;// +(comOffsetCoronal - d.x) * 2;
 	//desA.x = (-d.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
 
 	if (stance == 1){
@@ -717,7 +745,7 @@ Vector3d SimBiController::computeVirtualForce(){
 	//and this is the force that would achieve that - make sure it's not too large...
 	Vector3d fA = (desA)* character->getAF()->getMass(); 
 	boundToRange(&fA.x, -100, 100);
-	boundToRange(&fA.z, -60, 60);
+	boundToRange(&fA.z, -200, 200);
 
 	//now change this quantity to world coordinates...
 	fA = characterFrame.rotate(fA);
@@ -731,20 +759,32 @@ This method returns performes some pre-processing on the virtual torque. The tor
 and it will remain in world coordinates.
 */
 void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<ContactPoint> *cfs, Vector3d *ankleVTorque){
-	bool heelInContact, toeInContact;
+	ForceStruct heel_force,front_foot_force, toe_force;
 	ArticulatedRigidBody* foot = character->joints[ankleJointIndex]->child;
-	getForceInfoOn(foot, cfs, &heelInContact, &toeInContact);
+	getForceInfoOn(foot, cfs, heel_force, front_foot_force, toe_force);
 	*ankleVTorque = foot->getLocalCoordinates(*ankleVTorque);
 
-	if (toeInContact == false || getPhase() < 0.2 || getPhase() > 0.8) ankleVTorque->x = 0;
+	if (front_foot_force.F.isZeroVector() || getPhase() < 0.2 || getPhase() > 0.8){
+		ankleVTorque->x = 0;
+	}
 
 	Vector3d footRelativeAngularVel = foot->getLocalCoordinates(foot->getAngularVelocity());
-	if ((footRelativeAngularVel.z < -0.2 && ankleVTorque->z > 0) || (footRelativeAngularVel.z > 0.2 && ankleVTorque->z < 0))
+	if ((footRelativeAngularVel.z < -0.2 && ankleVTorque->z > 0) || (footRelativeAngularVel.z > 0.2 && ankleVTorque->z < 0)){
 		ankleVTorque->z = 0;
+	}
 
-	if (fabs(footRelativeAngularVel.z) > 1.0) ankleVTorque->z = 0;
-	if (fabs(footRelativeAngularVel.x) > 1.0) ankleVTorque->x = 0;
+	if (fabs(footRelativeAngularVel.z) > 1.0){
+		ankleVTorque->z = 0;
+	}
 
+	if (fabs(footRelativeAngularVel.x) > 1.0){
+		ankleVTorque->x = 0;
+	}
+
+	if ((!heel_force.F.isZeroVector())&&(front_foot_force.F.isZeroVector())){
+		ankleVTorque->x = 0;
+		ankleVTorque->z = 0;
+	}
 
 	boundToRange(&ankleVTorque->z, -20, 20);
 
@@ -753,17 +793,33 @@ void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<C
 
 /**
 determines if there are any heel/toe forces on the given RB
+the rigid body passed in the parameters HAVE to be a foot
 */
-void SimBiController::getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, bool* heelForce, bool* toeForce){
-	//figure out if the toe/heel are in contact...
-	*heelForce = false;
-	*toeForce = false;
+void SimBiController::getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, ForceStruct& heelForce, ForceStruct& frontFeetForce,
+												ForceStruct& toeForce){
+
+	//I will compte the resulting force of the ground on the heel, the front foot and the toes
+	RigidBody* toe_body = static_cast<ArticulatedRigidBody*>(rb)->getChildJoints().front()->getChild();
+
 	Point3d tmpP;
+
 	for (uint i = 0; i<cfs->size(); i++){
-		if (haveRelationBetween((*cfs)[i].rb1, rb) || haveRelationBetween((*cfs)[i].rb2, rb)){
+		if (((*cfs)[i].rb1 == rb) || ((*cfs)[i].rb2== rb)){
 			tmpP = rb->getLocalCoordinates((*cfs)[i].cp);
-			if (tmpP.z < 0) *heelForce = true;
-			if (tmpP.z > 0) *toeForce = true;
+			if (tmpP.z < 0){
+				heelForce.F += Vector3d(0, std::abs((*cfs)[i].f.y), 0);
+			}
+			
+			if (tmpP.z > 0){
+				frontFeetForce.F += Vector3d(0, std::abs((*cfs)[i].f.y), 0);
+			}
+		}
+		else if (((*cfs)[i].rb1 == toe_body) || ((*cfs)[i].rb2 == toe_body)){
+			if (toeForce.pt == Point3d(0, 0, 0)){			
+				tmpP = rb->getLocalCoordinates((*cfs)[i].cp);
+				toeForce.pt = tmpP;
+			}
+			toeForce.F += (*cfs)[i].f;
 		}
 	}
 }
@@ -789,6 +845,13 @@ This method is used to compute torques for the stance leg that help achieve a de
 void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, DynamicArray<ContactPoint> *cfs,Vector3d& ffRootTorque,
 			double leg_ratio){
 	
+	/*bool heelInContact, toeInContact;
+	ArticulatedRigidBody* foot = character->joints[ankleIndex]->child;
+	getForceInfoOn(foot, cfs, &heelInContact, &toeInContact);
+	if (heelInContact && (!toeInContact)){
+		return;
+	}*/
+
 	//applying a force at the COM induces the force f. The equivalent torques are given by the J' * f, where J' is
 	// dp/dq, where p is the COM.
 
@@ -822,17 +885,17 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 
 	Vector3d f1 = Vector3d(anklePos, tibia->state.position) * tibia->props.mass +
 		Vector3d(anklePos, femur->state.position) * femur->props.mass +
-		Vector3d(anklePos, pelvis->state.position) * pelvis->props.mass +
-		Vector3d(anklePos, back->state.position) * back->props.mass;
+		Vector3d(anklePos, pelvis->state.position) * pelvis->props.mass;// +
+		//Vector3d(anklePos, back->state.position) * back->props.mass;
 	f1 /= m;
 
 	Vector3d f2 = Vector3d(kneePos, femur->state.position) * femur->props.mass +
-		Vector3d(kneePos, pelvis->state.position) * pelvis->props.mass +
-		Vector3d(kneePos, back->state.position) * back->props.mass;
+		Vector3d(kneePos, pelvis->state.position) * pelvis->props.mass;// +
+		//Vector3d(kneePos, back->state.position) * back->props.mass;
 	f2 /= m;
 
-	Vector3d f3 = Vector3d(hipPos, pelvis->state.position) * pelvis->props.mass +
-		Vector3d(hipPos, back->state.position) * back->props.mass;
+	Vector3d f3 = Vector3d(hipPos, pelvis->state.position) * pelvis->props.mass;
+		//Vector3d(hipPos, back->state.position) * back->props.mass;
 	f3 /= m;
 
 	Vector3d f4 = Vector3d(backPos, back->state.position) * back->props.mass;
@@ -859,20 +922,28 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	//the torque on the stance hip is cancelled out, so pass it in as a torque that the root wants to see!
 	ffRootTorque -= torque;
 
-	torque= f4.crossProductWith(fA)*leg_ratio*0.5;
+	torque= f4.crossProductWith(fA)*leg_ratio;
 	//torque.y = 0;
 	torques[backIndex] -= torque;
 	
 
 	//*
 	//Now I'll study the component following x
+
+
 	fA.z=0;
 	fA.x=x_back*SimGlobals::time_factor;
 
 	torque = f1.crossProductWith(fA)*leg_ratio;
 	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
+	//torque.x = 0;
 	//torque.y = 0;
+	//torque.z = 0;
 	torques[ankleIndex] += torque;
+	//torque.x = 0;
+	//torque.y = 0;
+	//torque.z = 0;
+	//ffRootTorque -= torque;
 
 	torque = f2.crossProductWith(fA)*leg_ratio;
 	//torque.y = 0;
@@ -1084,12 +1155,12 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	Quaternion qRootDW;
 
 	//if (SimGlobals::forceHeadingControl == false){
-		//qRootD is specified in the character frame, so just maintain the current heading
-		//qRootDW = qRootD;
-		//qRootDW = characterFrame * qRootD;
+	//qRootD is specified in the character frame, so just maintain the current heading
+	//qRootDW = qRootD;
+	//qRootDW = characterFrame * qRootD;
 	//}else{
-		//qRootDW needs to also take into account the desired heading
-		qRootDW = Quaternion::getRotationQuaternion(SimGlobals::desiredHeading, SimGlobals::up) * qRootD;
+	//qRootDW needs to also take into account the desired heading
+	qRootDW = Quaternion::getRotationQuaternion(SimGlobals::desiredHeading, SimGlobals::up) * qRootD;
 	//}
 
 	double rootStrength = rootControlParams.strength;
@@ -1101,7 +1172,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	rootControlParams.strength = 1;
 
 	//so this is the net torque that the root wants to see, in world coordinates
-	rootTorque = computePDTorque(root->getOrientation(), qRootDW, root->getAngularVelocity(), Vector3d(0,0,0), &rootControlParams);
+	rootTorque = computePDTorque(root->getOrientation(), qRootDW, root->getAngularVelocity(), Vector3d(0, 0, 0), &rootControlParams);
 
 	rootTorque += ffRootTorque;
 
@@ -1111,9 +1182,11 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 
 	//we need to compute the total torque that needs to be applied at the hips so that the final net torque on the root is rootTorque
 	Vector3d rootMakeupTorque;
-	for (int i=0;i<jointCount;i++)
-		if (character->getJoint(i)->getParent() == root)
+	for (int i = 0; i < jointCount; i++){
+		if (character->getJoint(i)->getParent() == root){
 			rootMakeupTorque -= torques[i];
+		}
+	}
 	rootMakeupTorque -= rootTorque;
 
 	//add to the root makeup torque the predictive torque as well (only consider the effect of the torque in the lateral plane).
@@ -1122,6 +1195,7 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 
 	//assume the stance foot is in contact...
 	Vector3d stanceHipTorque = torques[stanceHipIndex];
+	double stance_hip_y = stanceHipTorque.y;
 
 	//now, based on the ratio of the forces the feet exert on the ground, and the ratio of the forces between the two feet, we will compute the forces that need to be applied
 	//to the two hips, to make up the root makeup torque - which means the final torque the root sees is rootTorque!
@@ -1174,7 +1248,20 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 	Quaternion qStanceHip = character->getJoint(stanceHipIndex)->getChild()->getOrientation();
 	stanceHipTorque = qStanceHip.getComplexConjugate().rotate(stanceHipTorque);
 	limitTorque(&stanceHipTorque, &controlParams[stanceHipIndex]);
+
+
+	
+
+	/*if (stanceHeelInContact){
+		Vector3d ang_speed=character->getJoint(stanceAnkleIndex)->getChild()->getAngularVelocity();
+		if (std::abs(ang_speed.y) > 3){
+			stanceHipTorque.y = stanceHipTorque.y;
+		}
+	}*/
+
+	//stanceHipTorque.y *= 0.1;
 	stanceHipTorque = qStanceHip.rotate(stanceHipTorque);
+	
 
 	Quaternion qSwingHip = character->getJoint(swingHipIndex)->getChild()->getOrientation();
 	swingHipTorque = qSwingHip.getComplexConjugate().rotate(swingHipTorque);

@@ -266,5 +266,14 @@ public:
 		return NULL;
 	}
 
+	/**
+	this function is used to set the mesh color (in case u wanna change it during the execution, to follow the stance foot for exemple)
+	*/
+	void set_mesh_color(float r, float g, float b, float a){
+		for (int i = 0; i < (int)meshes.size(); ++i){
+			meshes[i]->setColour(r, g, b, a);
+		}
+	}
+
 };
 

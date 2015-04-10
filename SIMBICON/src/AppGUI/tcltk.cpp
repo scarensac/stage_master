@@ -306,6 +306,9 @@ int Tcl_AppInit(Tcl_Interp *interp){
 	Tcl_LinkVar(interp, "vel_sagittal", (char *)&SimGlobals::velDSagittal, TCL_LINK_DOUBLE);
 
 
+	Tcl_LinkVar(interp, "step_width", (char *)&SimGlobals::step_width, TCL_LINK_DOUBLE);
+
+
 	Tcl_EvalFile(interp, "init/setup.tcl");
 
 

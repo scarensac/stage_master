@@ -127,7 +127,7 @@ void RigidBody::draw(int flags){
 		if (flags & SHOW_JOINTS){
 			if (lighting)
 				glDisable(GL_LIGHTING);
-			glColor3d(0.6, 0.6, 0);
+			glColor3d(0.0, 0.6, 0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 		for (uint i=0;i<cdps.size();i++)
@@ -148,7 +148,7 @@ void RigidBody::draw(int flags){
 		glEnable(GL_LIGHTING);
 
 	// now we'll draw the object's mesh
-	if (meshes.size()>0 && (flags & SHOW_MESH)){
+	if (meshes.size()>0 && (flags & SHOW_MESH) && !(flags & SHOW_CD_PRIMITIVES)){
 		if ((flags & SHOW_CD_PRIMITIVES) || (flags & SHOW_JOINTS))
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (flags & SHOW_COLOURS)

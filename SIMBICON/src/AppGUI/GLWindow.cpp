@@ -389,7 +389,7 @@ int GLWindow::onMouseEvent(int mEvent, int button, int x, int y){
 		mouseButtonPressed = button;
 
 	//otherwise it probably is a mouse event.
-	if (mEvent == MOUSE_DOWN || mEvent == MOUSE_UP || mEvent == MOUSE_DRAG/* || mEvent == MOUSE_MOVE*/){
+	if (mEvent == MOUSE_DOWN || mEvent == MOUSE_UP || mEvent == MOUSE_DRAG || mEvent == MOUSE_MOVE){
 		//see if the application wants to process this event.
 		bool processed = false;
 		if (Globals::app)
@@ -422,6 +422,12 @@ int GLWindow::onMouseEvent(int mEvent, int button, int x, int y){
 								camera.camDistance += (oldMouseY - y)/200.0;
 								break;
 				}
+			}
+			else if (button == MOUSE_WHEEL_DOWN){
+				camera.camDistance += 0.1;
+			}
+			else if (button == MOUSE_WHEEL_UP){
+				camera.camDistance -= 0.1;
 			}
 		}
 

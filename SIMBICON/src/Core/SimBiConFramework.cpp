@@ -35,6 +35,7 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	ankleBaseHeight = 0.05;
 	stepHeight = 0.15;
 	coronalStepWidth=0.1;
+	step_delta = 0;
 
 
 	//create the physical world...
@@ -123,8 +124,8 @@ SimBiConFramework::~SimBiConFramework(void){
 */
 
 bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recomputeTorques, bool advanceWorldInTime){
-	//init some variables
-	simStepPlan(dt);
+	static double avg_speed = 0;
+	static int times_vel_sampled = 0;
 
 	//some static var for later use
 	static Vector3d cur_com = Vector3d(0, 0, 0);
@@ -168,7 +169,9 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 	}
 	con->applyTorques();
 	
-	
+	//store the current speed to be able to know the avg speed at the end
+	avg_speed += getCharacter()->getHeading().getComplexConjugate().rotate(getCharacter()->getRoot()->getCMVelocity()).z;
+	times_vel_sampled++;
 
 	if (advanceWorldInTime)
 		pw->advanceInTime(dt);
@@ -209,8 +212,26 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		con->swingFootTrajectorySagittal.addKnot(0, 0);
 		con->swingFootTrajectorySagittal.addKnot(1, 0);
 
+		//addapt the variation on the IPM result depending on our speed
 		
+		avg_speed/=times_vel_sampled;
+		static double previous_speed = avg_speed;
 
+		double d_v = con->velDSagittal - (avg_speed*.75+previous_speed*0.25);
+		if (d_v < 0.3){
+			//step_delta -= (d_v)*0.01;
+		}
+		if (step_delta > 0){
+			step_delta = 0;
+		}
+		else if (step_delta < -0.04){
+			step_delta = -0.04;
+		}
+
+		previous_speed= avg_speed;
+
+		times_vel_sampled = 0;
+		avg_speed = 0;
 	}
 
 	return newFSMState;
@@ -221,6 +242,9 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 this method gets called at every simulation time step
 */
 void SimBiConFramework::simStepPlan(double dt){
+
+	con->updateDAndV();
+
 	//we start by initializing the speed
 	con->calc_desired_velocities(con->getPhase());
 
@@ -312,7 +336,12 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 
 	//applying the IP prediction would make the character stop, so take a smaller step if you want it to walk faster, or larger
 	//if you want it to go backwards
-	step.z -= con->velDSagittal / 20;
+	//step.z += -con->velDSagittal / 20;
+	Vector3d com_vel = con->get_v();
+	if (com_vel.y < 0&& phase>0.2){
+		step.z += -con->velDSagittal / 20;
+		step.z += step_delta;
+	}
 	//and adjust the stepping in the coronal plane in order to account for desired step width...
 	step.x = adjustCoronalStepLocation(step.x);
 
@@ -378,15 +407,21 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 
 
 	//when the caracter ain't in a falling situation
-	// double speed_control= con->get_v().x;
+	double speed_control= con->get_v().x;
 
 
 	//this addjust to the specifed step width
 	double stepWidth = coronalStepWidth / 2;
 	stepWidth = (con->getStance() == LEFT_STANCE) ? (-stepWidth) : (stepWidth);
 
+	//this help to diminish the fact that the caracter turn the leg when inside the water
 	if (con->getPhase() > 0.8){
-		//IPPrediction += IPPrediction / 20;
+		 if(stepWidth*speed_control > 0){
+			IPPrediction += IPPrediction /5;
+		 }
+		 else{
+			IPPrediction -= stepWidth;
+		 }
 	}
 
 	//if (stepWidth*speed_control > 0){
