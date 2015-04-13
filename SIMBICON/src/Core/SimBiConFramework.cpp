@@ -182,6 +182,8 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	//here we are assuming that each FSM state represents a new step. 
 	if (newFSMState){
+		coronalStepWidth = SimGlobals::step_width;
+
 		//we save the position of the swing foot (which is the old stance foot) and of the stance foot
 		swingFootStartPos=lastFootPos;
 
@@ -417,7 +419,7 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 	//this help to diminish the fact that the caracter turn the leg when inside the water
 	if (con->getPhase() > 0.8){
 		 if(stepWidth*speed_control > 0){
-			IPPrediction += IPPrediction /5;
+			//IPPrediction += IPPrediction /5;
 		 }
 		 else{
 			IPPrediction -= stepWidth;
@@ -430,7 +432,7 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 	//else{
 	//	IPPrediction += speed_control;
 	//}
-
+	IPPrediction += -con->velDCoronal / 20;
 
 	//I'll disable all the panic system for now ...
 	/**
