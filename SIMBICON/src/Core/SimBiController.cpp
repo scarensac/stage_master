@@ -909,23 +909,23 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 
 	Vector3d torque = f1.crossProductWith(fA)*leg_ratio;
 	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
-	//torque.y = 0;
+	torque.y = 0;
 	torques[ankleIndex] += torque;
 
 	torque = f2.crossProductWith(fA)*leg_ratio;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[kneeIndex] += torque;
 
 	torque = f3.crossProductWith(fA)*leg_ratio;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[hipIndex] += torque;
 	//the torque on the stance hip is cancelled out, so pass it in as a torque that the root wants to see!
 	ffRootTorque -= torque;
 
 	torque= f4.crossProductWith(fA)*leg_ratio;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[backIndex] -= torque;
-	
+	ffRootTorque -= torque;
 
 	//*
 	//Now I'll study the component following x
@@ -936,28 +936,23 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 
 	torque = f1.crossProductWith(fA)*leg_ratio;
 	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
-	//torque.x = 0;
-	//torque.y = 0;
-	//torque.z = 0;
+	torque.y = 0;
 	torques[ankleIndex] += torque;
-	//torque.x = 0;
-	//torque.y = 0;
-	//torque.z = 0;
-	//ffRootTorque -= torque;
-
+	
 	torque = f2.crossProductWith(fA)*leg_ratio;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[kneeIndex] += torque;
 
 	torque = f3.crossProductWith(fA)*leg_ratio;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[hipIndex] += torque;
 	//the torque on the stance hip is cancelled out, so pass it in as a torque that the root wants to see!
 	ffRootTorque -= torque;
 
 	torque= f4.crossProductWith(fA)*leg_ratio*0.5;
-	//torque.y = 0;
+	torque.y = 0;
 	torques[backIndex] -= torque;
+	ffRootTorque -= torque;
 	
 	//*/
 

@@ -164,7 +164,7 @@ void ControllerEditor::draw(bool shadowMode){
 		if (Globals::drawContactForces){
 			//figure out if we should draw the contacts, desired pose, etc.
 			glColor3d(0, 0, 1);
-			double factor = 1;
+			double factor = 0.001;
 			//*
 			DynamicArray<ContactPoint>* cfs = conF->getWorld()->getContactForces();
 			for (uint i=0;i<cfs->size();i++){
@@ -174,7 +174,7 @@ void ControllerEditor::draw(bool shadowMode){
 				GLUtils::drawCone(0.015, c->f * 1 *factor, c->cp+c->f*9*factor);
 			}
 			//*/
-			/*
+			//*
 			std::vector<ForceStruct> vect = SimGlobals::vect_forces;
 			
 			for (uint i = 0; i < vect.size(); ++i){
@@ -390,7 +390,7 @@ void ControllerEditor::processTask(){
 				Vector3d v = conF->getController()->get_v();
 				tprintf("%lf, %lf, %lf, %lf\n",
 					phi, v.x, v.y, v.z);					
-			}*/
+			}//*/
 
 
 			lastFSMState = conF->getController()->getFSMState();
