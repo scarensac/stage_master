@@ -548,9 +548,9 @@ public:
 	}
 
 	inline double get_effective_desired_coronal_velocity(double phi){
-		//double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
-		//return velDCoronal + traj_vel_corronal.evaluate_catmull_rom(phi)*signChange;
-		return velDCoronal;
+		double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
+		return velDCoronal + traj_vel_corronal.evaluate_catmull_rom(phi)*signChange;
+		//return velDCoronal;
 	}
 
 };
