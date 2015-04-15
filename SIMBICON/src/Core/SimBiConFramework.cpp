@@ -176,12 +176,14 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 	if (advanceWorldInTime)
 		pw->advanceInTime(dt);
 
-
-	bool newFSMState = (con->advanceInTime(dt, pw->getContactForces()) != -1);
+	int new_state_idx = con->advanceInTime(dt, pw->getContactForces());
+	bool newFSMState = (new_state_idx != -1);
 	con->updateDAndV();
 
 	//here we are assuming that each FSM state represents a new step. 
 	if (newFSMState){
+		con->getState(con->getFSMState())->update_joints_trajectory();
+
 		coronalStepWidth = SimGlobals::step_width;
 
 		//we save the position of the swing foot (which is the old stance foot) and of the stance foot

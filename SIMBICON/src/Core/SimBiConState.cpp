@@ -26,6 +26,36 @@
 #include "SimGlobals.h"
 #include "SimBiController.h"
 
+#include <string>
+#include <sstream>
+#include <vector>
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+	std::stringstream ss(s);
+	std::string item;
+	//split the string
+	while (std::getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+
+	if (!elems.empty()){
+		//remove the endl from the last element
+		std::stringstream ss2(elems.back());
+		elems.pop_back();
+		while (std::getline(ss2, item, '\n')) {
+			elems.push_back(item);
+		}
+	}
+	return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, elems);
+	return elems;
+}
+
 /** 
 	Update this component to recenter it around the new given D and V trajectories
 */
@@ -127,6 +157,12 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 	char buffer[200];
 	char tmpString[200];
 
+	//init the reference vector
+	ref_trajectories.push_back(RefTrajectory(0.90, NULL));
+	ref_trajectories.push_back(RefTrajectory(0.40, NULL));
+	ref_trajectories.push_back(RefTrajectory(0.00, NULL));
+
+
 	//this is where it happens.
 	while (!feof(f)){
 		//get a line from the file...
@@ -137,8 +173,13 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 		int lineType = getConLineType(line);
 		switch (lineType) {
 			case CON_TRAJ_COMPONENT_END:
+			{
 				//we're done...
+				//load the correct trajectory
+				generate_trajectory();
+
 				return;
+			}
 				break;
 			case CON_COMMENT:
 				break;
@@ -160,8 +201,61 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 					throwError("Unrecognized type of feedback: \'%s\'", line);
 				break;
 			case CON_BASE_TRAJECTORY_START:
+			{
 				//read in the base trajectory
+				baseTraj.clear();
 				SimBiConState::readTrajectory1D(f, baseTraj, CON_BASE_TRAJECTORY_END);
+
+				//we check for what speed this trajectory is defined
+				char *nline = lTrim(line);
+				std::string res(nline);
+				std::vector<std::string> tokens = split(res, ',');
+				//set the trajectory for each token
+				for (int i = 0; i < (int)tokens.size(); ++i){
+					if (tokens[i] == "forward"){
+						ref_trajectories[0].second = new Trajectory1D(baseTraj);
+					}
+					else if (tokens[i] == "slow_forward"){
+						ref_trajectories[1].second = new Trajectory1D(baseTraj);
+					}
+					else if (tokens[i] == "static"){
+						ref_trajectories[2].second = new Trajectory1D(baseTraj);
+					}
+					else if (tokens[i] == "" || tokens[i] == " "){
+						//we ignore the empty tokens
+						tokens.erase(tokens.begin()+i);
+						--i;
+					}
+					else{
+						exit(1256);
+					}
+				}
+
+
+				if (tokens.size() == 0){
+					//meaning we have a default trajectory
+					//we check what are the still undefined ref trajectories (if none then we delete the ref trajctories system
+					//and use a single trajectory system
+					std::vector<int> vect_idx_undefined;
+					for (int i = 0; i < (int)ref_trajectories.size(); ++i){
+						if (ref_trajectories[i].second == NULL){
+							vect_idx_undefined.push_back(i);
+						}
+					}
+
+					if (vect_idx_undefined.size() == ref_trajectories.size()){
+						//this mean on the default trajectory is defined so we switch back to the single trajectory system
+						ref_trajectories.clear();
+					}
+					else{
+						for (int i = 0; i < (int)vect_idx_undefined.size(); ++i){
+							ref_trajectories[vect_idx_undefined[i]].second = new Trajectory1D(baseTraj);
+						}
+					}
+
+				}
+			}
+				
 				break;
 			case CON_REVERSE_ANGLE_ON_STANCE:
 				if (strncmp(trim(line), "left", 4) == 0)
@@ -180,6 +274,79 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 	}
 	throwError("Incorrect SIMBICON input file: No \'/trajectory\' found ", buffer);
 }
+
+
+/**
+this method is use to generate the correct trajectory from the reference trajectories
+*/
+void TrajectoryComponent::generate_trajectory(){
+	//I'll load the trajtectorie the nearest fromthe current speed for the start (until I code the combinaison funtion)
+	if (ref_trajectories.size() > 0){
+		/*
+		//this version is a simple attribution to the nearest
+		double min = std::abs(ref_trajectories[0].first - SimGlobals::velDSagittal);
+		int idx_min = 0;
+		for (int i = 1; i < (int)ref_trajectories.size(); ++i){
+			double res = std::abs(ref_trajectories[i].first - SimGlobals::velDSagittal);
+			if (res < min){
+				min = res;
+				idx_min = i;
+			}
+		}
+
+		baseTraj = *(ref_trajectories[idx_min].second);
+		//*/
+
+
+		int idx_min = -1;
+		for (int i = 0; i < (int)ref_trajectories.size(); ++i){
+			if ((ref_trajectories[i].first - SimGlobals::velDSagittal) < 0){
+				idx_min = i;
+				break;
+			}
+		}
+
+		if (idx_min == 0){
+			baseTraj = *(ref_trajectories[0].second);
+		}
+		else if (idx_min == -1){
+			baseTraj = *(ref_trajectories[ref_trajectories.size()-1].second);
+		}
+		else{
+			//this case we are between 2 speed so we need to build a custon trajectory
+			baseTraj.clear();
+			double cur_phi = 0;
+
+			//we need the distance from each trajectory
+			double dv1 = ref_trajectories[idx_min - 1].first - SimGlobals::velDSagittal;
+			dv1 *= dv1;
+			double dv2 = ref_trajectories[idx_min].first - SimGlobals::velDSagittal;
+			dv2 *= dv2;
+			double dv = dv1 + dv2;
+
+			double r = dv1 / dv;
+
+			for (int i = 0; i < 11; ++i){
+				double val1 = ref_trajectories[idx_min - 1].second->evaluate_catmull_rom(cur_phi);
+				double val2 = ref_trajectories[idx_min].second->evaluate_catmull_rom(cur_phi);
+				baseTraj.addKnot(cur_phi, val1*(1-r)+val2*r);
+				cur_phi += 0.1;
+			}
+		}
+
+		//*
+		//this version will create a trajectorie by combining the 2 adjascent trajectories using a square distance
+
+
+		//*/
+	}
+}
+
+/*************************************************************************************/
+/*                          TRAJECTORY COMPONENT END                                 */
+/*************************************************************************************/
+
+
 
 /**
 	This method is used to write the knots of a strength trajectory to the file, where they are specified one (knot) on a line
@@ -339,10 +506,13 @@ void SimBiConState::readState(FILE* f, int offset){
 				break;
 			case CON_TRAJECTORY_START:
 				//create a new trajectory, and read its information from the file
+				
+				Trajectory* tempTraj;
 				tempTraj = new Trajectory();
 				strcpy(tempTraj->jName, trim(line));
 				tempTraj->readTrajectory(f);
 				this->sTraj.push_back(tempTraj);
+				
 				break;
 
 			case CON_D_TRAJX_START:
@@ -388,6 +558,9 @@ void SimBiConState::readState(FILE* f, int offset){
 	}
 	throwError("Incorrect SIMBICON input file: No \'/State\' found", buffer);
 }
+
+
+
 
 /**
 	This method is used to write the state parameters to a file

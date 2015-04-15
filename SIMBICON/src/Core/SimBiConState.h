@@ -34,6 +34,9 @@
 #include <Utils/Utils.h>
 
 
+#define RefTrajectory std::pair<double, Trajectory1D*>
+#define RefTrajectories std::vector<RefTrajectory > 
+
 
 /**
  *  This helper class is used to hold information regarding one component of a state trajectory. This includes (mainly): the base trajectory, 
@@ -43,6 +46,9 @@ class TrajectoryComponent{
 public:
 	//this is the array of basis functions that specify the trajectories for the sagittal plane.
 	Trajectory1D baseTraj;
+	//this is the container that indicate the ref trajectories (the ref trajectories contain one traj for each speed)
+	RefTrajectories ref_trajectories;
+
 	//if this variable is set to true, then when the stance of the character is the left side, the 
 	//static target provided by this trajectory should be negated
 	bool reverseAngleOnLeftStance;
@@ -129,6 +135,12 @@ public:
 		This method is used to write a trajectory to a file
 	*/
 	void writeTrajectoryComponent(FILE* f);
+
+	/**
+		this method is use to generate the correct trajectory from the reference trajectories	
+	*/
+	void generate_trajectory();
+
 };
 
 
@@ -243,6 +255,8 @@ friend class SimBiController;
 private:
 	//this is the array of trajectories, one for each joint that is controlled
 	DynamicArray<Trajectory*> sTraj;
+
+
 	//this is a description of this state, for debugging purposes
 	char description[100];
 	//this is the number of the state that we should transition to in the controller's finite state machine
@@ -401,6 +415,12 @@ public:
 	void readState(FILE* f, int offset);
 
 	/**
+	This function read the file to fill the reference trajectories	
+	*/
+	void read_trajectories(std::string name, FILE* f);
+
+
+	/**
 		This method is used to write the state parameters to a file
 	*/
 	void writeState(FILE* f, int index);
@@ -420,6 +440,14 @@ public:
 	static void readTrajectory1D(FILE* f, Trajectory1D& result, int endingLineType );
 
 	static void writeTrajectory1D(FILE* f, Trajectory1D& result, int startingLineType, int endingLineType );
+
+	void update_joints_trajectory(){
+		for (int i = 0; i < (int)sTraj.size(); ++i){
+			for (int j = 0; j < (int)sTraj[i]->components.size(); ++j){
+				sTraj[i]->components[j]->generate_trajectory();
+			}
+		}
+	}
 
 };
 
