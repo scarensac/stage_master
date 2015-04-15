@@ -152,7 +152,7 @@ void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_h
 	
 	ReducedCharacterState rs(&desiredPose);
 
-
+	/*
 	static std::vector<uint> idx_vect;
 	if (idx_vect.empty()){
 		std::vector<Joint*> lower_body;
@@ -160,11 +160,11 @@ void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_h
 		for (int i = 0; i < lower_body.size();++i){
 			idx_vect.push_back(lower_body[i]->get_idx());
 		}
-	}
+	}//*/
 	
 	
 	for (int i=0;i<jointCount;i++){
-		if (controlParams[i].controlled == true){
+		if (controlParams[i].controlled == true ){
 			ControlParams params = controlParams[i];
 
 			//*

@@ -95,7 +95,7 @@ void Application::drawGround(){
 	glColor3d(1, 1, 1);
 	//GLUtils::drawCheckerboard(10, 1, 0);
 
-	double size = 100;
+	double size = 1500;
 
 	double x, z;
 	

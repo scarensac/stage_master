@@ -540,8 +540,9 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	}
 
 	//Now we modify the target of the swing leg to follow the IPM
-	//TODO find the problem with this.
-	if (stance_mode == 0){
+	//I noticed that the IPM was incapable of generating movements with speed >0.8 (for the impultion of the swing leg)
+	//so if the speed is that high we have to use a predefinite movement for it (which is during the double stance for walk movements)
+	if (stance_mode == 0 || velDSagittal<0.75){
 		computeIKSwingLegTargets(SimGlobals::dt);
 	}
 		
@@ -631,6 +632,11 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 	for (int i = 0; i<curState->getTrajectoryCount(); i++){
 		//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
 		int jIndex = curState->sTraj[i]->getJointIndex(stance);
+
+		//since they are conpute by the IPM anyway
+		if (jIndex == swingKneeIndex || jIndex == swingHipIndex){
+			//continue;
+		}
 
 		//get the desired joint orientation to track - include the feedback if necessary/applicable
 		newOrientation = curState->sTraj[i]->evaluateTrajectory(this, character->getJoint(jIndex), stance, phiToUse, d_d, d_v);
@@ -1101,6 +1107,12 @@ void SimBiController::computeIKQandW(int parentJIndex, int childJIndex, const Ve
 	//controlParams[childJIndex].relToFrame = false;
 	controlParams[parentJIndex].relToCharFrame = false;
 	controlParams[childJIndex].relToCharFrame = false;
+	/*
+	controlParams[parentJIndex].controlled = true;
+	controlParams[childJIndex].controlled = true;
+	controlParams[parentJIndex].strength = 1.0;
+	controlParams[childJIndex].strength = 1.0;
+	//*/
 	
 	rs.setJointRelativeOrientation(qChild, childJIndex);
 	rs.setJointRelativeOrientation(qParent, parentJIndex);

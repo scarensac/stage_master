@@ -43,67 +43,25 @@ ConState 0
 			/baseTrajectory
 		/component
 
-	/trajectory
-	
-	trajectory SWING_Hip
-			strengthTrajectory
-				0.000000 1.000000
-			/strengthTrajectory
-
-		component
-			rotationAxis 0.000000 1.000000 0.000000
-			reverseTargetAngleOnStance left
-			baseTrajectory
-				0.732441 0
-			/baseTrajectory
-		/component
-
-
-		component
-			rotationAxis 1.000000 0.000000 0.000000
-			feedback linear
-				feedbackProjectionAxis 0.000000 0.000000 1.000000
-				cd -0.300000
-				cv -0.300000
-			/feedback
-			baseTrajectory
-				0.023411 -0.091589
-				0.230769 -0.476365
-				0.521739 -0.218055
-				0.709030 -0.035635
-				0.842809 -0.002125
-				0.986622 -0.000708
-			/baseTrajectory
-		/component
-
 		component
 			rotationAxis 0.000000 0.000000 1.000000
-			reverseTargetAngleOnStance left
-			feedback linear
-				feedbackProjectionAxis 1.000000 0.000000 0.000000
-				cd 0.550000
-				cv 0.300000
-			/feedback
+			reverseTargetAngleOnStance right
 			baseTrajectory
-				0.732441 -0.081375
+				0.006689 0.037422
+				0.491639 -0.030618
+				0.993311 0.034506
 			/baseTrajectory
 		/component
-	/trajectory
-
-	trajectory SWING_Knee
-
+		
 		component
-			rotationAxis 1.000000 0.000000 0.000000
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance right
 			baseTrajectory
-				0.016722 0.887089
-				0.250836 0.800963
-				0.428094 0.659216
-				0.555184 0.478290
-				0.632107 0.142159
-				0.775920 -0.027983
-				0.993311 -0.031620
+				0.0 0.0
+				0.5 0.0
+				1.0 0.0
 			/baseTrajectory
-		/component
+		/component		
 	/trajectory
 
 	trajectory STANCE_Knee
@@ -119,26 +77,11 @@ ConState 0
 		/component
 	/trajectory
 
-	trajectory SWING_Ankle
+	trajectory Ankle
 	characterFrameRelative
 			strengthTrajectory
 				0.000000 1.000000
 			/strengthTrajectory
-
-		component
-			rotationAxis 1.000000 0.000000 0.000000
-			baseTrajectory
-				0.00 1.50			
-				0.25 0.862791
-				0.4 -0.048689
-				0.7 -0.710860
-				1.00 -0.4
-			/baseTrajectory
-		/component
-	/trajectory
-
-	trajectory STANCE_Ankle
-	characterFrameRelative
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
@@ -147,16 +90,52 @@ ConState 0
 				cd 0.200000
 				cv 0.200000
 			/feedback
+			
+			#forward fast
 			baseTrajectory
 				0.00 0.3
 				0.10 0.12
 				0.20 0.05
 				0.30 0.05
 				0.85 0.1
-				1.00 1.50
+				1.00 1.50			
+				1.25 0.862791
+				1.4 -0.048689
+				1.7 -0.710860
+				2.00 -0.4
 			/baseTrajectory
+			
+			#forward slow
+			baseTrajectory
+				0.00 0.15
+				0.10 0.06
+				0.20 0.05
+				0.30 0.05
+				0.85 0.1
+				1.00 0.50			
+				1.25 0.35
+				1.40 0.00
+				1.70 -0.35
+				2.00 -0.2
+			/baseTrajectory
+			
+			#static
+			baseTrajectory
+				0.00 0.05
+				0.10 0.05
+				0.20 0.05
+				0.30 0.05
+				0.85 0.1
+				1.00 0.25			
+				1.25 0.15
+				1.40 0.00
+				1.70 -0.15
+				2.00 -0.05
+			/baseTrajectory
+			
 		/component
 	/trajectory
+
 
 	trajectory STANCE_Shoulder
 
@@ -169,6 +148,14 @@ ConState 0
 			/baseTrajectory
 		/component
 
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.036789 0.087916
+				0.665552 -0.282452
+				0.989967 -0.224412
+			/baseTrajectory
+		/component
 	/trajectory
 
 	trajectory SWING_Shoulder
@@ -182,8 +169,43 @@ ConState 0
 			/baseTrajectory
 		/component
 
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.003344 0.030020
+				0.180602 0.002729
+				0.494983 -0.011906
+				0.802676 0.068758
+				0.986622 0.078197
+			/baseTrajectory
+		/component
 	/trajectory
 
+	trajectory STANCE_Elbow
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance left
+			baseTrajectory
+				0.033445 0.310933
+				0.521739 0.419418
+				0.939799 0.310933
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory SWING_Elbow
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance left
+			baseTrajectory
+				0.003344 -0.036889
+				0.608696 -0.391027
+				1.000000 -0.300000
+			/baseTrajectory
+		/component
+	/trajectory
 
 	trajectory pelvis_torso
 	characterFrameRelative
@@ -217,6 +239,25 @@ ConState 0
 		/component
 	/trajectory
 
+	trajectory torso_head
+	characterFrameRelative
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.010033 0.000000
+				0.508361 0.050000
+				0.986622 0.000000
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+			/baseTrajectory
+		/component
+	/trajectory
 /ConState
 
 

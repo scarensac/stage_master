@@ -29,6 +29,7 @@ ConState 0
 	stateStance reverse
 	time 0.7000000
 
+
 	trajectory root
 			strengthTrajectory
 				0.000000 1.000000
@@ -37,84 +38,24 @@ ConState 0
 		component
 			rotationAxis 1.000000 0.000000 0.000000
 			baseTrajectory
-				0.020067 0.071300
-				0.538462 0.071300
-				0.966555 0.071300
+				0.006689 0.000378
+				0.254181 0.000378
+				0.501672 -0.000378
+				0.745819 -0.000378
+				0.989967 -0.000378
 			/baseTrajectory
 		/component
-
-	/trajectory
-	
-	trajectory SWING_Hip
-			strengthTrajectory
-				0.000000 1.000000
-			/strengthTrajectory
-
-		component
-			rotationAxis 0.000000 1.000000 0.000000
-			reverseTargetAngleOnStance left
-			baseTrajectory
-				0.732441 0
-			/baseTrajectory
-		/component
-
-
-		component
-			rotationAxis 1.000000 0.000000 0.000000
-			feedback linear
-				feedbackProjectionAxis 0.000000 0.000000 1.000000
-				cd -0.300000
-				cv -0.300000
-			/feedback
-			baseTrajectory
-				0.023411 -0.091589
-				0.230769 -0.476365
-				0.521739 -0.218055
-				0.709030 -0.035635
-				0.842809 -0.002125
-				0.986622 -0.000708
-			/baseTrajectory
-		/component
-
-		component
-			rotationAxis 0.000000 0.000000 1.000000
-			reverseTargetAngleOnStance left
-			feedback linear
-				feedbackProjectionAxis 1.000000 0.000000 0.000000
-				cd 0.550000
-				cv 0.300000
-			/feedback
-			baseTrajectory
-				0.732441 -0.081375
-			/baseTrajectory
-		/component
-	/trajectory
-
-	trajectory SWING_Knee
-
-		component
-			rotationAxis 1.000000 0.000000 0.000000
-			baseTrajectory
-				0.016722 0.887089
-				0.250836 0.800963
-				0.428094 0.659216
-				0.555184 0.478290
-				0.632107 0.142159
-				0.775920 -0.027983
-				0.993311 -0.031620
-			/baseTrajectory
-		/component
+		
 	/trajectory
 
 	trajectory STANCE_Knee
-
 		component
 			rotationAxis 1.000000 0.000000 0.000000
 			baseTrajectory
-				0.046823 0.396230
-				0.207358 0.134641
-				0.662207 -0.011162
-				1.000000 0.000000
+				0.0 0.155
+				0.2 0.055
+				0.6 0.00
+				1.0 0.00
 			/baseTrajectory
 		/component
 	/trajectory
@@ -122,17 +63,17 @@ ConState 0
 	trajectory SWING_Ankle
 	characterFrameRelative
 			strengthTrajectory
-				0.000000 1.000000
+				0.00 1.00
 			/strengthTrajectory
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
 			baseTrajectory
-				0.00 1.50			
-				0.25 0.862791
-				0.4 -0.048689
-				0.7 -0.710860
-				1.00 -0.4
+				0.00 0.25			
+				0.25 0.15
+				0.40 0.00
+				0.70 -0.15
+				1.00 -0.05
 			/baseTrajectory
 		/component
 	/trajectory
@@ -144,19 +85,27 @@ ConState 0
 			rotationAxis 1.000000 0.000000 0.000000
 			feedback linear
 				feedbackProjectionAxis 0.000000 0.000000 1.000000
-				cd 0.200000
+				cd 0.150000
 				cv 0.200000
 			/feedback
 			baseTrajectory
-				0.00 0.3
-				0.10 0.12
+				0.00 0.05
+				0.10 0.05
 				0.20 0.05
 				0.30 0.05
 				0.85 0.1
-				1.00 1.50
+				1.00 0.25
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			baseTrajectory
+				0.000000 -0.000000
 			/baseTrajectory
 		/component
 	/trajectory
+
 
 	trajectory STANCE_Shoulder
 
@@ -184,7 +133,6 @@ ConState 0
 
 	/trajectory
 
-
 	trajectory pelvis_torso
 	characterFrameRelative
 
@@ -201,8 +149,8 @@ ConState 0
 		component
 			rotationAxis 1.000000 0.000000 0.000000
 			baseTrajectory
-				0.117057 -0.001063
-				0.511706 0.024454
+				0.0 0.0
+				1.0 0.0
 			/baseTrajectory
 		/component
 
@@ -222,6 +170,6 @@ ConState 0
 
 startAtState 0
 startingStance left
-loadCharacterState ../data/controllers/bipV2/fWalkState.rs
+loadCharacterState ../data/controllers/bipV2/iWalkState.rs
 
 
