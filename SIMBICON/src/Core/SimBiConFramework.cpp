@@ -206,10 +206,20 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		con->swingFootTrajectoryCoronal.clear();
 		con->swingFootTrajectorySagittal.clear();
 
+		//*
+		//normal walk
 		con->swingFootHeightTrajectory.addKnot(0, ankleBaseHeight);
 		con->swingFootHeightTrajectory.addKnot(0.5, ankleBaseHeight + 0.01 + stepHeight);
 		con->swingFootHeightTrajectory.addKnot(1, ankleBaseHeight + 0.01);
+		//*/
 
+		/*
+		//snow walk
+		con->swingFootHeightTrajectory.addKnot(0, ankleBaseHeight);
+		con->swingFootHeightTrajectory.addKnot(0.2, ankleBaseHeight + 0.01 + 0.5);
+		con->swingFootHeightTrajectory.addKnot(0.6, ankleBaseHeight + 0.01 + 0.5);
+		con->swingFootHeightTrajectory.addKnot(1, ankleBaseHeight + 0.01);
+		//*/
 		con->swingFootTrajectoryCoronal.addKnot(0, 0);
 		con->swingFootTrajectoryCoronal.addKnot(1, 0);
 

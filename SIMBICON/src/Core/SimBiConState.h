@@ -390,14 +390,17 @@ public:
 		//if it is a foot contact based transition
 		if (transitionOnFootContact == true){
 			//transition if we have a meaningful foot contact, and if it does not happen too early on...
-			if ((phi > minPhiBeforeTransitionOnFootContact && swingFootVerticalForce > minSwingFootForceForContact) || phi >= 1)
+			if ((phi > minPhiBeforeTransitionOnFootContact && swingFootVerticalForce > minSwingFootForceForContact)){
 				return true;
-			return false;
+			}
 		}
 
 		//otherwise it must be a time-based transition
-		if (phi >= 1)
-			return true;
+		//I disable it because it has no meaning
+		if (phi >= 1){
+
+		}
+			//return true;
 
 		return false;
 	}

@@ -75,6 +75,7 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	startingStance = LEFT_STANCE;
 	initialBipState[0] = '\0';
 
+	swing_foot_traj = NULL;
 
 
 	comOffsetSagittal=0;
@@ -89,13 +90,19 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 
 	double cur_phi = 0;
 	for (int i = 0; i < 13; ++i){
+		//normal walk
 		traj_vel_corronal.addKnot(cur_phi, (-0.1 + 0.2 * cur_phi));
 		traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
 		cur_phi += 0.1;
 	}
-
-
-	
+	/*
+	//snow walk
+	traj_vel_sagittal.clear();
+	traj_vel_sagittal.addKnot(0, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
+	traj_vel_sagittal.addKnot(0.2, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
+	traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
+	traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
+	//*/
 
 
 	lKneeIndex = character->getJointIndex("lKnee");
@@ -114,10 +121,21 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	swingFootTrajectoryCoronal.clear();
 	swingFootTrajectorySagittal.clear();
 
+	//*
+	//normal walk
 	swingFootHeightTrajectory.addKnot(0, 0.05);
 	swingFootHeightTrajectory.addKnot(0.5, 0.05 + 0.01 + 0.13);
 	swingFootHeightTrajectory.addKnot(1, 0.05 + 0.01);
-	
+	//*/
+
+	/*
+	//non continuous walk (like in snow)
+	swingFootHeightTrajectory.addKnot(0, 0.05);
+	swingFootHeightTrajectory.addKnot(0.2, 0.05 + 0.01 + 0.5);
+	swingFootHeightTrajectory.addKnot(0.5, 0.05 + 0.01 + 0.5);
+	swingFootHeightTrajectory.addKnot(1, 0.05 + 0.01);
+	//*/
+
     swingFootTrajectoryCoronal.addKnot(0, 0);
 	swingFootTrajectoryCoronal.addKnot(1, 0);
 
@@ -317,7 +335,7 @@ int SimBiController::advanceInTime(double dt, DynamicArray<ContactPoint> *cfs){
 	}
 
 	//advance the phase of the controller
-	this->phi += dt/get_cur_state_time();
+	advance_phase(dt);
 
 	//see if we have to transition to the next state in the FSM, and do it if so...
 	if (states[FSMStateIndex]->needTransition(getPhase(), fabs(getForceOnFoot(swingFoot, cfs).dotProductWith(SimGlobals::up)), fabs(getForceOnFoot(stanceFoot, cfs).dotProductWith(SimGlobals::up)))){
@@ -370,7 +388,12 @@ double SimBiController::getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs
 }
 
 
-
+/**
+This function get the desired pose from the last step
+*/
+void SimBiController::getDesiredPose(DynamicArray<double>& trackingPose){
+	trackingPose = desiredPose;
+}
 
 /**
 	This method makes it possible to evaluate the debug pose at any phase angle
@@ -539,12 +562,17 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 		stance_mode = 0;
 	}
 
-	//Now we modify the target of the swing leg to follow the IPM
-	//I noticed that the IPM was incapable of generating movements with speed >0.8 (for the impultion of the swing leg)
-	//so if the speed is that high we have to use a predefinite movement for it (which is during the double stance for walk movements)
-	if (stance_mode == 0 || velDSagittal<0.75){
-		computeIKSwingLegTargets(SimGlobals::dt);
+	//since I use the foot trajectory now I have to compute the positions
+	//we do it only in the ascendent phase (in the decendent phase we use the IPM result to conserve balance)
+	//TODO also use specified result during static phase
+	if (v.y>=0){
+		use_specified_swing_foot(SimGlobals::dt);
 	}
+
+
+	//Now we modify the target of the swing leg to follow the IPM (or the specified values)
+	computeIKSwingLegTargets(SimGlobals::dt);
+	
 		
 
 	//compute the torques now, using the desired pose information - the hip torques will get overwritten below
@@ -633,9 +661,10 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 		//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
 		int jIndex = curState->sTraj[i]->getJointIndex(stance);
 
-		//since they are conpute by the IPM anyway
-		if (jIndex == swingKneeIndex || jIndex == swingHipIndex){
-			//continue;
+		//anything loer than -1 is just a trajectory stored here for a simple usage
+		//but it's not a real tajectory so I have to ignore them
+		if (jIndex < -1){
+			continue;
 		}
 
 		//get the desired joint orientation to track - include the feedback if necessary/applicable
@@ -1002,7 +1031,36 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	//*/
 }
 
+/**
+this function override the results of the ipm with the specified results
+*/
+void SimBiController::use_specified_swing_foot(double dt){
+	double cur_phi = MIN(getPhase(), 1);
+	double future_phi = MIN(cur_phi + dt / get_cur_state_time(), 1);
 
+	//we know that the points what we want to modify are the 2 last that were defined
+	//since we specify the position relative to the hip knot and that the system is based on positions relatives to the mass center
+	//we need to add the bifference before giving the values to the system
+	Point3d com = character->getCOM();
+	Point3d hip = swingHip->getParent()->getWorldCoordinates(swingHip->getParentJointPosition());
+	double dx = hip.x - com.x;
+	double dz = hip.z - com.z;
+
+	int point_count = swingFootTrajectorySagittal.getKnotCount();
+	swingFootTrajectorySagittal.setKnotValue(point_count - 2, swing_foot_traj->components[2]->baseTraj.evaluate_catmull_rom(cur_phi)+dz);
+	swingFootTrajectorySagittal.setKnotValue(point_count - 1, swing_foot_traj->components[2]->baseTraj.evaluate_catmull_rom(future_phi) + dz);
+
+
+	double sign = (getStance() == LEFT_STANCE) ? -1.0 : 1.0;
+	point_count = swingFootTrajectoryCoronal.getKnotCount();
+	swingFootTrajectoryCoronal.setKnotValue(point_count - 2, sign*swing_foot_traj->components[0]->baseTraj.evaluate_catmull_rom(cur_phi) + dx);
+	swingFootTrajectoryCoronal.setKnotValue(point_count - 1, sign*swing_foot_traj->components[0]->baseTraj.evaluate_catmull_rom(future_phi) + dx);
+
+
+	//the height will be handled somewhere else( because it has to be always generated)
+
+
+}
 
 /**
 This method is used to compute the target angles for the swing hip and swing knee that help
@@ -1041,6 +1099,14 @@ Point3d SimBiController::getSwingFootTargetLocation(double t, const Point3d& com
 	//finally, set the desired height of the foot
 	//TODO reactivate the panicheight an the unplanned height
 	step.y = swingFootHeightTrajectory.evaluate_catmull_rom(t);// + panicHeight + unplannedForHeight;
+
+	//the override of the height is just during the transition phase of the program (it will be moved somewhere else maybe)
+	//if (stance_mode != 0 && velDSagittal>0.75){
+		Point3d hip_pos = swingHip->getParent()->getWorldCoordinates(swingHip->getParentJointPosition());
+		double delta_y=swing_foot_traj->components[1]->baseTraj.evaluate_catmull_rom(t);
+		step.y = hip_pos.y - delta_y;
+	//}
+
 
 	step += computeSwingFootDelta(t);
 
@@ -1321,6 +1387,12 @@ void SimBiController::resolveJoints(SimBiConState* state){
 			jt->leftStanceIndex = jt->rightStanceIndex = -1;
 			continue;
 		}
+		//deal with the new swing foot trajectory specification
+		if (strcmp(jt->jName, "swing_foot") == 0){
+			jt->leftStanceIndex = jt->rightStanceIndex = -2;
+			continue;
+		}
+
 		//deal with the SWING_XXX' case
 		if (strncmp(jt->jName, "SWING_", strlen("SWING_"))==0){
 			strcpy(tmpName+1, jt->jName + strlen("SWING_"));
@@ -1514,6 +1586,21 @@ void SimBiController::loadFromFile(char* fName){
 				throwError("Incorrect SIMBICON input file: \'%s\' - unexpected line.", buffer);
 		}
 	}
+
+	//now that the states are loaded I have access to the trajectories
+	//I'll create a reference to the foot 
+	SimBiConState* curState = getState(getFSMState());
+	for (int i = 0; i < curState->getTrajectoryCount(); i++){
+		//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
+		int jIndex = curState->sTraj[i]->getJointIndex(stance);
+
+		//when we found the trajectory wr save a pointer for easy access
+		if (jIndex == -2){
+			swing_foot_traj = curState->sTraj[i];
+			break;
+		}
+	}
+
 }
 
 /**

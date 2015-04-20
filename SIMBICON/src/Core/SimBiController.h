@@ -112,6 +112,9 @@ private:
 	//this is a controller that we will be using to compute gravity-cancelling torques
 	VirtualModelController* vmc;
 
+	//this trajectory contains the way time is distorded during the phase (it's used to dynamicaly adapt the time that the controler can use)
+	Trajectory1D time_distortion_trajectory;
+
 public:
 	//keep a copy of the initial character state, starting stance and file that contains the character's initial state
 	int startingState;
@@ -171,6 +174,10 @@ public:
 	double stanceHipToSwingHipRatio;
 	bool stanceHeelInContact, stanceToeInContact;
 
+
+	//I'll store the swing foot trajectory here before I'll use it often
+	Trajectory* swing_foot_traj;
+
 protected:
 
 
@@ -225,6 +232,10 @@ protected:
 	*/
 	double getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs);
 
+	/**
+	this function override the results of the ipm with the specified results
+	*/
+	void use_specified_swing_foot(double dt);
 
 	/**
 	This method is used to compute the target angles for the swing hip and swing knee that help
@@ -299,7 +310,28 @@ public:
 	*/
 	virtual ~SimBiController(void);
 
-	
+	/*
+	this func is useless I just needed to output those value to see them
+	*/
+	void read_target_swing_hip_knee(std::vector<double>& hip_target, std::vector<double>& knee_target){
+		SimBiConState* curState= getState(getFSMState());
+		for (int i = 0; i < curState->getTrajectoryCount(); i++){
+			//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
+			int jIndex = curState->sTraj[i]->getJointIndex(stance);
+
+			if (jIndex == stanceKneeIndex){
+				for (int k = 0; k < (int)11; ++k){
+					knee_target.push_back(curState->sTraj[i]->components[0]->baseTraj.evaluate_catmull_rom(k*0.1));
+				}
+
+			}
+			else if	(jIndex == swingHipIndex){
+				for (int k = 0; k < (int)11; ++k){
+					hip_target.push_back(curState->sTraj[i]->components[1]->baseTraj.evaluate_catmull_rom(k*0.1));
+				}
+			}
+		}
+	}
 	
 	inline Vector3d get_d(){
 		return d;
@@ -391,6 +423,14 @@ public:
 		or the index of the state that it transitions to otherwise.
 	*/
 	int advanceInTime(double dt, DynamicArray<ContactPoint> *cfs);
+
+	/*
+	this function is here to make phi advance following the specifyed dt
+	*/
+	void advance_phase(double dt){
+
+		this->phi += dt / get_cur_state_time();
+	}
 
 	/**
 	this funtion is just an easy way to now the current state time length
@@ -484,6 +524,11 @@ public:
 		Returns null if the index is out of range
 	 */
 	SimBiConState* getState( uint idx );
+
+	/**
+	This function get the desired pose from the last step
+	*/
+	void getDesiredPose(DynamicArray<double>& trackingPose);
 
 	/**
 		This method makes it possible to evaluate the debug pose at any phase angle
