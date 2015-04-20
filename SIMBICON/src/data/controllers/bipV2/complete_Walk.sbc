@@ -131,7 +131,7 @@ ConState 0
 				0.20 0.05
 				0.30 0.05
 				0.85 0.1
-				1.00 1.50
+				1.00 0.1
 			/baseTrajectory
 			
 			baseTrajectory slow_forward
@@ -140,7 +140,7 @@ ConState 0
 				0.20 0.05
 				0.30 0.05
 				0.85 0.1
-				1.00 0.50
+				1.00 0.1
 			/baseTrajectory
 			
 			baseTrajectory static
@@ -149,76 +149,51 @@ ConState 0
 				0.20 0.05
 				0.30 0.05
 				0.85 0.1
-				1.00 0.25
+				1.00 0.1
 			/baseTrajectory
 		
 			
 		/component
 	/trajectory
 
-	
-	
-	trajectory SWING_Hip
-			strengthTrajectory
-				0.000000 1.000000
-			/strengthTrajectory
-
+	trajectory swing_foot
 		component
-			rotationAxis 0.000000 1.000000 0.000000
-			reverseTargetAngleOnStance left
+			rotationAxis 1.000000 0.000000 0.000000
 			baseTrajectory
-				0.732441 0
+				0.0	-0.07
+				0.25 -0.068
+				1.0	-0.075
 			/baseTrajectory
 		/component
 
-
 		component
-			rotationAxis 1.000000 0.000000 0.000000
-			feedback linear
-				feedbackProjectionAxis 0.000000 0.000000 1.000000
-				cd -0.300000
-				cv -0.300000
-			/feedback
+			rotationAxis 0.000000 1.000000 0.000000
 			baseTrajectory
-				0.023411 -0.091589
-				0.230769 -0.476365
-				0.521739 -0.218055
-				0.709030 -0.035635
-				0.842809 -0.002125
-				0.986622 -0.000708
+				0.0 0.95
+				0.5 0.80
+				1.0 0.95
 			/baseTrajectory
 		/component
 
 		component
 			rotationAxis 0.000000 0.000000 1.000000
-			reverseTargetAngleOnStance left
-			feedback linear
-				feedbackProjectionAxis 1.000000 0.000000 0.000000
-				cd 0.550000
-				cv 0.300000
-			/feedback
 			baseTrajectory
-				0.732441 -0.081375
+				0.0	-0.09160307
+				0.1	0.039413809
+				0.2	0.243181333
+				0.3	0.277204883
+				0.4	0.227912361
+				0.5	0.179916282
+				0.6	0.221916683
+				0.7	0.253631053
+				0.8	0.256397754
+				0.9	0.2523565
+				1.0	0.25032652
 			/baseTrajectory
 		/component
+	
 	/trajectory
-
-	trajectory SWING_Knee
-
-		component
-			rotationAxis 1.000000 0.000000 0.000000
-			baseTrajectory
-				0.016722 0.887089
-				0.250836 0.800963
-				0.428094 0.659216
-				0.555184 0.478290
-				0.632107 0.142159
-				0.775920 -0.027983
-				0.993311 -0.031620
-			/baseTrajectory
-		/component
-	/trajectory	
-
+	
 	
 	trajectory STANCE_Shoulder
 

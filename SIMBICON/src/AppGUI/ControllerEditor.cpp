@@ -101,7 +101,9 @@ void ControllerEditor::drawDesiredTarget(){
 	Character* ch = conF->getCharacter();
 	//we need to get the desired pose, and set it to the character
 	DynamicArray<double> pose;
-	conF->getController()->updateTrackingPose(pose, Globals::targetPosePhase);
+	//conF->getController()->updateTrackingPose(pose, Globals::targetPosePhase);
+	conF->getController()->getDesiredPose(pose);
+
 
 	glPushMatrix();
 	Point3d p = ch->getRoot()->getCMPosition();
@@ -440,6 +442,18 @@ void ControllerEditor::processTask(){
 
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
+
+				std::vector<double> hip_target, knee_target;
+				conF->con->read_target_swing_hip_knee(hip_target, knee_target);
+
+				for (int i = 0; i < (int)hip_target.size(); ++i){
+					tprintf(" %lf \n", hip_target[i]);
+				}
+				tprintf(" \n");
+				for (int i = 0; i < (int)knee_target.size(); ++i){
+					tprintf(" %lf \n", knee_target[i]);
+				}
+				
 
 				phi_it = 0;
 				//compute the speed and show it to the user
