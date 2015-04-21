@@ -493,6 +493,7 @@ void ControllerEditor::processTask(){
 				stepTaken();
 
 				//get the reversed new state...
+				/*
 				DynamicArray<double> newState;
 				if (conF->getController()->getStance() == RIGHT_STANCE)
 					conF->getCharacter()->getReverseStanceState(&newState);
@@ -502,6 +503,7 @@ void ControllerEditor::processTask(){
 				ReducedCharacterState rNew(&newState);
 
 				conF->getCharacter()->saveReducedStateToFile("out\\reducedCharacterState.rs", newState);
+				//*/
 			}
 
 //			if (conF->getController()->isBodyInContactWithTheGround()){

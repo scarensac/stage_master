@@ -178,13 +178,20 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	int new_state_idx = con->advanceInTime(dt, pw->getContactForces());
 	bool newFSMState = (new_state_idx != -1);
-	con->updateDAndV();
+	//con->updateDAndV();
 
 	//here we are assuming that each FSM state represents a new step. 
 	if (newFSMState){
 		con->getState(con->getFSMState())->update_joints_trajectory();
 
+		//adapt the velD trajectories
+		con->velD_adapter(false);
+
+		//read the step width
 		coronalStepWidth = SimGlobals::step_width;
+
+		//read the speed from the gui
+		con->calc_desired_velocities(con->getPhase());
 
 		//we save the position of the swing foot (which is the old stance foot) and of the stance foot
 		swingFootStartPos=lastFootPos;
@@ -202,24 +209,10 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		com_displacement_last_step = cur_com - old_com;
 		
 		//now prepare the step information for the following step:
-		con->swingFootHeightTrajectory.clear();
 		con->swingFootTrajectoryCoronal.clear();
 		con->swingFootTrajectorySagittal.clear();
 
-		//*
-		//normal walk
-		con->swingFootHeightTrajectory.addKnot(0, ankleBaseHeight);
-		con->swingFootHeightTrajectory.addKnot(0.5, ankleBaseHeight + 0.01 + stepHeight);
-		con->swingFootHeightTrajectory.addKnot(1, ankleBaseHeight + 0.01);
-		//*/
 
-		/*
-		//snow walk
-		con->swingFootHeightTrajectory.addKnot(0, ankleBaseHeight);
-		con->swingFootHeightTrajectory.addKnot(0.2, ankleBaseHeight + 0.01 + 0.5);
-		con->swingFootHeightTrajectory.addKnot(0.6, ankleBaseHeight + 0.01 + 0.5);
-		con->swingFootHeightTrajectory.addKnot(1, ankleBaseHeight + 0.01);
-		//*/
 		con->swingFootTrajectoryCoronal.addKnot(0, 0);
 		con->swingFootTrajectoryCoronal.addKnot(1, 0);
 
@@ -227,13 +220,12 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		con->swingFootTrajectorySagittal.addKnot(1, 0);
 
 		//addapt the variation on the IPM result depending on our speed
-		
 		avg_speed/=times_vel_sampled;
 		static double previous_speed = avg_speed;
 
 		double d_v = con->velDSagittal - (avg_speed*.75+previous_speed*0.25);
 		if (d_v < 0.3){
-			//step_delta -= (d_v)*0.01;
+			step_delta -= (d_v)*0.01;
 		}
 		if (step_delta > 0){
 			step_delta = 0;
@@ -257,12 +249,16 @@ this method gets called at every simulation time step
 */
 void SimBiConFramework::simStepPlan(double dt){
 
+	//update the pointers for the controler (normaly should only be done once at the start of each step)
+	con->updateSwingAndStanceReferences();
+
+	//update D and V
 	con->updateDAndV();
 
-	//we start by initializing the speed
-	con->calc_desired_velocities(con->getPhase());
+	//let the adapter learn for the new phi
+	con->velD_adapter();
 
-	con->updateSwingAndStanceReferences();
+
 	if (con->getPhase()<= 0.01)
 		swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
 

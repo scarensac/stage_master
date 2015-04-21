@@ -98,6 +98,7 @@ private:
 
 	//the phase parameter, phi must have values between 0 and 1, and it indicates the progress through the current state.
 	double phi;
+	double phi_last_step;
 
 	//this quaternion gives the current heading of the character. The complex conjugate of this orientation is used
 	//to transform quantities from world coordinates into a rotation/heading-independent coordinate frame (called the character frame).
@@ -128,15 +129,11 @@ public:
 	//desired velocity in the coronal plane...
 	double velDCoronal;
 
-	//here the trajectories for the velocity
-	Trajectory1D traj_vel_sagittal;
-	Trajectory1D traj_vel_corronal;
 
 	//this is a desired foot trajectory that we may wish to follow, expressed separately, for the 3 components,
 	//and relative to the current location of the CM
 	Trajectory1D swingFootTrajectorySagittal;
 	Trajectory1D swingFootTrajectoryCoronal;
-	Trajectory1D swingFootHeightTrajectory;
 	Trajectory1D swingFootTrajectoryDeltaSagittal;
 	Trajectory1D swingFootTrajectoryDeltaCoronal;
 	Trajectory1D swingFootTrajectoryDeltaHeight;
@@ -177,6 +174,12 @@ public:
 
 	//I'll store the swing foot trajectory here before I'll use it often
 	Trajectory* swing_foot_traj;
+
+	//I'll store the velD trajectory here before I'll use it often
+	Trajectory* velD_traj;
+
+	//this bolean indicate if the next step should be a step where we focus on trying to get back in a stable state
+	bool recovery_step;
 
 protected:
 
@@ -342,10 +345,6 @@ public:
 	}
 
 	inline void calc_desired_velocities(double phi){
-		//read the parameter from the trajectory
-		//velDSagittal = traj_vel_sagittal.evaluate_catmull_rom(phi);
-		//velDCoronal= traj_vel_corronal.evaluate_catmull_rom(phi);
-
 		//read the parameters from the gui
 		velDSagittal = SimGlobals::velDSagittal;
 		velDCoronal = SimGlobals::velDCoronal;
@@ -586,16 +585,20 @@ public:
 	}
 
 	/**
-	those functions are here to get the desired speed affected by the variations defined by the trajectories
+	this function get the desired sagital velocity (affected by the variation trajectory)
 	*/
-	inline double get_effective_desired_sagittal_velocity(double phi){
-		return velDSagittal*traj_vel_sagittal.evaluate_catmull_rom(phi);
-	}
+	inline double get_effective_desired_sagittal_velocity(double phi);
 
-	inline double get_effective_desired_coronal_velocity(double phi){
-		double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
-		return velDCoronal + traj_vel_corronal.evaluate_catmull_rom(phi)*signChange;
-		//return velDCoronal;
-	}
+	/**
+	this function get the desired coronal velocity (affected by the variation trajectory)
+	*/
+	inline double get_effective_desired_coronal_velocity(double phi);
+
+	/**
+	this function will store the velocities every 0.1 phi when on learning mode
+	when learning learning mode is desactivated the function will adapt the velD_trajectories so they have a better fit on the movement
+	this system will also update a bolean signaling if the next step will be a recovery step or if it will be a normal step
+	*/
+	void velD_adapter(bool learning_mode=true, bool* trajectory_modified = NULL);
 
 };
