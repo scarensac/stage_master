@@ -85,25 +85,6 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	velDSagittal = 0.95;
 	velDCoronal = 0;
 
-	traj_vel_sagittal.clear();
-	traj_vel_corronal.clear();
-
-	double cur_phi = 0;
-	for (int i = 0; i < 13; ++i){
-		//normal walk
-		traj_vel_corronal.addKnot(cur_phi, (-0.1 + 0.2 * cur_phi));
-		traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
-		cur_phi += 0.1;
-	}
-	/*
-	//snow walk
-	traj_vel_sagittal.clear();
-	traj_vel_sagittal.addKnot(0, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
-	traj_vel_sagittal.addKnot(0.2, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
-	traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
-	traj_vel_sagittal.addKnot(cur_phi, 1.1985 * cur_phi*cur_phi - 1.1857 *cur_phi + 1.2155);
-	//*/
-
 
 	lKneeIndex = character->getJointIndex("lKnee");
 	rKneeIndex = character->getJointIndex("rKnee");
@@ -117,24 +98,11 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	swingLegPlaneOfRotation = Vector3d(-1, 0, 0);
 
 	//those are an init for the foot trajectory
-    swingFootHeightTrajectory.clear();
 	swingFootTrajectoryCoronal.clear();
 	swingFootTrajectorySagittal.clear();
 
-	//*
-	//normal walk
-	swingFootHeightTrajectory.addKnot(0, 0.05);
-	swingFootHeightTrajectory.addKnot(0.5, 0.05 + 0.01 + 0.13);
-	swingFootHeightTrajectory.addKnot(1, 0.05 + 0.01);
-	//*/
 
-	/*
-	//non continuous walk (like in snow)
-	swingFootHeightTrajectory.addKnot(0, 0.05);
-	swingFootHeightTrajectory.addKnot(0.2, 0.05 + 0.01 + 0.5);
-	swingFootHeightTrajectory.addKnot(0.5, 0.05 + 0.01 + 0.5);
-	swingFootHeightTrajectory.addKnot(1, 0.05 + 0.01);
-	//*/
+
 
     swingFootTrajectoryCoronal.addKnot(0, 0);
 	swingFootTrajectoryCoronal.addKnot(1, 0);
@@ -162,6 +130,7 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	vmc = new VirtualModelController(b);
 
 
+	recovery_step = false;
 }
 
 /**
@@ -231,7 +200,9 @@ void SimBiController::transitionToState(int stateIndex){
 	setStance(states[FSMStateIndex]->getStateStance(this->stance));
 //	tprintf("Transition to state: %d (stance = %s) (phi = %lf)\n", stateIndex, (stance == LEFT_STANCE)?("left"):("right"), phi);
 	//reset the phase...
-	this->phi = 0;
+	//I'll backup the phi that was reached
+	phi_last_step = phi;
+	phi = 0;
 }
 
 /**
@@ -565,7 +536,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	//since I use the foot trajectory now I have to compute the positions
 	//we do it only in the ascendent phase (in the decendent phase we use the IPM result to conserve balance)
 	//TODO also use specified result during static phase
-	if (v.y>=0){
+	if (v.y>=0&&!recovery_step){
 		use_specified_swing_foot(SimGlobals::dt);
 	}
 
@@ -1098,15 +1069,10 @@ Point3d SimBiController::getSwingFootTargetLocation(double t, const Point3d& com
 	step = com + step;
 	//finally, set the desired height of the foot
 	//TODO reactivate the panicheight an the unplanned height
-	step.y = swingFootHeightTrajectory.evaluate_catmull_rom(t);// + panicHeight + unplannedForHeight;
-
-	//the override of the height is just during the transition phase of the program (it will be moved somewhere else maybe)
-	//if (stance_mode != 0 && velDSagittal>0.75){
-		Point3d hip_pos = swingHip->getParent()->getWorldCoordinates(swingHip->getParentJointPosition());
-		double delta_y=swing_foot_traj->components[1]->baseTraj.evaluate_catmull_rom(t);
-		step.y = hip_pos.y - delta_y;
-	//}
-
+	Point3d hip_pos = swingHip->getParent()->getWorldCoordinates(swingHip->getParentJointPosition());
+	double delta_y=swing_foot_traj->components[1]->baseTraj.evaluate_catmull_rom(t);
+	step.y = hip_pos.y - delta_y; // + panicHeight + unplannedForHeight;
+	
 
 	step += computeSwingFootDelta(t);
 
@@ -1390,6 +1356,19 @@ void SimBiController::resolveJoints(SimBiConState* state){
 		//deal with the new swing foot trajectory specification
 		if (strcmp(jt->jName, "swing_foot") == 0){
 			jt->leftStanceIndex = jt->rightStanceIndex = -2;
+			
+			//we save a pointer for easy access
+			swing_foot_traj = jt;
+			continue;
+		}
+
+		//deal with the velD trajectory specification
+		if (strcmp(jt->jName, "velD") == 0){
+			jt->leftStanceIndex = jt->rightStanceIndex = -3;
+
+			//we save a pointer for easy access
+			velD_traj = jt;
+
 			continue;
 		}
 
@@ -1587,19 +1566,6 @@ void SimBiController::loadFromFile(char* fName){
 		}
 	}
 
-	//now that the states are loaded I have access to the trajectories
-	//I'll create a reference to the foot 
-	SimBiConState* curState = getState(getFSMState());
-	for (int i = 0; i < curState->getTrajectoryCount(); i++){
-		//now we have the desired rotation angle and axis, so we need to see which joint this is intended for
-		int jIndex = curState->sTraj[i]->getJointIndex(stance);
-
-		//when we found the trajectory wr save a pointer for easy access
-		if (jIndex == -2){
-			swing_foot_traj = curState->sTraj[i];
-			break;
-		}
-	}
 
 }
 
@@ -1612,3 +1578,148 @@ SimBiConState* SimBiController::getState( uint idx ) {
 	return states[idx];
 }
 
+
+/**
+this function get the desired sagital velocity (affected by the variation trajectory)
+*/
+inline double SimBiController::get_effective_desired_sagittal_velocity(double phi){
+	return velDSagittal*velD_traj->components[1]->baseTraj.evaluate_catmull_rom(phi);
+}
+
+/**
+this function get the desired coronal velocity (affected by the variation trajectory)
+*/
+inline double SimBiController::get_effective_desired_coronal_velocity(double phi){
+	double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
+	return velDCoronal + velD_traj->components[0]->baseTraj.evaluate_catmull_rom(phi)*signChange;
+	//return velDCoronal;
+}
+
+/**
+this function will store the velocities every 0.1 phi when on learning mode
+when learning learning mode is desactivated the function will adapt the velD_trajectories so they have a better fit on the movement
+this system will also update a bolean signaling if the next step will be a recovery step or if it will be a normal step
+*/
+void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified){
+	static std::vector<double> vel_sagittal;
+	static std::vector<double> vel_coronal;
+
+	static double cur_phi_limit = 0;
+	if (learning_mode){
+		
+		double cur_phi = MIN(getPhase(), 1);
+
+		if (cur_phi > cur_phi_limit){
+			cur_phi_limit += 0.1;
+			vel_sagittal.push_back(v.z/velDSagittal);
+
+			double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
+			vel_coronal.push_back(v.x*signChange-velDCoronal);
+		}
+	}
+	else{
+		//first I handle the sagittal trajectory
+
+		//So we calculate the moy variation
+		double variation_moy = 0;
+		std::vector<double> variation_vector;
+		for (int i = 0; i <(int) vel_sagittal.size(); ++i){
+			variation_vector.push_back(vel_sagittal[i] - velD_traj->components[1]->baseTraj.getKnotValue(i));
+			variation_moy +=std::abs(variation_vector.back());
+		}
+		int nbr_values = vel_sagittal.size();
+
+		//this 'if' add a new point in case we haven't reached 1.0
+		double sup_point_variation = 0;
+		double sup_point_traj_val = 0;
+		if (phi_last_step < 1.0){
+			sup_point_traj_val = velD_traj->components[1]->baseTraj.evaluate_catmull_rom(phi_last_step);
+			sup_point_variation = v.z/velDSagittal - sup_point_traj_val;
+			variation_moy += std::abs(sup_point_variation);
+			nbr_values++;
+		}
+
+		variation_moy /= nbr_values;
+
+		if (variation_moy < 0.6){
+			recovery_step = false;
+
+
+			//we handle the points stored in the buffer
+			for (int i = 0; i <(int) vel_sagittal.size(); ++i){
+				double cur_phi = i*0.1;
+				//we prevent that the variation we are gonna use is based on a value superior to the moy variation
+				if (std::abs(variation_vector[i]) > variation_moy){
+					variation_vector[i] = variation_moy*variation_vector[i] / std::abs(variation_vector[i]);
+				}
+
+				double new_val = velD_traj->components[1]->baseTraj.getKnotValue(i) + variation_vector[i] / 2;
+				velD_traj->components[1]->baseTraj.setKnotValue(i,new_val);
+			}
+
+			//we handle the supplementary point if one was added
+			if (phi_last_step < 1.0){
+				if (std::abs(sup_point_variation) > variation_moy){
+					sup_point_variation = variation_moy*sup_point_variation / std::abs(sup_point_variation);
+				}
+
+				double new_val = sup_point_traj_val+ sup_point_variation / 2;
+
+				//I now need to calculate the value for the next point in the trajectory
+				// I'll use a linear interpolation for it
+				int pt_nbr = static_cast<int>(std::trunc(phi_last_step * 10));//this will get me the nbr of the previous pt
+				double val_previous_pt = velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr);
+
+				double val_next_pt = val_previous_pt + 0.1*(val_previous_pt - new_val) / (phi_last_step - static_cast<float>(pt_nbr) / 10.0);
+				double val_next_variation = val_next_pt- velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr + 1);
+
+				if (std::abs(val_next_variation) > variation_moy){
+					val_next_variation = variation_moy*val_next_variation / std::abs(val_next_variation);
+				}
+
+				val_next_pt = velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation / 2;
+
+				velD_traj->components[1]->baseTraj.setKnotValue(pt_nbr+1, val_next_pt);
+			}
+
+			//now this need to be centered on the desired speed that we used during the step
+			double integral = 0;
+			integral += velD_traj->components[1]->baseTraj.getKnotValue(0)*0.5;
+			for (int i = 1; i < nbr_values-1; ++i){
+				integral += velD_traj->components[1]->baseTraj.getKnotValue(i);
+			}
+			
+			if (nbr_values == 11){
+				integral += velD_traj->components[1]->baseTraj.getKnotValue(10)*0.5;
+			}
+			else{
+				integral += velD_traj->components[1]->baseTraj.getKnotValue(nbr_values - 1);
+			}
+
+			integral /= 10;
+
+			integral *= 1/((nbr_values - 1)*0.1);
+
+			for (int i = 0; i < nbr_values; ++i){
+				velD_traj->components[1]->baseTraj.setKnotValue(i,velD_traj->components[1]->baseTraj.getKnotValue(i) / integral);
+			}
+			
+
+		}
+		else{
+			//this should mean the caracter is currenlty in an unstable state
+			recovery_step = true;
+		}
+
+		//now I need to handle the coronal trajectory
+		//TODO handle the coronal trajectory
+	
+	
+	
+		//we reinitialize the system
+		vel_sagittal.clear();
+		vel_coronal.clear();
+		cur_phi_limit = 0;	
+	}
+
+}
