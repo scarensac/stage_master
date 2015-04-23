@@ -536,7 +536,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	//since I use the foot trajectory now I have to compute the positions
 	//we do it only in the ascendent phase (in the decendent phase we use the IPM result to conserve balance)
 	//TODO also use specified result during static phase
-	if (v.y>=0&&!recovery_step){
+	if (!ipm_used()){
 		use_specified_swing_foot(SimGlobals::dt);
 	}
 
@@ -1604,27 +1604,58 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 	static std::vector<double> vel_sagittal;
 	static std::vector<double> vel_coronal;
 
+	static double avgSpeed_z = 0;
+	static double avgSpeed_x_left = 0;
+	static double avgSpeed_x_right = 0;
+	static uint timesVelSampled = 0;
+
+
+	static int stance = 0;
+	if (stance == 0){
+		stance= (getStance() == RIGHT_STANCE) ? 1 : -1;
+	}
+
 	static double cur_phi_limit = 0;
 	if (learning_mode){
-		
+		//store the current speed to be able to know the avg speed at the end
+		avgSpeed_z += character->getHeading().getComplexConjugate().rotate(character->getRoot()->getCMVelocity()).z;
+
+
+		if (stance < 0){
+			avgSpeed_x_left += character->getHeading().getComplexConjugate().rotate(character->getRoot()->getCMVelocity()).x;
+		}
+		else{
+			avgSpeed_x_right += character->getHeading().getComplexConjugate().rotate(character->getRoot()->getCMVelocity()).x;
+		}
+		timesVelSampled++;
+
+		//store the actual speed if necessary
 		double cur_phi = MIN(getPhase(), 1);
 
 		if (cur_phi > cur_phi_limit){
 			cur_phi_limit += 0.1;
 			vel_sagittal.push_back(v.z/velDSagittal);
 
-			double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
-			vel_coronal.push_back(v.x*signChange-velDCoronal);
+			vel_coronal.push_back(v.x*stance-velDCoronal);
 		}
 	}
 	else{
+		//I finish the calculation of the avg speed
+		avgSpeed_z /= timesVelSampled;
+		avgSpeed_x_left /= timesVelSampled;
+		avgSpeed_x_right /= timesVelSampled;
+
+		recovery_step = false;
+		TrajectoryComponent* affected_component=NULL;
+
 		//first I handle the sagittal trajectory
+		affected_component=velD_traj->components[1];
 
 		//So we calculate the moy variation
 		double variation_moy = 0;
 		std::vector<double> variation_vector;
 		for (int i = 0; i <(int) vel_sagittal.size(); ++i){
-			variation_vector.push_back(vel_sagittal[i] - velD_traj->components[1]->baseTraj.getKnotValue(i));
+			variation_vector.push_back(vel_sagittal[i] - affected_component->baseTraj.getKnotValue(i));
 			variation_moy +=std::abs(variation_vector.back());
 		}
 		int nbr_values = vel_sagittal.size();
@@ -1633,7 +1664,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 		double sup_point_variation = 0;
 		double sup_point_traj_val = 0;
 		if (phi_last_step < 1.0){
-			sup_point_traj_val = velD_traj->components[1]->baseTraj.evaluate_catmull_rom(phi_last_step);
+			sup_point_traj_val = affected_component->baseTraj.evaluate_catmull_rom(phi_last_step);
 			sup_point_variation = v.z/velDSagittal - sup_point_traj_val;
 			variation_moy += std::abs(sup_point_variation);
 			nbr_values++;
@@ -1641,8 +1672,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 		variation_moy /= nbr_values;
 
-		if (variation_moy < 0.6){
-			recovery_step = false;
+		if (variation_moy < 1.0){
 
 
 			//we handle the points stored in the buffer
@@ -1653,8 +1683,8 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					variation_vector[i] = variation_moy*variation_vector[i] / std::abs(variation_vector[i]);
 				}
 
-				double new_val = velD_traj->components[1]->baseTraj.getKnotValue(i) + variation_vector[i] / 2;
-				velD_traj->components[1]->baseTraj.setKnotValue(i,new_val);
+				double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i] / 2;
+				affected_component->baseTraj.setKnotValue(i, new_val);
 			}
 
 			//we handle the supplementary point if one was added
@@ -1668,41 +1698,82 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				//I now need to calculate the value for the next point in the trajectory
 				// I'll use a linear interpolation for it
 				int pt_nbr = static_cast<int>(std::trunc(phi_last_step * 10));//this will get me the nbr of the previous pt
-				double val_previous_pt = velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr);
+				double val_previous_pt = affected_component->baseTraj.getKnotValue(pt_nbr);
 
 				double val_next_pt = val_previous_pt + 0.1*(val_previous_pt - new_val) / (phi_last_step - static_cast<float>(pt_nbr) / 10.0);
-				double val_next_variation = val_next_pt- velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr + 1);
+				double val_next_variation = val_next_pt - affected_component->baseTraj.getKnotValue(pt_nbr + 1);
 
 				if (std::abs(val_next_variation) > variation_moy){
 					val_next_variation = variation_moy*val_next_variation / std::abs(val_next_variation);
 				}
 
-				val_next_pt = velD_traj->components[1]->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation / 2;
+				val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation / 2;
 
-				velD_traj->components[1]->baseTraj.setKnotValue(pt_nbr+1, val_next_pt);
+				affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
+
+				if (nbr_values < affected_component->baseTraj.getKnotCount()){
+
+					//I'll now handle the other points (the ones even after the point I just created
+					//simply using a linear interpolation to know how they should be updated (limiting the possible variation the the variation_moy/2
+					//and preventing them to go over the current min and max of the trajectory
+					double min_z = affected_component->baseTraj.getKnotValue(0);
+					double max_z = affected_component->baseTraj.getKnotValue(0);
+
+					for (int i = 1; i < nbr_values; ++i){
+						double val = affected_component->baseTraj.getKnotValue(i);
+						if (val < min_z){
+							min_z = val;
+						}
+						else if (val > max_z){
+							max_z = val;
+						}
+					}
+
+					//compute the step and the starting point
+					double a = affected_component->baseTraj.getKnotValue(nbr_values - 1) -
+						affected_component->baseTraj.getKnotValue(nbr_values - 2);
+					a /= (affected_component->baseTraj.getKnotPosition(nbr_values - 1) -
+						affected_component->baseTraj.getKnotPosition(nbr_values - 2));
+					
+					for (int i = nbr_values; i < (int)(affected_component->baseTraj.getKnotCount()); ++i){
+						//we compute the value with linear prolongation
+						double next_val = affected_component->baseTraj.getKnotValue(i - 1) + a*
+							(affected_component->baseTraj.getKnotPosition(i) - affected_component->baseTraj.getKnotPosition(i - 1));
+
+						//now we apply the limits
+						if (next_val > max_z){
+							next_val = max_z;
+						}
+						else if (next_val<min_z){
+							next_val = min_z;
+						}
+						
+						//we now compute the variation we created in the point position and limit it
+						double point_variation = next_val - affected_component->baseTraj.getKnotValue(i);
+						if (std::abs(point_variation) > variation_moy){
+							point_variation = variation_moy*point_variation / std::abs(point_variation);
+						}
+						next_val = affected_component->baseTraj.getKnotValue(i) + point_variation / 2;
+
+						
+						//and we can set the value in the curve
+						affected_component->baseTraj.setKnotValue(i, next_val);
+					}
+				}
 			}
+
 
 			//now this need to be centered on the desired speed that we used during the step
-			double integral = 0;
-			integral += velD_traj->components[1]->baseTraj.getKnotValue(0)*0.5;
-			for (int i = 1; i < nbr_values-1; ++i){
-				integral += velD_traj->components[1]->baseTraj.getKnotValue(i);
-			}
-			
-			if (nbr_values == 11){
-				integral += velD_traj->components[1]->baseTraj.getKnotValue(10)*0.5;
-			}
-			else{
-				integral += velD_traj->components[1]->baseTraj.getKnotValue(nbr_values - 1);
-			}
+			double evo_speed = 1;
 
-			integral /= 10;
+			//this is a test, intead of doing with the integral I'l simply divide by the ratio between the avg_speed and the velD
+			double traj_delta = (avgSpeed_z / velDSagittal - 1)* evo_speed + 1;
 
-			integral *= 1/((nbr_values - 1)*0.1);
 
 			for (int i = 0; i < nbr_values; ++i){
-				velD_traj->components[1]->baseTraj.setKnotValue(i,velD_traj->components[1]->baseTraj.getKnotValue(i) / integral);
+				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) / traj_delta);
 			}
+
 			
 
 		}
@@ -1711,15 +1782,29 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			recovery_step = true;
 		}
 
+
+		//we are finished with the sagittal trajectory
 		//now I need to handle the coronal trajectory
-		//TODO handle the coronal trajectory
-	
+		
+		/*
+		
+		//*/
 	
 	
 		//we reinitialize the system
 		vel_sagittal.clear();
 		vel_coronal.clear();
 		cur_phi_limit = 0;	
+		avgSpeed_z = 0;
+		timesVelSampled = 0;
+		
+		if (stance < 0){
+			avgSpeed_x_right = 0;
+		}
+		else{
+			avgSpeed_x_left = 0;
+		}
+		stance = 0;
 	}
 
 }
