@@ -344,7 +344,10 @@ public:
 		return v;
 	}
 
-	inline void calc_desired_velocities(double phi){
+	/*
+	This function update the velD.
+	*/
+	inline void calc_desired_velocities(){
 		//read the parameters from the gui
 		velDSagittal = SimGlobals::velDSagittal;
 		velDCoronal = SimGlobals::velDCoronal;
@@ -601,4 +604,13 @@ public:
 	*/
 	void velD_adapter(bool learning_mode=true, bool* trajectory_modified = NULL);
 
+	/*
+	this funtion will return a simple bolean telling us if the IPM result will be used or if they will be overriden
+	*/
+	bool ipm_used(){
+		bool used = recovery_step;
+		used |= (v.y < 0);
+		
+		return used;
+	}
 };

@@ -191,7 +191,7 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		coronalStepWidth = SimGlobals::step_width;
 
 		//read the speed from the gui
-		con->calc_desired_velocities(con->getPhase());
+		con->calc_desired_velocities();
 
 		//we save the position of the swing foot (which is the old stance foot) and of the stance foot
 		swingFootStartPos=lastFootPos;
@@ -258,13 +258,27 @@ void SimBiConFramework::simStepPlan(double dt){
 	//let the adapter learn for the new phi
 	con->velD_adapter();
 
+	//set the foot start pos
+	static bool ipm_active = false;
+	if (con->getPhase() <= 0.01){
+		//swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
+		ipm_active = false;
+	}
+		
+	//compute desired swing foot location with the IPM if needed
+	if (con->ipm_used()){
+		if (!ipm_active){
+			swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
+			ipm_active = true;
+		}
 
-	if (con->getPhase()<= 0.01)
-		swingFootStartPos = con->swingFoot->getWorldCoordinates(bip->getJoint(con->swingAnkleIndex)->getChildJointPosition());
 
-	//compute desired swing foot location...
-	setDesiredSwingFootLocation();
-
+		setDesiredSwingFootLocation();
+	}
+	else{
+		ipm_active = false;
+	}
+	
 	//set some of these settings
 	//the commented ones are used to modify the trajectories (but srly i don't care right now)
 	//setUpperBodyPose(ubSagittalLean, ubCoronalLean, ubTwist);
