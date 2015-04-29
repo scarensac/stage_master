@@ -498,9 +498,14 @@ public:
 	}
 
 	/**
-		This method is used to write the current controller to a file
+	This method is used to write the current controller to a file
 	*/
 	void writeToFile(char* fileName, char* stateFileName = NULL);
+
+	/**
+	This method is used to write the current controller to a file
+	*/
+	void writeToFile(std::string fileName, std::string* stateFileName = NULL);
 
 	/**
 		This method is used to return the current state number
@@ -586,6 +591,21 @@ public:
 			torques[character->getJointIndex(affected_joints[i]->name)] += tmpT;
 		}
 	}
+	
+	/**
+	those functions are here to make access to the diferent component of the velD easier
+	*/
+	inline TrajectoryComponent* velD_sagittal_component() {
+		return velD_traj->components[2];
+	}
+	inline TrajectoryComponent* velD_coronal_component(int stance) {
+		if (stance == RIGHT_STANCE){
+			return velD_traj->components[0];
+		}
+		else{
+			return velD_traj->components[1];
+		}
+	}
 
 	/**
 	this function get the desired sagital velocity (affected by the variation trajectory)
@@ -598,7 +618,7 @@ public:
 	inline double get_effective_desired_coronal_velocity(double phi);
 
 	/**
-	this function will store the velocities every 0.1 phi when on learning mode
+	this function will store the velocities every for every phi specified on the velD curve when on learning mode
 	when learning learning mode is desactivated the function will adapt the velD_trajectories so they have a better fit on the movement
 	this system will also update a bolean signaling if the next step will be a recovery step or if it will be a normal step
 	*/
@@ -608,9 +628,10 @@ public:
 	this funtion will return a simple bolean telling us if the IPM result will be used or if they will be overriden
 	*/
 	bool ipm_used(){
-		bool used = recovery_step;
-		used |= (v.y < 0);
-		
-		return used;
+		if (recovery_step){ return true; }
+
+		if (getPhase() < 0.2){ return false; }
+
+		if (v.y < 0){ return true; }
 	}
 };
