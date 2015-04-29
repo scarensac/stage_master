@@ -29,6 +29,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <algorithm>    // std::sort
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
 	std::stringstream ss(s);
@@ -106,19 +107,38 @@ void TrajectoryComponent::updateComponent(SimBiController* con, Joint* j, Trajec
 
 
 /**
-	This method is used to read the knots of a base trajectory from the file, where they are specified one (knot) on a line
+This method is used to read the knots of a base trajectory from the file, where they are specified one (knot) on a line
 */
 void TrajectoryComponent::writeBaseTrajectory(FILE* f){
 	if (f == NULL)
 		return;
 
-	fprintf( f, "\t\t\t%s\n", getConLineString(CON_BASE_TRAJECTORY_START) );
+	fprintf(f, "\t\t\t%s\n", getConLineString(CON_BASE_TRAJECTORY_START));
 
-	for( int i=0; i < baseTraj.getKnotCount(); ++i ) {
-		fprintf( f, "\t\t\t\t%lf %lf\n", baseTraj.getKnotPosition(i), baseTraj.getKnotValue(i) );
+	for (int i = 0; i < baseTraj.getKnotCount(); ++i) {
+		fprintf(f, "\t\t\t\t%lf %lf\n", baseTraj.getKnotPosition(i), baseTraj.getKnotValue(i));
 	}
 
-	fprintf( f, "\t\t\t%s\n", getConLineString(CON_BASE_TRAJECTORY_END) );
+	fprintf(f, "\t\t\t%s\n", getConLineString(CON_BASE_TRAJECTORY_END));
+}
+
+/**
+This method is used to read the knots of a ref trajectory from the file, where they are specified one (knot) on a line
+*/
+void TrajectoryComponent::writeRefTrajectory(FILE* f,int idx){
+	if (f == NULL||idx<0||idx>(int)(ref_trajectories.size()-1)){
+		return;
+	}
+
+	//we just add the speed of the trajectory
+	fprintf(f, "\t\t\t%s %lf\n", getConLineString(CON_BASE_TRAJECTORY_START), ref_trajectories[idx].first);
+
+	Trajectory1D* traject = ref_trajectories[idx].second;
+	for (int i = 0; i < traject->getKnotCount(); ++i) {
+		fprintf(f, "\t\t\t\t%lf %lf\n", traject->getKnotPosition(i), traject->getKnotValue(i));
+	}
+
+	fprintf(f, "\t\t\t%s\n", getConLineString(CON_BASE_TRAJECTORY_END));
 }
 
 /**
@@ -141,8 +161,27 @@ void TrajectoryComponent::writeTrajectoryComponent(FILE* f){
 	if( bFeedback )
 		bFeedback->writeToFile( f );
 
-	writeBaseTrajectory(f);
+	//here we have 2 cases possible (either there is only one trajectory and we use the default system
+	//or we ave mutliples trajectories in which case we need to modify the system)
 
+	if (ref_trajectories.empty()){
+		writeBaseTrajectory(f);
+	}
+	else{
+		//first I have to put the line that indicate the possible speeds
+		fprintf(f, "\t\t\t%s", getConLineString(CON_TRAJ_COMPONENT_SPEEDS));
+		fprintf(f, " %lf", ref_trajectories[0].first);
+		for (int i = 1; i < (int)ref_trajectories.size(); ++i){
+			fprintf(f, ",%lf", ref_trajectories[i].first);
+		}
+		fprintf(f, "\n");
+
+		//and now we write the different trajectories
+		for (int i = 0; i < (int)ref_trajectories.size(); ++i){
+			writeRefTrajectory(f, i);
+		}
+	}
+	
 	fprintf( f, "\t\t%s\n", getConLineString(CON_TRAJ_COMPONENT_END) );
 }
 
@@ -157,10 +196,10 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 	char buffer[200];
 	char tmpString[200];
 
-	//init the reference vector
-	ref_trajectories.push_back(RefTrajectory(0.90, NULL));
-	ref_trajectories.push_back(RefTrajectory(0.40, NULL));
-	ref_trajectories.push_back(RefTrajectory(0.00, NULL));
+	
+	//this map is used to know the position of each speed in the vector
+	//since I can't do a map with floating point key I'll simply mult the speeds by 10^4 and use a n int value
+	std::map<int, int> correspondance_map;
 
 
 	//this is where it happens.
@@ -175,12 +214,57 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 			case CON_TRAJ_COMPONENT_END:
 			{
 				//we're done...
+				//we sort the custom vector
+				//since I use double as the first memeber of the pairs I don't need to specify the sort function normaly
+				std::sort(ref_trajectories.begin(), ref_trajectories.end());
+
 				//load the correct trajectory
 				generate_trajectory();
 
 				return;
 			}
-				break;
+			break; 
+			case CON_TRAJ_COMPONENT_SPEEDS:
+			{
+				//we define the speeds that can be found inside the components
+				char *nline = lTrim(line);
+				std::string res(nline);
+				std::vector<std::string> tokens = split(res, ',');
+
+
+				//I'll clean the vector from any strange element
+				//set the trajectory for each token
+				for (int i = 0; i < (int)tokens.size(); ++i){
+					if (tokens[i] == "" || tokens[i] == " "){
+						//we ignore the empty tokens
+						tokens.erase(tokens.begin() + i);
+						--i;
+					}
+				}
+
+				std::istringstream iss;
+				//set the trajectory for each token
+				for (int i = 0; i < (int)tokens.size(); ++i){
+					//convert the string to double then to int for the key value
+					iss.clear();
+					iss.str(tokens[i]);
+					double double_speed;
+
+					if (!(iss >> double_speed))
+					{
+						exit(9876);
+					}
+
+					int int_speed = (int)std::round(double_speed * 10000);
+					
+					//we add it in the trzjectory vector
+					ref_trajectories.push_back(RefTrajectory(double_speed, NULL));
+
+					//we add it in the corespondance map;
+					correspondance_map[int_speed] = ref_trajectories.size() - 1;
+				}
+			}
+			break;
 			case CON_COMMENT:
 				break;
 			case CON_ROTATION_AXIS:
@@ -210,27 +294,46 @@ void TrajectoryComponent::readTrajectoryComponent(FILE* f){
 				char *nline = lTrim(line);
 				std::string res(nline);
 				std::vector<std::string> tokens = split(res, ',');
+				
+				//I'll clean the vector from any strange element
 				//set the trajectory for each token
 				for (int i = 0; i < (int)tokens.size(); ++i){
-					if (tokens[i] == "forward"){
-						ref_trajectories[0].second = new Trajectory1D(baseTraj);
-					}
-					else if (tokens[i] == "slow_forward"){
-						ref_trajectories[1].second = new Trajectory1D(baseTraj);
-					}
-					else if (tokens[i] == "static"){
-						ref_trajectories[2].second = new Trajectory1D(baseTraj);
-					}
-					else if (tokens[i] == "" || tokens[i] == " "){
+					if (tokens[i] == "" || tokens[i] == " "){
 						//we ignore the empty tokens
-						tokens.erase(tokens.begin()+i);
+						tokens.erase(tokens.begin() + i);
 						--i;
-					}
-					else{
-						exit(1256);
 					}
 				}
 
+
+				std::istringstream iss;
+				//set the trajectory for each token
+				for (int i = 0; i < (int)tokens.size(); ++i){
+					//convert the string to double then to int for the key value
+					iss.clear();
+					iss.str(tokens[i]);
+					double double_speed;
+					
+
+					if (!(iss >> double_speed))
+					{
+						exit(9876);
+					}
+
+					int int_speed = (int)std::round(double_speed * 10000);
+
+					try{
+						int idx=correspondance_map.at(int_speed);
+						ref_trajectories[idx].second=new Trajectory1D(baseTraj);
+					}
+					catch (std::exception& e){
+						//just the specified speed don't exist
+						//that should not be possible, so if the use wanna troll me I'll just hut down the program (that'll teach him)
+						(void)e;
+						exit(1256);		
+					}
+
+				}
 
 				if (tokens.size() == 0){
 					//meaning we have a default trajectory
@@ -297,20 +400,20 @@ void TrajectoryComponent::generate_trajectory(){
 		baseTraj = *(ref_trajectories[idx_min].second);
 		//*/
 
-
+		int idx_traj_max = ref_trajectories.size() - 1;
 		int idx_min = -1;
 		for (int i = 0; i < (int)ref_trajectories.size(); ++i){
-			if ((ref_trajectories[i].first - SimGlobals::velDSagittal) < 0){
+			if ((ref_trajectories[idx_traj_max - i].first - SimGlobals::velDSagittal) < 0){
 				idx_min = i;
 				break;
 			}
 		}
 
 		if (idx_min == 0){
-			baseTraj = *(ref_trajectories[0].second);
+			baseTraj = *(ref_trajectories[idx_traj_max].second);
 		}
 		else if (idx_min == -1){
-			baseTraj = *(ref_trajectories[ref_trajectories.size()-1].second);
+			baseTraj = *(ref_trajectories[0].second);
 		}
 		else{
 			//this case we are between 2 speed so we need to build a custon trajectory
@@ -318,17 +421,17 @@ void TrajectoryComponent::generate_trajectory(){
 			double cur_phi = 0;
 
 			//we need the distance from each trajectory
-			double dv1 = ref_trajectories[idx_min - 1].first - SimGlobals::velDSagittal;
+			double dv1 = ref_trajectories[idx_traj_max-(idx_min - 1)].first - SimGlobals::velDSagittal;
 			dv1 *= dv1;
-			double dv2 = ref_trajectories[idx_min].first - SimGlobals::velDSagittal;
+			double dv2 = ref_trajectories[idx_traj_max-idx_min].first - SimGlobals::velDSagittal;
 			dv2 *= dv2;
 			double dv = dv1 + dv2;
 
 			double r = dv1 / dv;
 
 			for (int i = 0; i < 11; ++i){
-				double val1 = ref_trajectories[idx_min - 1].second->evaluate_catmull_rom(cur_phi);
-				double val2 = ref_trajectories[idx_min].second->evaluate_catmull_rom(cur_phi);
+				double val1 = ref_trajectories[idx_traj_max-(idx_min - 1)].second->evaluate_catmull_rom(cur_phi);
+				double val2 = ref_trajectories[idx_traj_max-idx_min].second->evaluate_catmull_rom(cur_phi);
 				baseTraj.addKnot(cur_phi, val1*(1-r)+val2*r);
 				cur_phi += 0.1;
 			}
@@ -449,7 +552,7 @@ void SimBiConState::readState(FILE* f, int offset){
 
 	//have a temporary buffer used to read the file line by line...
 	char buffer[200];
-	Trajectory* tempTraj;
+	//Trajectory* tempTraj;
 
 
 	//this is where it happens.

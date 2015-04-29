@@ -36,15 +36,16 @@ ConState 0
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
+			referenceSpeeds 0,0.4,0.9
 			
-			baseTrajectory forward,slow_forward
+			baseTrajectory 0.4,0.9
 				0.020067 0.071300
 				0.538462 0.071300
 				0.966555 0.071300
 			/baseTrajectory
 			
 			
-			baseTrajectory static
+			baseTrajectory 0
 				0.006689 0.000378
 				0.254181 0.000378
 				0.501672 -0.000378
@@ -59,15 +60,16 @@ ConState 0
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
+			referenceSpeeds 0,0.4,0.9
 			
-			baseTrajectory forward,slow_forward
+			baseTrajectory 0.4,0.9
 				0.046823 0.396230
 				0.207358 0.134641
 				0.662207 -0.011162
 				1.000000 0.000000
 			/baseTrajectory
 			
-			baseTrajectory static
+			baseTrajectory 0
 				0.0 0.155
 				0.2 0.055
 				0.6 0.00
@@ -85,8 +87,9 @@ ConState 0
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
+			referenceSpeeds 0,0.4,0.9
 			
-			baseTrajectory forward
+			baseTrajectory 0.9
 				0.00 1.50			
 				0.25 0.862791
 				0.4 -0.048689
@@ -94,7 +97,7 @@ ConState 0
 				1.00 -0.4
 			/baseTrajectory
 			
-			baseTrajectory slow_forward
+			baseTrajectory 0.4
 				0.00 0.50			
 				0.25 0.35
 				0.40 0.00
@@ -102,7 +105,7 @@ ConState 0
 				1.00 -0.2
 			/baseTrajectory
 			
-			baseTrajectory static
+			baseTrajectory 0
 				0.00 0.25			
 				0.25 0.15
 				0.40 0.00
@@ -119,13 +122,15 @@ ConState 0
 
 		component
 			rotationAxis 1.000000 0.000000 0.000000
+			referenceSpeeds 0,0.4,0.9
+			
 			feedback linear
 				feedbackProjectionAxis 0.000000 0.000000 1.000000
 				cd 0.200000
 				cv 0.200000
 			/feedback
 			
-			baseTrajectory forward
+			baseTrajectory 0.9
 				0.00 0.3
 				0.10 0.12
 				0.20 0.05
@@ -134,7 +139,7 @@ ConState 0
 				1.00 0.1
 			/baseTrajectory
 			
-			baseTrajectory slow_forward
+			baseTrajectory 0.4
 				0.00 0.15
 				0.10 0.06
 				0.20 0.05
@@ -143,7 +148,7 @@ ConState 0
 				1.00 0.1
 			/baseTrajectory
 			
-			baseTrajectory static
+			baseTrajectory 0
 				0.00 0.05
 				0.10 0.05
 				0.20 0.05
@@ -170,6 +175,7 @@ ConState 0
 			rotationAxis 0.000000 1.000000 0.000000
 			baseTrajectory
 				0.0 0.95
+				0.25 0.80
 				0.5 0.80
 				1.0 0.95
 			/baseTrajectory
@@ -179,15 +185,7 @@ ConState 0
 			rotationAxis 0.000000 0.000000 1.000000
 			baseTrajectory
 				0.0	-0.09160307
-				0.1	0.039413809
 				0.2	0.243181333
-				0.3	0.277204883
-				0.4	0.227912361
-				0.5	0.179916282
-				0.6	0.221916683
-				0.7	0.253631053
-				0.8	0.256397754
-				0.9	0.2523565
 				1.0	0.25032652
 			/baseTrajectory
 		/component

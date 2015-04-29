@@ -127,9 +127,14 @@ public:
 	void readTrajectoryComponent(FILE* f);
 
 	/**
-		This method is used to read a trajectory from a file
+		This method is used to write a trajectory to a file
 	*/ 
 	void writeBaseTrajectory(FILE* f);
+
+	/**
+	This method is used to write a ref_trajectory to a file (the idx is the idx in the ref_trajectories vector)
+	*/
+	void writeRefTrajectory(FILE* f,int idx);
 
 	/**
 		This method is used to write a trajectory to a file

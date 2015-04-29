@@ -24,6 +24,10 @@
 #include "ControllerEditor.h"
 #include "Globals.h"
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
 
 /**
  * Constructor.
@@ -294,6 +298,7 @@ void ControllerEditor::stepTaken() {
 	}
 
 	if( Globals::drawControlShots ) {
+		/*
 		char stateFileName[100], fName[100];
 		sprintf(stateFileName, "..\\controlShots\\cs%05d.rs", nextControlShot);
 		conF->getCharacter()->saveReducedStateToFile(stateFileName);
@@ -305,6 +310,46 @@ void ControllerEditor::stepTaken() {
 		Globals::drawControlShots = false;
 		Tcl_UpdateLinkedVar( Globals::tclInterpreter, "toggleControlshots" );
 		conF->getState(&conState);
+		//*/
+		//I'll use that function to write the current state to a file 
+		//the names used are found in a file
+		std::string line;
+		std::ifstream myfile("../data/controllers/bipV2/learning_files_names.txt");
+		if (myfile.is_open())
+		{
+			std::ostringstream oss;
+
+			//so we read the name we want for the state file
+			if (std::getline(myfile, line)){
+				//we add the prefix
+				
+				oss << "../data/controllers/bipV2/";
+				oss << line;
+
+				//and we write it	
+				conF->getCharacter()->saveReducedStateToFile(oss.str());
+			}
+
+			//we read the name we want for the control file
+			if (std::getline(myfile, line)){
+				//we add the prefix
+				std::ostringstream oss2;
+				oss2 << "../data/controllers/bipV2/";
+				oss2 << line;
+
+				//and we write it	
+				conF->getController()->writeToFile(oss2.str(),&oss.str());
+			}
+
+			myfile.close();
+		}
+		else{
+			exit(5612);
+		}
+
+		Globals::drawControlShots = false;
+		//Tcl_UpdateLinkedVar(Globals::tclInterpreter, "toggleControlshots");
+
 	}
 }
 
@@ -443,6 +488,7 @@ void ControllerEditor::processTask(){
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
 
+				/*
 				std::vector<double> hip_target, knee_target;
 				conF->con->read_target_swing_hip_knee(hip_target, knee_target);
 
@@ -453,6 +499,7 @@ void ControllerEditor::processTask(){
 				for (int i = 0; i < (int)knee_target.size(); ++i){
 					tprintf(" %lf \n", knee_target[i]);
 				}
+				//*/
 				
 
 				phi_it = 0;
@@ -481,9 +528,18 @@ void ControllerEditor::processTask(){
 
 				
 				Vector3d v = conF->getLastStepTaken();
-				tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-					v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
-//				Globals::animationRunning = false;
+
+				if (conF->getController()->recovery_step){
+					tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
+						v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+	
+				}
+				else{
+					tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
+						v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+				}
+
+				//Globals::animationRunning = false;
 
 				//reset the speed for the next step
 				avgSpeed = 0;

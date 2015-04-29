@@ -103,9 +103,18 @@ public:
 	void loadReducedStateFromFile(char* fName);
 
 	/**
-		this method is used to write the reduced state of the character to a file
+	this method is used to write the reduced state of the character to a file
 	*/
 	void saveReducedStateToFile(char* fName);
+
+	/**
+	this method is used to write the reduced state of the character to a file
+	*/
+	void saveReducedStateToFile(std::string name){
+		char fname[100];
+		strcpy(fname, name.c_str());
+		saveReducedStateToFile(fname);
+	}
 
 	/**
 		this method is used to write the reduced state of the character to a file

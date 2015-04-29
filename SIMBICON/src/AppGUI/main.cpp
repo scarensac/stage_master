@@ -27,6 +27,9 @@
 #include <windows.h>
 #include "UI.h"
 #include "tcltk.h"
+#include <iostream>
+#include <stdlib.h>     /* system, NULL, EXIT_FAILURE */
+#include <sstream>
 
 /**
  *	Entry point for the program. Note that we will not worry much about the command line arguments.
@@ -37,14 +40,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	if( *lpCmdLine == 'n' ) {
 		Globals::useShader = false;
-		Globals::useConsole = false;
+		Globals::useConsole = true;
 	}
 
 	if( *lpCmdLine == 's' ) {
 		Globals::useShader = true;
-		Globals::useConsole = false;
+		Globals::useConsole = true;
 	}
 
+	//fait  bug le programe pr une raison que je ne comprend pas
+	//Globals::useConsole = false;
 
 	try{
 		Tk_Main(argc, argv, Tcl_AppInit);
@@ -52,5 +57,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		logPrint("Exception: %s\n", msg);
 	}
     
+
     return 0;
 }
