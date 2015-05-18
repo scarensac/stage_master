@@ -63,12 +63,13 @@ void InitMainWindow(int argc, const char **argv){
 	Globals::window->init();
 
 	//also create an application that will be used to run the whole thing.
-	if (strcmp(argv[1], "ControllerEditor") == 0){
+	//FOr the time being let's say e will only use the controller editor (which we do anyway...)
+	//if (strcmp(argv[1], "ControllerEditor") == 0){
 		
 		Globals::app = new ControllerEditor();
-	}else{
-		Globals::app = new Application();
-	}
+	//}else{
+	//	Globals::app = new Application();
+	//}
 
 		
 	Globals::app->init();
@@ -252,6 +253,15 @@ int launch (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **
 	InitMainWindow(argc, argv);
 
     return TCL_OK;
+}
+
+/**
+* This method is used to launch the animation
+*/
+int launch(){
+	InitMainWindow();
+
+	return TCL_OK;
 }
 
 /**

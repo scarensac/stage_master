@@ -30,6 +30,12 @@
 
 #include "Globals.h"
 
+/**
+* This method is used to initialize the main window.
+* DO NOT USE THIS FUNCTION OUTSIDE OF THIS FILE
+*/
+void InitMainWindow(int argc=0, const char **argv=NULL);
+
 // Quit the application
 int quit (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **argv);
 
@@ -38,7 +44,10 @@ int quit (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **ar
 int animate _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **argv));
 
 // Launch the animation
-int launch (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **argv);
+int launch(ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **argv);
+
+// Launch the animation
+int launch();
 
 // control the camera orientation
 int camera (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **argv);

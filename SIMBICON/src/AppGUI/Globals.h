@@ -91,6 +91,12 @@ public:
 	static bool useShader;
 	//indicates wether or not to use the console
 	static bool useConsole;
+	//this string will contain the path to the init folder
+	static std::string init_folder_path;
+	//this boolean is used to activate or disactivate the interface (for evolution)
+	static bool use_interface;
+	//this bollean specify that we are in the evolution mode 
+	static bool evolution_mode;
 
 	//these params define the ground plane - for drawing purposes only
 	static double a, b, c, d;

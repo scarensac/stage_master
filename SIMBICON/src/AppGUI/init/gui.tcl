@@ -18,6 +18,9 @@ proc populateTrajectories { } {
 #A procedure to make a toplevel window
 proc makeControlDialog { } {
 	toplevel .dialog ;#Make the window
+	wm title .dialog "Control Parameters"
+	wm geometry .dialog 260x120+0+0
+
 	#Put things in it
 	frame .dialog.editionbuttons -padx 15 -pady 5
 	image create photo undo -file [file join ../data/buttons/undo.gif]
@@ -41,6 +44,7 @@ proc makeControlDialog { } {
 	
 
 }
+
 
 proc finalizeUI {} {
 

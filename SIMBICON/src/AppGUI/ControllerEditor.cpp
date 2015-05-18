@@ -25,6 +25,7 @@
 #include "Globals.h"
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -33,8 +34,14 @@
  * Constructor.
  */
 ControllerEditor::ControllerEditor(void){
-	tprintf("Loading Controller Editor...\n");
-	strcpy(inputFile,  "init/input.conF");
+
+	//tprintf("Loading Controller Editor...\n");
+
+	std::ostringstream oss;
+	oss << Globals::init_folder_path;
+	oss << "input.conF";
+
+	strcpy(inputFile,  oss.str().c_str());
 
 	loadFramework();
 
@@ -43,8 +50,10 @@ ControllerEditor::ControllerEditor(void){
 
 	nextControlShot = 0;
 	maxControlShot = -1;
-
-	registerTclFunctions();
+	
+	if (Globals::use_interface){
+		registerTclFunctions();
+	}
 }
 
 
@@ -311,41 +320,9 @@ void ControllerEditor::stepTaken() {
 		Tcl_UpdateLinkedVar( Globals::tclInterpreter, "toggleControlshots" );
 		conF->getState(&conState);
 		//*/
-		//I'll use that function to write the current state to a file 
-		//the names used are found in a file
-		std::string line;
-		std::ifstream myfile("../data/controllers/bipV2/learning_files_names.txt");
-		if (myfile.is_open())
-		{
-			std::ostringstream oss;
 
-			//so we read the name we want for the state file
-			if (std::getline(myfile, line)){
-				//we add the prefix
-				
-				oss << "../data/controllers/bipV2/";
-				oss << line;
-
-				//and we write it	
-				conF->getCharacter()->saveReducedStateToFile(oss.str());
-			}
-
-			//we read the name we want for the control file
-			if (std::getline(myfile, line)){
-				//we add the prefix
-				std::ostringstream oss2;
-				oss2 << "../data/controllers/bipV2/";
-				oss2 << line;
-
-				//and we write it	
-				conF->getController()->writeToFile(oss2.str(),&oss.str());
-			}
-
-			myfile.close();
-		}
-		else{
-			exit(5612);
-		}
+		//we just same the position and the controller
+		conF->save();
 
 		Globals::drawControlShots = false;
 		//Tcl_UpdateLinkedVar(Globals::tclInterpreter, "toggleControlshots");
@@ -396,6 +373,11 @@ Point3d ControllerEditor::getCameraTarget(){
 * (i.e. run simulations, and so on).
 */
 void ControllerEditor::processTask(){
+	if (Globals::animationRunning == 0){
+		return;
+	}
+
+
 	double simulationTime = 0;
 	double maxRunningTime = 0.98/Globals::desiredFrameRate;
 
@@ -482,6 +464,77 @@ void ControllerEditor::processTask(){
 			//we can now advance the simulation
 			bool newStep = conF->advanceInTime(SimGlobals::dt);
 
+			//if we fall we just stop
+			if (Globals::evolution_mode){
+
+				if ((conF->getCharacter()->getRoot()->getCMPosition().y<0.3)){
+					Globals::animationRunning = 0;
+					std::ofstream myfile("eval_result.txt");
+					if (myfile.is_open()){
+						myfile << std::fixed << std::setprecision(8) << (double)10E20;
+						myfile.close();
+					}
+					else{
+						std::cout << "damn dat fail" << std::endl;
+					}
+
+					exit(0);
+				}
+
+				if (count_step>(uint)SimGlobals::steps_before_evaluation){
+					static double eval_result=0;
+					static double cumul_time = 0;
+					cumul_time += SimGlobals::dt;
+
+					//we stop if we have enougth
+					if (cumul_time >SimGlobals::nbr_evaluation_steps ){
+						try{
+							Globals::animationRunning = 0;
+							std::ofstream myfile("eval_result.txt");
+							if (myfile.is_open()){
+								myfile << std::fixed << std::setprecision(8) << (double)eval_result;
+								myfile.close();
+							}
+							else{
+								std::cout << "damn dat fail" << std::endl;
+							}
+
+							exit(0);
+						}
+						catch (...){
+							exit(0);
+						}
+					}
+				
+					//we stop if need a recovery step or if we fall
+					if (conF->getController()->recovery_step||(conF->getCharacter()->getRoot()->getCMPosition().y<0.3)){
+						Globals::animationRunning = 0;
+						std::ofstream myfile("eval_result.txt");
+						if (myfile.is_open()){
+							myfile << std::fixed << std::setprecision(8) << (double)10E20;
+							myfile.close();
+						}
+						else{
+							std::cout << "damn dat fail" << std::endl;
+						}
+
+						exit(0);
+
+					}
+
+					//here I'll do the evaluation
+					//*
+					//this version just sum the weights on the lower body
+					std::vector<Joint*> vect_lower_body;
+					conF->getController()->character->getCharacterBottom(vect_lower_body);
+					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+						eval_result += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
+					}
+					//*/
+
+				}
+			}
+
 			
 			last_phi = phi;
 
@@ -513,7 +566,7 @@ void ControllerEditor::processTask(){
 				if (count_step == 10){
 					avg_speed = avgSpeed;
 
-					tprintf("ref speed = %lf \n", avg_speed);
+					//tprintf("ref speed = %lf \n", avg_speed);
 				}
 				if (count_step > 10){
 					double epsilon = avgSpeed - avg_speed;
@@ -528,15 +581,17 @@ void ControllerEditor::processTask(){
 
 				
 				Vector3d v = conF->getLastStepTaken();
-
-				if (conF->getController()->recovery_step){
-					tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-						v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+				
+				if (!Globals::evolution_mode){
+					if (conF->getController()->recovery_step){
+						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
+							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
 	
-				}
-				else{
-					tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-						v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+					}
+					else{
+						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
+							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+					}
 				}
 
 				//Globals::animationRunning = false;

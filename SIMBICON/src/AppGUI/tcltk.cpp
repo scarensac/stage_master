@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <Core/SimGlobals.h>
+#include <sstream>
 
 /**
  * The console command implements a Tcl interface to the 
@@ -220,6 +221,7 @@ void CheckTCLTKEvents(){
  * and registers new commands with the Tcl interpreter
  */
 int Tcl_AppInit(Tcl_Interp *interp){
+
     // Initialize Tcl and Tk
     if (Tcl_Init(interp) == TCL_ERROR || Tk_Init(interp) == TCL_ERROR)
         return TCL_ERROR;
@@ -309,9 +311,16 @@ int Tcl_AppInit(Tcl_Interp *interp){
 	Tcl_LinkVar(interp, "step_width", (char *)&SimGlobals::step_width, TCL_LINK_DOUBLE);
 
 
-	Tcl_EvalFile(interp, "init/setup.tcl");
+	std::ostringstream oss;
+	oss << Globals::init_folder_path;
+	oss << "setup.tcl";
 
-
+	//*
+	int return_val=Tcl_EvalFile(interp, oss.str().c_str());
+	if (return_val != TCL_OK){
+		throw std::exception("Tcl_AppInit: Tcl_EvalFile failed please check that the setup file and it's path are correct");
+	}//*/
+	
 	//and start the main loop...
 	glutMainLoop();
 
@@ -326,33 +335,38 @@ int Tcl_AppInit(Tcl_Interp *interp){
  *          things using the Tcl 'puts' command
  */
 int tprintf(const char *format, ...) {
-	int n;
-	va_list ap;
-	STR str,argstr,newstuff;
-	static STR line;
-	static int lineptr = 0;
-	newstuff[0] = 0;
+	//if we don't use the interface then I just remove all prints...
 
-	// print into 'newstuff'
-	va_start(ap,format);
-	n = vsprintf(argstr,format,ap);
-	strcat(newstuff,argstr);
-	va_end(ap);
+	if (Globals::use_interface){
+		int n;
+		va_list ap;
+		STR str,argstr,newstuff;
+		static STR line;
+		static int lineptr = 0;
+		newstuff[0] = 0;
 
-	// look for line-feeds, print out using Tcl 'puts' as necessary
-	int len = strlen(newstuff);
-	for (int c=0; c<len; c++) {
-		if (newstuff[c]=='\n') {
-				line[lineptr++] = 0;
-				sprintf(str,"puts \"%s\"",line);
-				//Tcl_Eval(Interp,str);
-				Tcl_Eval(Globals::tclInterpreter,str);
-				lineptr = 0;
-		} else {
-				line[lineptr++] = newstuff[c];
+		// print into 'newstuff'
+		va_start(ap,format);
+		n = vsprintf(argstr,format,ap);
+		strcat(newstuff,argstr);
+		va_end(ap);
+
+		// look for line-feeds, print out using Tcl 'puts' as necessary
+		int len = strlen(newstuff);
+		for (int c=0; c<len; c++) {
+			if (newstuff[c]=='\n') {
+					line[lineptr++] = 0;
+					sprintf(str,"puts \"%s\"",line);
+					//Tcl_Eval(Interp,str);
+					Tcl_Eval(Globals::tclInterpreter,str);
+					lineptr = 0;
+			} else {
+					line[lineptr++] = newstuff[c];
+			}
 		}
+		return n;
 	}
-	return n;
+	return 0;
 }
 
 /**

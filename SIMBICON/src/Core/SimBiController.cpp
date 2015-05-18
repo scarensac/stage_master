@@ -82,7 +82,7 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	comOffsetCoronal=0;
 
 	//init the speed trajecotries
-	velDSagittal = 0.95;
+	velDSagittal = 0.7;//0.95 old value
 	velDCoronal = 0;
 
 
@@ -1578,7 +1578,7 @@ void SimBiController::loadFromFile(char* fName){
 				throwError("Incorrect SIMBICON input file: \'%s\' - unexpected line.", buffer);
 		}
 	}
-
+	fclose(f);
 
 }
 
@@ -1778,7 +1778,17 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			double evo_speed = 1;
 
 			//I'l simply divide by the ratio between the avg_speed and the velD
-			double traj_delta = (avgSpeed_z / velDSagittal - 1)* evo_speed + 1;
+			double traj_delta = (avgSpeed_z / velDSagittal - 1)* evo_speed;
+			
+			//I'll limit the possible translation to 0.25
+			if (traj_delta>0.25){
+				traj_delta = 0.25;
+			}
+			else if (traj_delta < -0.25){
+				traj_delta = -0.25;
+			}
+			traj_delta += 1;
+
 			for (int i = 0; i < nbr_values; ++i){
 				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) / traj_delta);
 			}

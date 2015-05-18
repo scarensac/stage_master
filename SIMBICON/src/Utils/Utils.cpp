@@ -38,14 +38,18 @@ void logPrint(char *format, ...){
 	vsprintf(message, format, vl);
 	va_end(vl);
 
+	//TODO change this
+
     static FILE *fp = fopen("out\\log.txt", "wt");
 
     fprintf(fp, "%s", message);
     fflush(fp);
+
 }
 
 
 void debugLog(std::string msg){
+	//TODO change this
 	static FILE *fp = fopen("out\\debugLog.txt", "a");
 
 	fprintf(fp, "%s", msg.c_str());

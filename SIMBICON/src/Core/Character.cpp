@@ -601,8 +601,8 @@ void Character::readReducedStateFromFile(char* fName, DynamicArray<double> *stat
 
 	FILE* fp = fopen(fName, "r");
 	if (fp == NULL)
-		throwError("cannot open the file \'%s\' for reading...", fName);
-
+		throwError("cannot open the file \'%s\' for reading... error: %i", fName, errno);
+	 
 	double temp1, temp2, temp3, temp4;
 
 	char line[100];

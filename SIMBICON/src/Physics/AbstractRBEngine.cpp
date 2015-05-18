@@ -149,6 +149,8 @@ void AbstractRBEngine::loadRBsFromFile(char* fName){
 	for (uint i=0;i<AFs.size();i++)
 		AFs[i]->fixJointConstraints();
 
+
+	fclose(f);
 	//and now make sure that each rigid body's toWorld transformation is updated
 //	for (uint i=0;i<objects.size();i++){
 //		objects[i]->updateToWorldTransformation();

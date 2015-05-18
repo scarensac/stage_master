@@ -93,6 +93,10 @@ public:
 
 	static double step_width;
 
+	//those variables are here for the evaluation mode (done in the case of an evolution strategy)
+	static bool is_evaluation;
+	static int steps_before_evaluation;
+	static int nbr_evaluation_steps;
 
 	SimGlobals(void){
 	}

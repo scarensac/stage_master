@@ -168,4 +168,11 @@ public:
 		return lastStepTaken;
 	}
 
+
+
+	/*
+	this function is a quick and easy way to save the current controler and the current position
+	the to boolean are here to help choose which one is saved
+	*/
+	void save(bool save_controller = true, bool save_position = true);
 };

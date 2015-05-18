@@ -633,5 +633,7 @@ public:
 		if (getPhase() < 0.2){ return false; }
 
 		if (v.y < 0){ return true; }
+		
+		return false;
 	}
 };

@@ -70,9 +70,15 @@ double SimGlobals::left_stance_factor = 0;
 std::vector<ForceStruct> SimGlobals::vect_forces = std::vector<ForceStruct>();
 
 //for the deplacement direction control
-double SimGlobals::velDSagittal = 0.95;
+double SimGlobals::velDSagittal = 0.7;//0.95;
 double SimGlobals::velDCoronal = 0;
 
 
 double SimGlobals::step_width = 0.1;
+
+
+
+bool SimGlobals::is_evaluation = false;
+int SimGlobals::steps_before_evaluation = 2;
+int SimGlobals::nbr_evaluation_steps= 1;
 

@@ -53,6 +53,9 @@ int Globals::updateDVTraj = 0;
 char* Globals::currControlShotStr = NULL;
 bool Globals::useShader = true;
 bool Globals::useConsole = true;
+std::string Globals::init_folder_path = "init/" ;
+bool Globals::use_interface=true;
+bool Globals::evolution_mode=false;
 
 double Globals::a=0, Globals::b=1, Globals::c=0, Globals::d=0;
 
@@ -72,7 +75,9 @@ void Globals::changeCurrControlShotStr( int currControlShot ) {
 	else
 		sprintf( currControlShotStr, "%05d", currControlShot );
 	
-	Tcl_UpdateLinkedVar( Globals::tclInterpreter, "currControlShot" );
+
+		Tcl_UpdateLinkedVar( Globals::tclInterpreter, "currControlShot" );
+	
 }
 
 

@@ -28,6 +28,8 @@
 #include "SimGlobals.h"
 #include <Physics/ODEWorld.h>
 #include "Core\ForcesUtilitary.h"
+#include <fstream>
+#include <sstream>
 
 SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	//we should estimate these from the character info...
@@ -533,4 +535,50 @@ void SimBiConFramework::setState(SimBiConFrameworkState& conFState){
 	//now copy over the contact force information
 	for (uint i=0;i<conFState.cfi.size();i++)
 		cfs->push_back(ContactPoint(conFState.cfi[i]));
+}
+
+
+/*
+this function is a quick and easy way to save the current controler and the current position
+the to boolean are here to help choose which one is saved
+*/
+void SimBiConFramework::save(bool save_controller, bool save_position){
+
+	std::string line;
+	std::ifstream myfile("../data/controllers/bipV2/learning_files_names.txt");
+	if (myfile.is_open())
+	{
+		std::ostringstream oss;
+
+		//so we read the name we want for the state file
+		if (std::getline(myfile, line)){
+			//we add the prefix
+			oss << "../data/controllers/bipV2/";
+			oss << line;
+
+			if (save_position){
+				
+				//and we write it	
+				getCharacter()->saveReducedStateToFile(oss.str());
+			}
+		}
+
+		//we read the name we want for the control file
+		if (std::getline(myfile, line)){
+			if (save_controller){
+				//we add the prefix
+				std::ostringstream oss2;
+				oss2 << "../data/controllers/bipV2/";
+				oss2 << line;
+
+				//and we write it	
+				getController()->writeToFile(oss2.str(), &oss.str());
+			}
+		}
+
+		myfile.close();
+	}
+	else{
+		exit(5612);
+	}
 }
