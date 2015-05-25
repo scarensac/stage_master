@@ -30,6 +30,7 @@
 #include "Core\ForcesUtilitary.h"
 #include <fstream>
 #include <sstream>
+#include "AppGUI\Globals.h"
 
 SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	//we should estimate these from the character info...
@@ -70,9 +71,18 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 			throwError("The input file contains a line that is longer than ~200 characters - not allowed");
 		char *line = lTrim(buffer);
 		int lineType = getConLineType(line);
+
+		std::string path;
+		char effective_path[256];
 		switch (lineType) {
 			case LOAD_RB_FILE:
-				pw->loadRBsFromFile(trim(line));
+				//first i need to add the part of the path to go to the configutation_data folder
+				path=std::string((trim(line)));
+				path = interpret_path(path);
+				
+				//and now we cna use it
+				strcpy(effective_path, path.c_str());
+				pw->loadRBsFromFile(effective_path);
 				if (bip == NULL && pw->getAFCount()>0) {
 					bip = new Character(pw->getAF(0));
 					con = new SimBiController(bip);
@@ -80,9 +90,17 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 				break;
 			case LOAD_CON_FILE:
 				if( conFile != NULL ) break; // Controller file
-				if( con == NULL )
+				if (con == NULL){
 					throwError("The physical world must contain at least one articulated figure that can be controlled!");
-				con->loadFromFile(trim(line));
+				}
+				
+				//first i need to add the part of the path to go to the configutation_data folder
+				path = std::string((trim(line)));
+				path = interpret_path(path);
+
+				//and now we cna use it
+				strcpy(effective_path, path.c_str()); 
+				con->loadFromFile(effective_path);
 				conLoaded = true;
 				break;
 			case CON_NOT_IMPORTANT:
@@ -545,7 +563,10 @@ the to boolean are here to help choose which one is saved
 void SimBiConFramework::save(bool save_controller, bool save_position){
 
 	std::string line;
-	std::ifstream myfile("../data/controllers/bipV2/learning_files_names.txt");
+	std::ostringstream os;
+	os << Globals::data_folder_path;
+	os << "controllers/bipV2/learning_files_names.txt";
+	std::ifstream myfile(os.str());
 	if (myfile.is_open())
 	{
 		std::ostringstream oss;
@@ -553,7 +574,7 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 		//so we read the name we want for the state file
 		if (std::getline(myfile, line)){
 			//we add the prefix
-			oss << "../data/controllers/bipV2/";
+			oss << Globals::data_folder_path << "controllers/bipV2/";
 			oss << line;
 
 			if (save_position){
@@ -568,7 +589,7 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 			if (save_controller){
 				//we add the prefix
 				std::ostringstream oss2;
-				oss2 << "../data/controllers/bipV2/";
+				oss2 << Globals::data_folder_path<<"controllers/bipV2/";
 				oss2 << line;
 
 				//and we write it	

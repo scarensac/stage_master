@@ -31,31 +31,7 @@
 #include <vector>
 #include <algorithm>    // std::sort
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-	std::stringstream ss(s);
-	std::string item;
-	//split the string
-	while (std::getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
 
-	if (!elems.empty()){
-		//remove the endl from the last element
-		std::stringstream ss2(elems.back());
-		elems.pop_back();
-		while (std::getline(ss2, item, '\n')) {
-			elems.push_back(item);
-		}
-	}
-	return elems;
-}
-
-
-std::vector<std::string> split(const std::string &s, char delim) {
-	std::vector<std::string> elems;
-	split(s, delim, elems);
-	return elems;
-}
 
 /** 
 	Update this component to recenter it around the new given D and V trajectories

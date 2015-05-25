@@ -7,7 +7,7 @@ int _tmain(int argc, _TCHAR* argv[]);
 int cma_program();
 
 //this function launch the simulation
-void launch_simulation(bool use_interface);
+void launch_simulation(bool use_tk_interface=true, bool use_gl_interface=true);
 
 //hello world tutorial
 void hello_world();
@@ -79,3 +79,11 @@ void SetWindow(int Width, int Height)
 	SetConsoleScreenBufferSize(Handle, coord);            // Set Buffer Size
 	SetConsoleWindowInfo(Handle, TRUE, &Rect);            // Set Window Size
 }
+
+void execute_line(std::string line);
+
+std::string get_data_folder_path(int lookup_nbr);
+
+//string convert functions
+std::wstring s2ws(const std::string& str);
+std::string ws2s(const std::wstring& wstr);

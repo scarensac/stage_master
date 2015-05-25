@@ -732,68 +732,57 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 		Joint* joint = lower_body[i];
 		RigidBody* body = joint->getChild();
 
-		//F.x = 0;
-		//F = -Vector3d(0, 0, 1)*SimGlobals::force_alpha / 3000;
-		bool on_full_body = false;
-		if (on_full_body){
-			if (strcmp(body->name, "torso") == 0){
-				//compute_liquid_drag_on_toes(i, water_level);
-
-				//applyForceTo(body, F*20, body->getLocalCoordinates(body->getCMPosition()));
-
-			}
-			//applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));
+		
+		WaterImpact water_impact;
+		if (strcmp(body->name, "rToes") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "lToes") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "rFoot") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "lFoot") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "lLowerleg") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "rLowerleg") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "lUpperleg") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
+		}
+		else if (strcmp(body->name, "rUpperleg") == 0){
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else{
-			WaterImpact water_impact;
-			if (strcmp(body->name, "rToes") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "lToes") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "rFoot") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "lFoot") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "lLowerleg") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "rLowerleg") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "lUpperleg") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else if (strcmp(body->name, "rUpperleg") == 0){
-				water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
-				water_impact.boyancy = compute_buoyancy(joint, water_level);
-			}
-			else{
-				//should be impossible with the current system
-				//I'll just shut down the application if this happens bouahahahahha
-				exit(0);
-			}
-
-			//Now I need to limit the drag torque (depending on the type of join)
-			//there are 3 types of join with only one having a restriction (the HingeJoint)
-			HingeJoint* hj = dynamic_cast<HingeJoint*>(joint);
-			if (hj != NULL){
-				Vector3d axis = body->getWorldCoordinates(hj->getRotAxisA());
-				axis /= axis.length();
-				water_impact.drag_torque = axis*water_impact.drag_torque.dotProductWith(axis);
-			}
-			resulting_impact[joint->get_idx()] = water_impact;
+			//should be impossible with the current system
+			//I'll just shut down the application if this happens bouahahahahha
+			exit(985632);
 		}
+		//*/
+
+		//Now I need to limit the drag torque (depending on the type of join)
+		//there are 3 types of join with only one having a restriction (the HingeJoint)
+		HingeJoint* hj = dynamic_cast<HingeJoint*>(joint);
+		if (hj != NULL){
+			Vector3d axis = body->getWorldCoordinates(hj->getRotAxisA());
+			axis /= axis.length();
+			water_impact.drag_torque = axis*water_impact.drag_torque.dotProductWith(axis);
+		}
+		resulting_impact[joint->get_idx()] = water_impact;
+		
 	}
 	//*/
 	
@@ -889,7 +878,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level){
 
 
 
-		//*
+		/*
 		//this can be used to show the forces
 		ForceStruct cp;
 		cp.F = F;
@@ -914,7 +903,7 @@ this function handle the feet
 Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 	
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
-
+	double density = SimGlobals::liquid_density;
 
 
 	CollisionDetectionPrimitive* cdp = body->cdps.front();
@@ -930,7 +919,6 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 
 	Point3d center = box->getCenter();
 	Point3d corners[8];
-
 	corners[0] = center + Point3d(box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
 	corners[1] = center + Point3d(box->getXLen() / 2, -box->getYLen() / 2, -box->getZLen() / 2);
 	corners[2] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, -box->getZLen() / 2);
@@ -940,12 +928,14 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 	corners[6] = center + Point3d(-box->getXLen() / 2, box->getYLen() / 2, box->getZLen() / 2);
 	corners[7] = center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2, box->getZLen() / 2);
 	
+	
 	double miny = body->getWorldCoordinates(corners[0]).getY();
+	Point3d wcorners[8];
 
 	for (int i = 0; i < 8; ++i){
-		corners[i] = body->getWorldCoordinates(corners[i]);
-		if (corners[i].getY() < miny){
-			miny = corners[i].getY();
+		wcorners[i] = body->getWorldCoordinates(corners[i]);
+		if (wcorners[i].getY() < miny){
+			miny = wcorners[i].getY();
 		}
 	}
 	
@@ -967,7 +957,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 		Point3d cur_pos,cur_normal;
 
 		///TODO optimize this so we star with the lowest corner
-
+		/*
 		//first let's handle the back face
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x/2, -box->getYLen() / 2 + d_y/2, -box->getZLen() / 2);
 		cur_normal = Point3d(0, 0, -1);
@@ -998,12 +988,55 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 		drag_torque+=compute_liquid_drag_on_plane(joint, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
-		//now the top face to finish
+		//now the bottom face to finish
 		cur_pos = center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2);
 		cur_normal = Point3d(0, -1, 0);
 		drag_torque+=compute_liquid_drag_on_plane(joint, box->getXLen(), box->getYLen(), box->getZLen(),
 			cur_pos, cur_normal, water_level, nbr_interval_x, 0, nbr_interval_z);
 
+
+		//*/
+		//*
+		//I need this to get hthe world coordinates
+		RigidBody* body = static_cast<RigidBody*>(joint->getChild());
+
+		Vector3d nx = body->getWorldCoordinates(Vector3d(1, 0, 0));
+		Vector3d ny = body->getWorldCoordinates(Vector3d(0, 1, 0));
+		Vector3d nz = body->getWorldCoordinates(Vector3d(0, 0, 1));
+		Vector3d wvx = nx*d_x;
+		Vector3d wvy = ny*d_y;
+		Vector3d wvz = nz*d_z;
+
+
+		//first let's handle the back face
+		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2));
+		cur_normal = -nz;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, density);
+
+		//now the front face
+		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, box->getZLen() / 2));
+		cur_normal = nz;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, density);
+
+		//now the left face
+		cur_pos = body->getWorldCoordinates(center + Point3d(box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2));
+		cur_normal = nx;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, density);
+
+		//now the right face
+		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2));
+		cur_normal = -nx;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, density);
+
+		//now the top face
+		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
+		cur_normal = ny;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, density);
+
+		//now the bottom face to finish
+		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
+		cur_normal = -ny;
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, density);
 
 		//*/
 	}
@@ -1060,7 +1093,9 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					//now that we have the surface we can compute the resulting force
 					Vector3d F = -normal*V_eff*V_eff * 1 / 2 * SimGlobals::liquid_density*S;
 					F = body->getWorldCoordinates(F);
-
+					if (F.length() > 0.1){
+						F /= 2;
+					}
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					applyForceTo(body,F, pos);
@@ -1068,7 +1103,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					//*
+					/*
 					//this can be used to show the forces
 					ForceStruct cp;
 					cp.F = F;
@@ -1109,7 +1144,9 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					F = body->getWorldCoordinates(F);
-
+					if (F.length() > 0.1){
+						F /= 2;
+					}
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					applyForceTo(body, F, pos);
@@ -1117,7 +1154,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					//*
+					/*
 					//this can be used to show the forces
 					ForceStruct cp;
 					cp.F = F;
@@ -1151,7 +1188,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 				double V_eff = V.x*normal.x;
 				if (V_eff > 0){
 					double S = d_S;
-					
+
 					//now that we have the surface we can compute the resulting force
 					Vector3d F = -normal*V_eff*V_eff * 1 / 2 * SimGlobals::liquid_density*S;
 					F = body->getWorldCoordinates(F);
@@ -1159,11 +1196,13 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 					//and apply the force on every ds
 					applyForceTo(body, F, pos);
-
+					if (F.length() > 0.1){
+						F /= 2;
+					}
 					Vector3d op = pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					//*
+					/*
 					//this can be used to show the forces
 					ForceStruct cp;
 					cp.F = F;
@@ -1173,12 +1212,71 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 				}
 				pos = pos + Point3d(0, d_y, 0);
 			}
-			pos = Point3d(pos.x , init_y, pos.z + d_z);
+			pos = Point3d(pos.x, init_y, pos.z + d_z);
 		}
 	}
 
 	return drag_torque;
 }
+
+
+
+Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vector3d normal, float water_level,
+	Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density){
+
+	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
+
+
+	Vector3d drag_torque = Vector3d(0, 0, 0);
+
+
+	double d_S = v1.length()*v2.length();
+
+
+	for (int i = 0; i < nbr_interval_v1; ++i){
+		Point3d line_start = pos;
+		for (int j = 0; j < nbr_interval_v2; ++j){
+			//we the center of the fragment is not underater we skipp it
+			if (pos.y > water_level){
+				continue;
+			}
+
+			//here we calculate the force and applys it
+			Vector3d V = body->getAbsoluteVelocityForGlobalPoint(pos);
+					
+
+			//we check if we are a facing the movement 
+			double V_eff = V.dotProductWith(normal);
+			if (V_eff > 0){
+				
+				//now that we have the surface we can compute the resulting force
+				Vector3d F = -normal*V_eff*V_eff * 0.5 * density*d_S;
+
+				//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
+				//and apply the force on every ds
+				applyForceTo(body, F, body->getLocalCoordinates(pos));
+
+
+				Vector3d op = pos - body->getWorldCoordinates(joint->getChildJointPosition());
+				drag_torque += op.crossProductWith(F);
+
+				/*
+				//this can be used to show the forces
+				ForceStruct cp;
+				cp.F = F;
+				cp.pt = pos;
+				SimGlobals::vect_forces.push_back(cp);
+				//*/
+
+			}
+			pos = pos + v2;
+		}
+		pos = line_start + v1;
+	}
+	return drag_torque;
+}
+
+
 
 /**
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
@@ -1191,7 +1289,6 @@ Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level){
 	CapsuleCDP* capsule = dynamic_cast<CapsuleCDP*>(cdp);
 
 	if (capsule == NULL){
-		//throwError("the toes should only have a sphere primitive...");
 		return Vector3d();
 	}
 
@@ -1276,14 +1373,13 @@ Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level){
 					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * SimGlobals::liquid_density*S;
 					F = body->getWorldCoordinates(F);
 
-					//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
-					//and apply the force on every ds
+					//we apply the force
 					applyForceTo(body, F, cur_pos);
 
 					Vector3d op = cur_pos - joint->getChildJointPosition();
 					drag_torque += body->getWorldCoordinates(op).crossProductWith(F);
 
-					//*
+					/*
 					//this can be used to show the forces
 					ForceStruct cp;
 					cp.F = F;

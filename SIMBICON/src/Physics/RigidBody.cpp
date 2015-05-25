@@ -223,12 +223,20 @@ void RigidBody::loadFromFile(FILE* f){
 			throwError("The input file contains a line that is longer than ~200 characters - not allowed");
 		char *line = lTrim(buffer);
 		int lineType = getRBLineType(line);
+
+		std::string path;
+
 		switch (lineType) {
 			case RB_NAME:
 				sscanf(line, "%s", this->name);
 				break;
 			case RB_MESH_NAME:
-				sscanf(line, "%s", meshName);
+				//first we must correct the path
+				path = std::string(line);
+				path=interpret_path(path);
+				//and now we can use it
+				strcpy(meshName, path.c_str());
+				
 				tmpMesh = OBJReader::loadOBJFile(meshName);
 				tmpMesh->computeNormals();
 				tmpMesh->dontUseTextureMapping();

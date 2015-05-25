@@ -150,15 +150,6 @@ void GLWindow::onStartProcessing(){
 	//delays between redraw() and draw(), etc, we'll restart the timer here, and
 	//record the end time of the application processing.
 	fpsTimer.restart();
-	
-	static bool test = true;
-	if (test){
-		test = false;
-		if (Globals::evolution_mode){
-			glutHideWindow();
-		}
-	}
-	
 }
 
 /**
@@ -192,7 +183,7 @@ void GLWindow::draw(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 
-	if (Globals::use_interface){
+	if (Globals::use_tk_interface){
 
 
 		//we will now place the camera

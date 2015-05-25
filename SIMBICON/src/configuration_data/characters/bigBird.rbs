@@ -2,9 +2,9 @@
 
 A_RigidBody 
 	name body
-	mesh ../data/models/bigBird/torso.obj
+	mesh ../configuration_data/models/bigBird/torso.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/torso_2.obj
+	mesh ../configuration_data/models/bigBird/torso_2.obj
 	colour 0.2 0.2 0.2 1
 
 	mass 20
@@ -18,7 +18,7 @@ A_RigidBody
 
 A_RigidBody 
 	name neck
-	mesh ../data/models/bigBird/neck.obj
+	mesh ../configuration_data/models/bigBird/neck.obj
 	mass 10.0
 	moi 0.12 0.08 0.12
 	CDP_Capsule 0 0.05 0 0 -0.05 0 0.05
@@ -29,9 +29,9 @@ A_RigidBody
 
 A_RigidBody 
 	name head
-	mesh ../data/models/bigBird/head.obj
+	mesh ../configuration_data/models/bigBird/head.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/eyes.obj
+	mesh ../configuration_data/models/bigBird/eyes.obj
 	colour 0.5 0.5 0.5 1	
 	mass 10.7
 	moi 0.24 0.24 0.12
@@ -42,9 +42,9 @@ A_RigidBody
 
 A_RigidBody
 	name lUpperleg
-	mesh ../data/models/bigBird/lUpperLeg.obj
+	mesh ../configuration_data/models/bigBird/lUpperLeg.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/lKnee.obj
+	mesh ../configuration_data/models/bigBird/lKnee.obj
 	colour 0.2 0.2 0.2 1
 
 	mass 3.7
@@ -56,9 +56,9 @@ A_RigidBody
 			
 A_RigidBody
 	name lLowerleg
-	mesh ../data/models/bigBird/lLowerLeg.obj
+	mesh ../configuration_data/models/bigBird/lLowerLeg.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/lAnkle.obj
+	mesh ../configuration_data/models/bigBird/lAnkle.obj
 	colour 0.2 0.2 0.2 1
 	mass 2.2
 	moi 0.023 0.003 0.023
@@ -70,7 +70,7 @@ A_RigidBody
 
 A_RigidBody
 	name lFoot
-	mesh ../data/models/bigBird/lFoot.obj
+	mesh ../configuration_data/models/bigBird/lFoot.obj
 	colour 0.7 0.7 0.7 1
 
 	mass 5.8
@@ -83,9 +83,9 @@ A_RigidBody
 
 A_RigidBody
 	name rUpperleg
-	mesh ../data/models/bigBird/rUpperLeg.obj
+	mesh ../configuration_data/models/bigBird/rUpperLeg.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/rKnee.obj
+	mesh ../configuration_data/models/bigBird/rKnee.obj
 	colour 0.2 0.2 0.2 1
 
 	mass 3.7
@@ -97,9 +97,9 @@ A_RigidBody
 			
 A_RigidBody
 	name rLowerleg
-	mesh ../data/models/bigBird/rLowerLeg.obj
+	mesh ../configuration_data/models/bigBird/rLowerLeg.obj
 	colour 0.7 0.7 0.7 1
-	mesh ../data/models/bigBird/rAnkle.obj
+	mesh ../configuration_data/models/bigBird/rAnkle.obj
 	colour 0.2 0.2 0.2 1
 
 	mass 2.2
@@ -111,7 +111,7 @@ A_RigidBody
 
 A_RigidBody
 	name rFoot
-	mesh ../data/models/bigBird/rFoot.obj
+	mesh ../configuration_data/models/bigBird/rFoot.obj
 	colour 0.7 0.7 0.7 1
 	mass 5.8
 	moi 0.046 0.086 0.046

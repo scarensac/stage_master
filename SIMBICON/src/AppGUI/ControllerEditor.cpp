@@ -51,7 +51,7 @@ ControllerEditor::ControllerEditor(void){
 	nextControlShot = 0;
 	maxControlShot = -1;
 	
-	if (Globals::use_interface){
+	if (Globals::use_tk_interface){
 		registerTclFunctions();
 	}
 }
@@ -373,9 +373,9 @@ Point3d ControllerEditor::getCameraTarget(){
 * (i.e. run simulations, and so on).
 */
 void ControllerEditor::processTask(){
-	if (Globals::animationRunning == 0){
-		return;
-	}
+	//if (Globals::animationRunning == 0){
+	//	return;
+	//}
 
 
 	double simulationTime = 0;
@@ -430,8 +430,9 @@ void ControllerEditor::processTask(){
 			
 			cur_height = conF->getController()->getSwingFootPos().y;
 			
-			Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
-
+			if (Globals::use_tk_interface){
+				Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
+			}
 	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
 
 			//store the current speed to be able to know the avg speed at the end

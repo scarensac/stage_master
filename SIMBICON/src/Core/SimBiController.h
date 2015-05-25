@@ -420,6 +420,16 @@ public:
 
 
 	/**
+	this method us used to control the interaction beetween the stance foot and the ground
+	it has 2 functionalities.
+	first it store a curve updating how the interactions beetween the foot and the ground should be
+	second it make sure that the contact of the foot with the ground is real.
+	*/
+	void foot_contact_control();
+
+
+
+	/**
 		This method is used to advance the controller in time. It takes in a list of the contact points, since they might be
 		used to determine when to transition to a new state. This method returns -1 if the controller does not advance to a new state,
 		or the index of the state that it transitions to otherwise.

@@ -29,6 +29,7 @@
 #include "Globals.h"
 #include <Core/SimBiConFramework.h>
 #include <Utils/Utils.h>
+#include <sstream>
 
 /**
  * Constructor.
@@ -59,7 +60,11 @@ void InteractiveWorld::drawExtras(){
 void InteractiveWorld::init(){
 	Application::init();
 
-	bInterface = new InteractionInterface("../data/textures/pushInterface.bmp", 0, 0, 128);
+	std::ostringstream oss;
+	oss << Globals::data_folder_path << "textures/pushInterface.bmp";
+	char dest[230];
+	strcpy(dest, oss.str().c_str());
+	bInterface = new InteractionInterface(dest, 0, 0, 128);
 }
 
 

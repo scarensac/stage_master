@@ -26,6 +26,8 @@
 #include <GlUtils/GLUtils.h>
 #include <AppGUI/Globals.h>
 #include <Core/SimGlobals.h>
+#include <sstream>
+
 
 
 /**
@@ -153,8 +155,18 @@ Vector3d Application::getGroundNormal(){
  * This method gets called when the application gets initialized.
  */
 void Application::init(){
-	groundTexture = new GLTexture("../data/textures/grid.bmp");
-	waterTexture = new GLTexture("../data/textures/test.bmp");
+	std::ostringstream oss;
+	oss << Globals::data_folder_path << "textures/grid.bmp";
+	char dest[230];
+	strcpy(dest, oss.str().c_str());
+	groundTexture = new GLTexture(dest);
+
+
+	std::ostringstream oss2;
+	oss2 << Globals::data_folder_path << "textures/darkGrid.bmp";
+	char dest2[230];
+	strcpy(dest2, oss2.str().c_str());
+	waterTexture = new GLTexture(dest2);
 }
 
 /**

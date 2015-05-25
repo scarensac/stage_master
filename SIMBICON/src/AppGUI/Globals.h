@@ -25,8 +25,8 @@
 
 #include <TCL/tcl.h>
 #include <TCL/tk.h>
-#include "Application.h"
-#include "GLWindow.h"
+#include "AppGUI\Application.h"
+#include "AppGUI\GLWindow.h"
 #include <include/glut.h>
 
 //disable all the 'deprecated function' warnings
@@ -93,8 +93,13 @@ public:
 	static bool useConsole;
 	//this string will contain the path to the init folder
 	static std::string init_folder_path;
-	//this boolean is used to activate or disactivate the interface (for evolution)
-	static bool use_interface;
+	//this string will contain the path to the data folder
+	static std::string data_folder_path;
+	
+	//those booleans are used to activate or disactivate the tk and gl interfaces (for evolution)
+	static bool use_tk_interface;
+	static bool use_gl_interface;
+	
 	//this bollean specify that we are in the evolution mode 
 	static bool evolution_mode;
 

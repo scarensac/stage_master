@@ -23,8 +23,9 @@
 
 #include <TCL/tcl.h>
 #include <TCL/tk.h>
-
+#include <sstream>
 #include "utils.h"
+#include "AppGUI\Globals.h"
 
 
 /**
@@ -85,6 +86,72 @@ char* stringListToTclList( DynamicArray<const char*> stringList, bool enQuote ) 
 
 	return buffer;
 
+}
+
+
+/**
+those method are helper to split a string
+*/
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+	std::stringstream ss(s);
+	std::string item;
+	//split the string
+	while (std::getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+
+	if (!elems.empty()){
+		//remove the endl from the last element
+		std::stringstream ss2(elems.back());
+		elems.pop_back();
+		while (std::getline(ss2, item, '\n')) {
+			elems.push_back(item);
+		}
+	}
+	return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, elems);
+	return elems;
+}
+
+
+/**
+this function interpret the path (using the global configuration data path
+*/
+std::string interpret_path(std::string path){
+	std::vector<std::string> splited_path;
+	std::ostringstream oss;
+	bool config_folder_reached;
+	bool first_passage;
+
+	splited_path = split(path, '/');
+	//now we look for the configuration folder in the vector and we create the real path
+	config_folder_reached = false;
+	for (int i = 0; i < (int)splited_path.size(); ++i){
+		//we ignore anything before the data folder
+		if (!config_folder_reached){
+			if (splited_path[i] == "configuration_data"){
+				config_folder_reached = true;
+				oss << Globals::data_folder_path;
+				first_passage = true;
+			}
+			continue;
+		}
+
+		//so if we reach here we have only the things following the data folder
+		if (first_passage){
+			first_passage = false;
+		}
+		else{
+			oss << "/";
+		}
+		oss << splited_path[i];
+	}
+	return oss.str();
 }
 
 

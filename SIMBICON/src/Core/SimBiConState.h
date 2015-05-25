@@ -38,6 +38,8 @@
 #define RefTrajectories std::vector<RefTrajectory > 
 
 
+
+
 /**
  *  This helper class is used to hold information regarding one component of a state trajectory. This includes (mainly): the base trajectory, 
  *	a data member that specifies the feedback law to be used, and the axis about which it represents a rotation, 
@@ -82,6 +84,8 @@ public:
 		delete bFeedback;
 	}
 
+
+	
 	/**
 		this method is used to evaluate the trajectory at a given point phi, knowing the stance of the character, 
 		and the d and v values used for feedback.

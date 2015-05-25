@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <vector>
 
+
 #define DynamicArray std::vector
 typedef unsigned int uint;
 
@@ -136,4 +137,17 @@ inline DynamicArray<char*> getTokens(char* input){
 char* stringListToTclList( DynamicArray<const char*> stringList, bool enQuote = false );
 
 #define __max__(x,y) (((x)>(y))?(x):(y))
+
+
+/**
+those method are helper to split a string
+*/
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
+std::vector<std::string> split(const std::string &s, char delim);
+
+/**
+this function interpret the path (using the global configuration data path
+*/
+std::string interpret_path(std::string path);
+
 

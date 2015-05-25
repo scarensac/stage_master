@@ -264,4 +264,4 @@ ConState 0
 
 startAtState 0
 startingStance right
-loadCharacterState ../data/controllers/bipV2/learning_walk_state.rs
+loadCharacterState ../configuration_data/controllers/bipV2/learning_walk_state.rs

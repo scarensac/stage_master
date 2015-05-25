@@ -239,62 +239,66 @@ int Tcl_AppInit(Tcl_Interp *interp){
 			return TCL_ERROR;
 	}
 
+
+
+	//we initialise the system
+	
 	//get a list of callback functions
-    Tcl_CreateCommand(interp, "cls",			cls,			(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-	Tcl_CreateCommand(interp, "<",				pipeIn,			(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateCommand(interp, "quit",			quit,			(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateCommand(interp, "launch",			launch,			(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-	Tcl_CreateCommand(interp, "anim",			animation,		(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-	Tcl_CreateCommand(interp, "camera",			camera,			(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-	Tcl_CreateCommand(interp, "instantChar",	instantChar,	(ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+	Tcl_CreateCommand(interp, "cls", cls, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "<", pipeIn, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "quit", quit, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "launch", launch, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "anim", animation, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "camera", camera, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+	Tcl_CreateCommand(interp, "instantChar", instantChar, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 
 	//and link some variables as well
-	Tcl_LinkVar(interp, "slowdown",					(char *) &Globals::animationTimeToRealTimeRatio, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "drawFPS",					(char *) &Globals::drawFPS, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawCubeMap",				(char *) &Globals::drawCubeMap, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawGlobalAxes",			(char *) &Globals::drawGlobalAxes, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawShadows",				(char *) &Globals::drawShadows, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawCollisionPrimitives",	(char *) &Globals::drawCollisionPrimitives, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "followCharacter",			(char *) &Globals::followCharacter, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawCDPs",					(char *) &Globals::drawCollisionPrimitives, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawJoints",				(char *) &Globals::drawJoints, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawContactForces",		(char *) &Globals::drawContactForces, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawDesiredPose",			(char *) &Globals::drawDesiredPose, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "showPushInterface",		(char *) &Globals::drawPushInterface, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "showCurveEditor",			(char *) &Globals::drawCurveEditor, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "showCanvas",				(char *) &Globals::drawCanvas, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "toggleScreenshots",		(char *) &Globals::drawScreenShots, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "toggleControlshots",		(char *) &Globals::drawControlShots, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "toggleUpdateDVTraj",		(char *) &Globals::updateDVTraj, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "toggleWorldshots",			(char *) &Globals::drawWorldShots, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "forceHeadingControl",		(char *) &SimGlobals::forceHeadingControl, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "drawGroundPlane",			(char *) &Globals::drawGroundPlane, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "conInterpValue",			(char *) &SimGlobals::conInterpolationValue, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "currControlShot",          (char *) &Globals::currControlShotStr, TCL_LINK_STRING);
-	Tcl_LinkVar(interp, "targetPosePhase",			(char *) &Globals::targetPosePhase, TCL_LINK_DOUBLE);
-//	Tcl_LinkVar(interp, "conInterpValue",			(char *) &SimGlobals::conInterpolationValue, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "bipVel",					(char *) &SimGlobals::bipDesiredVelocity, TCL_LINK_DOUBLE);
-	
-//	Tcl_LinkVar(interp, "part1dPos",			(char *) &DynamicWorld1D::pos, TCL_LINK_DOUBLE);
-//	Tcl_LinkVar(interp, "part1dVel",			(char *) &DynamicWorld1D::vel, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "part1dTarget",			(char *) &SimGlobals::targetPos, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "softness",			(char *) &SimGlobals::constraintSoftness, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "cgitn",			(char *) &SimGlobals::CGIterCount, TCL_LINK_INT);
-	Tcl_LinkVar(interp, "lincnt",			(char *) &SimGlobals::linearizationCount, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "slowdown", (char *)&Globals::animationTimeToRealTimeRatio, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "drawFPS", (char *)&Globals::drawFPS, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawCubeMap", (char *)&Globals::drawCubeMap, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawGlobalAxes", (char *)&Globals::drawGlobalAxes, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawShadows", (char *)&Globals::drawShadows, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawCollisionPrimitives", (char *)&Globals::drawCollisionPrimitives, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "followCharacter", (char *)&Globals::followCharacter, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawCDPs", (char *)&Globals::drawCollisionPrimitives, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawJoints", (char *)&Globals::drawJoints, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawContactForces", (char *)&Globals::drawContactForces, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawDesiredPose", (char *)&Globals::drawDesiredPose, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "showPushInterface", (char *)&Globals::drawPushInterface, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "showCurveEditor", (char *)&Globals::drawCurveEditor, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "showCanvas", (char *)&Globals::drawCanvas, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "toggleScreenshots", (char *)&Globals::drawScreenShots, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "toggleControlshots", (char *)&Globals::drawControlShots, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "toggleUpdateDVTraj", (char *)&Globals::updateDVTraj, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "toggleWorldshots", (char *)&Globals::drawWorldShots, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "forceHeadingControl", (char *)&SimGlobals::forceHeadingControl, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "drawGroundPlane", (char *)&Globals::drawGroundPlane, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "conInterpValue", (char *)&SimGlobals::conInterpolationValue, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "currControlShot", (char *)&Globals::currControlShotStr, TCL_LINK_STRING);
+	Tcl_LinkVar(interp, "targetPosePhase", (char *)&Globals::targetPosePhase, TCL_LINK_DOUBLE);
+	//	Tcl_LinkVar(interp, "conInterpValue",			(char *) &SimGlobals::conInterpolationValue, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "bipVel", (char *)&SimGlobals::bipDesiredVelocity, TCL_LINK_DOUBLE);
+
+	//	Tcl_LinkVar(interp, "part1dPos",			(char *) &DynamicWorld1D::pos, TCL_LINK_DOUBLE);
+	//	Tcl_LinkVar(interp, "part1dVel",			(char *) &DynamicWorld1D::vel, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "part1dTarget", (char *)&SimGlobals::targetPos, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "softness", (char *)&SimGlobals::constraintSoftness, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "cgitn", (char *)&SimGlobals::CGIterCount, TCL_LINK_INT);
+	Tcl_LinkVar(interp, "lincnt", (char *)&SimGlobals::linearizationCount, TCL_LINK_INT);
 
 
-	Tcl_LinkVar(interp, "rootSagittal",			(char *) &SimGlobals::rootSagittal, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "rootLateral",			(char *) &SimGlobals::rootLateral, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "swingHipSagittal",			(char *) &SimGlobals::swingHipSagittal, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "swingHipLateral",			(char *) &SimGlobals::swingHipLateral, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "stanceAngleSagittal",			(char *) &SimGlobals::stanceAngleSagittal, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "stanceAngleLateral",			(char *) &SimGlobals::stanceAngleLateral, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "stanceKnee",			(char *) &SimGlobals::stanceKnee, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "rootSagittal", (char *)&SimGlobals::rootSagittal, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "rootLateral", (char *)&SimGlobals::rootLateral, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "swingHipSagittal", (char *)&SimGlobals::swingHipSagittal, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "swingHipLateral", (char *)&SimGlobals::swingHipLateral, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "stanceAngleSagittal", (char *)&SimGlobals::stanceAngleSagittal, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "stanceAngleLateral", (char *)&SimGlobals::stanceAngleLateral, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "stanceKnee", (char *)&SimGlobals::stanceKnee, TCL_LINK_DOUBLE);
 
 
-	Tcl_LinkVar(interp, "comX",			(char *) &SimGlobals::COMOffsetX, TCL_LINK_DOUBLE);
-	Tcl_LinkVar(interp, "comZ",			(char *) &SimGlobals::COMOffsetZ, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "comX", (char *)&SimGlobals::COMOffsetX, TCL_LINK_DOUBLE);
+	Tcl_LinkVar(interp, "comZ", (char *)&SimGlobals::COMOffsetZ, TCL_LINK_DOUBLE);
 
 	Tcl_LinkVar(interp, "waterLevel", (char *)&SimGlobals::water_level, TCL_LINK_DOUBLE);
 	Tcl_LinkVar(interp, "forceAlpha", (char *)&SimGlobals::force_alpha, TCL_LINK_DOUBLE);
@@ -311,15 +315,24 @@ int Tcl_AppInit(Tcl_Interp *interp){
 	Tcl_LinkVar(interp, "step_width", (char *)&SimGlobals::step_width, TCL_LINK_DOUBLE);
 
 
+
 	std::ostringstream oss;
 	oss << Globals::init_folder_path;
 	oss << "setup.tcl";
-
-	//*
-	int return_val=Tcl_EvalFile(interp, oss.str().c_str());
+	int return_val = Tcl_EvalFile(interp, oss.str().c_str());
 	if (return_val != TCL_OK){
-		throw std::exception("Tcl_AppInit: Tcl_EvalFile failed please check that the setup file and it's path are correct");
-	}//*/
+		Tcl_Obj* error_obj=Tcl_GetObjResult(interp);
+		std::string error_msg = Tcl_GetStringResult(interp);
+		std::ostringstream oss; 
+		oss << "Tcl_AppInit: Tcl_EvalFile failed please check that the setup file and it's path are correct."<<std::endl;
+		oss << error_msg;
+
+		throw std::exception(oss.str().c_str());
+	}
+	
+	if (!Globals::use_gl_interface){
+		glutHideWindow();
+	}
 	
 	//and start the main loop...
 	glutMainLoop();
@@ -337,7 +350,7 @@ int Tcl_AppInit(Tcl_Interp *interp){
 int tprintf(const char *format, ...) {
 	//if we don't use the interface then I just remove all prints...
 
-	if (Globals::use_interface){
+	if (Globals::use_tk_interface){
 		int n;
 		va_list ap;
 		STR str,argstr,newstuff;

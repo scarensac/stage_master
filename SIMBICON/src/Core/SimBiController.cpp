@@ -580,6 +580,8 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	double cur_phi = getPhase();
 
 
+	//here I'l start the stance foot control system
+
 	
 	//this is a ponderation if we are near to fall
 	for (uint i=0;i<torques.size();i++){
@@ -1310,6 +1312,21 @@ void SimBiController::computeHipTorques(const Quaternion& qRootD, const Quaterni
 
 }
 
+/**
+this method us used to control the interaction beetween the stance foot and the ground
+it has 2 functionalities.
+first it store a curve updating how the interactions beetween the foot and the ground should be
+second it make sure that the contact of the foot with the ground is real.
+*/
+void SimBiController::foot_contact_control(){
+	//this function should not do anything if we are not in a phase of foot contact
+	if (getPhase() < 0.14){
+		return;
+	}
+
+	//so first I need the ground force I can attribute with each corner of the foot
+}
+
 
 /**
 	This method is used to obtain the d and v parameters, using the current postural information of the biped
@@ -1524,6 +1541,9 @@ void SimBiController::loadFromFile(char* fName){
 			throwError("The input file contains a line that is longer than ~200 characters - not allowed");
 		char *line = lTrim(buffer);
 		int lineType = getConLineType(line);
+
+		std::string path;
+		char effective_path[256];
 		switch (lineType) {
 			case CON_PD_GAINS_START:
 				readGains(f);
@@ -1548,7 +1568,13 @@ void SimBiController::loadFromFile(char* fName){
 				sscanf(line, "%lf", &rootPredictiveTorqueScale);
 				break;
 			case CON_CHARACTER_STATE:
-				character->loadReducedStateFromFile(trim(line));
+				//first we must correct the path
+				path = std::string(line);
+				path = interpret_path(path);
+				//and now we can use it
+				strcpy(effective_path, path.c_str());
+
+				character->loadReducedStateFromFile(effective_path);
 				strcpy(initialBipState, trim(line));
 				break;
 			case CON_START_AT_STATE:

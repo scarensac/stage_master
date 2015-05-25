@@ -23,9 +23,9 @@ proc makeControlDialog { } {
 
 	#Put things in it
 	frame .dialog.editionbuttons -padx 15 -pady 5
-	image create photo undo -file [file join ../data/buttons/undo.gif]
-	image create photo redo -file [file join ../data/buttons/redo.gif]
-	image create photo recordState -file [file join ../data/buttons/recS.gif]
+	image create photo undo -file [file join [file dirname [info script]] "../buttons/undo.gif"]
+	image create photo redo -file [file join [file dirname [info script]] "../buttons/redo.gif"]
+	image create photo recordState -file [file join [file dirname [info script]] "../buttons/recS.gif"]
 	checkbutton .dialog.recordState -image recordState -anchor center -width 21 -height 21 -selectcolor SeaGreen1 -indicatoron 0 -variable toggleControlshots
 	button .dialog.undo -image undo -anchor center -width 23 -height 23 -command {controllerUndo}
 	button .dialog.redo -image redo -anchor center -width 23 -height 23 -command {controllerRedo}
@@ -135,13 +135,13 @@ pack .v1 .v3 .v2 .v4 .v8 -side left -pady 3 -padx 4 -fill x -in .camerasettings 
 frame .simulatorlabel
 frame .simulatorframe -padx 15 -pady 5
 label .labelsimulator -text "Animation:" -relief raised
-image create photo reload -file [file join ../data/buttons/reload.gif]
-image create photo restart -file [file join ../data/buttons/restart.gif]
-image create photo start -file [file join ../data/buttons/start.gif]
-image create photo pause -file [file join ../data/buttons/pause.gif]
-image create photo step -file [file join ../data/buttons/step.gif]
-image create photo record -file [file join ../data/buttons/rec.gif]
-image create photo recordWorld -file [file join ../data/buttons/recW.gif]
+image create photo reload -file [file join [file dirname [info script]] "../buttons/reload.gif"]
+image create photo restart -file [file join [file dirname [info script]] "../buttons/restart.gif"]
+image create photo start -file [file join [file dirname [info script]] "../buttons/start.gif"]
+image create photo pause -file [file join [file dirname [info script]] "../buttons/pause.gif"]
+image create photo step -file [file join [file dirname [info script]] "../buttons/step.gif"]
+image create photo record -file [file join [file dirname [info script]] "../buttons/rec.gif"]
+image create photo recordWorld -file [file join [file dirname [info script]] "../buttons/recW.gif"]
 button .simulstart -image start -anchor center -width 23 -height 23 -command {anim start}
 button .simulpause -image pause -anchor center -width 23 -height 23 -command {anim pause}
 button .simulstep -image step -anchor center -width 23 -height 23 -command {anim step}

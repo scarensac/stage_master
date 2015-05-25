@@ -1,4 +1,5 @@
-< ../AppGUI/init/gui.tcl
+#< ../configuration_data/init/gui.tcl
+source [file join [file dirname [info script]] "gui.tcl"]
 
 #setup the location of the console and the toolbar
 
