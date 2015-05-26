@@ -1,2 +1,2 @@
-water_lvl_evo/learning_walk_waterlvl0.25_state.rs
-water_lvl_evo/learning_walk_waterlvl0.25.sbc
+water_lvl_evo/learning_walk_waterlvl0.5_state.rs
+water_lvl_evo/learning_walk_waterlvl0.5.sbc
