@@ -26,6 +26,9 @@ $RECYCLE.BIN/
 *Debug*
 *Release*
 
+#intellisence files
+*.sdf
+
 # =========================
 # Operating System Files
 # =========================
