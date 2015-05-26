@@ -754,6 +754,7 @@ Vector3d SimBiController::computeVirtualForce(){
 
 	//now change this quantity to world coordinates...
 	fA = characterFrame.rotate(fA);
+	fA = fA*SimGlobals::virtual_force_effectiveness;
 
 	return fA;
 }

@@ -38,6 +38,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	//try to launch the normal program
 	//*
 	if (argc > 1){
+		for (int i = 2; i < argc; ++i){
+			std::string  cur_arg= ws2s(std::wstring(argv[i]));
+			if (cur_arg == "save"){
+				Globals::save_mode = true;
+				Globals::primary_save_config = "controllers/bipV2/primary_save_config.txt";
+				Globals::secondary_save_config = "controllers/bipV2/learning_files_names.txt";
+				if (argc >= i){
+					std::string  save_controller = ws2s(std::wstring(argv[i+1]));
+					Globals::save_mode_controller = save_controller;
+				}
+				break;
+			}
+		}
+
+
+
 		Globals::evolution_mode = 1;
 		SimGlobals::steps_before_evaluation = 10;
 		SimGlobals::nbr_evaluation_steps = 5;
@@ -48,32 +64,73 @@ int _tmain(int argc, _TCHAR* argv[])
 		launch_simulation(false,false);
 	}
 	else{
+		/*
+		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
+		std::string secondary_save_config = "controllers/bipV2/learning_files_names.txt";
+
+
+		oss.clear();
+		oss.str("");
+		oss << Globals::data_folder_path;
+		oss << primary_save_config;
+
+		std::ofstream myfile1(oss.str());
+		if (myfile1.is_open())
+		{
+			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << "_state.rs" << std::endl;
+			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << ".sbc" << std::endl;
+		}
+		myfile1.close();
+
 		//*
-		//Globals::evolution_mode = 1;
+		std::stringstream oss2;
+		oss2 << Globals::data_folder_path;
+		oss2 << secondary_save_config;
+		std::ofstream myfile2(oss2.str());
+		if (myfile2.is_open())
+		{
+			myfile2 << "learning_walk_state.rs" << std::endl;
+			myfile2 << "learning_walk.sbc" << std::endl;
+		}
+		myfile2.close();
+		//I don't want the secondary save in that program (just needed to fill that file for later use)
+		//so I disactivate the secondary save
+		Globals::primary_save_config = secondary_save_config;
+		Globals::secondary_save_config = primary_save_config;
+
+
+		//*
+		Globals::save_mode = true;
+		Globals::evolution_mode = 1;
 		SimGlobals::steps_before_evaluation = 10;
 		SimGlobals::nbr_evaluation_steps = 5;
 		//Globals::animationRunning = 1;
 		SimGlobals::liquid_density = 1000;
-		SimGlobals::water_level = 0.9;
+		SimGlobals::water_level = 0.25;
 		launch_simulation(true,true);
 		//*/
 
-		
-
-
-		//execute_line("..\\Binaries\\Release\\Evolution_program.exe 0.2");
-		
-	
-		
 		/*
-		SimGlobals::water_level = 0.3;
+		std::ostringstream oss;
+		oss << "..\\Binaries\\Release\\Evolution_program.exe " << 0.25;
+		oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << ".sbc";
+		std::string save_line = oss.str();
+		execute_line(save_line);
+		//*/
+		
+		//*
+		SimGlobals::water_level = 0.0;
 		do{
-			SimGlobals::water_level += 0.2;
+			SimGlobals::water_level += 0.25;
+			std::cout << "starting evolution for water_lvl:" << SimGlobals::water_level << std::endl;
 			cma_program();
-		} while (SimGlobals::water_level<1.15);
+		} while (SimGlobals::water_level<0.99);
 		//*/
 
 		//
+		std::cout << "execution successfully finished"<< std::endl;
+		system("pause");
+
 	}
 	//*/
 
@@ -107,6 +164,47 @@ int cma_program() {
 	std::ostringstream oss;
 	oss << "..\\Binaries\\Release\\Evolution_program.exe " << SimGlobals::water_level;
 	objective_func.exe_line = oss.str();
+	oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
+	std::string save_line = oss.str();
+
+
+	//we set the save configurations
+	//we switch the save folder
+	std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
+	std::string secondary_save_config = "controllers/bipV2/learning_files_names.txt";
+
+
+	oss.clear();
+	oss.str("");
+	oss << Globals::data_folder_path;
+	oss << primary_save_config;
+
+	std::ofstream myfile1(oss.str());
+	if (myfile1.is_open())
+	{
+		myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
+		myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
+	}
+	myfile1.close();
+
+	//*
+	std::stringstream oss2;
+	oss2 << Globals::data_folder_path;
+	oss2 << secondary_save_config;
+	std::ofstream myfile2(oss2.str());
+	if (myfile2.is_open())
+	{
+		myfile2 << "learning_walk_state.rs" << std::endl;
+		myfile2 << "learning_walk.sbc" << std::endl;
+	}
+	myfile2.close();
+	//I don't want the secondary save in that program (just needed to fill that file for later use)
+	//so I disactivate the secondary save
+	Globals::primary_save_config = secondary_save_config;
+	Globals::secondary_save_config = "";
+	//*/
+
+
 
 	// Initialize the optimizer for the objective function instance.
 	shark::CMA cma;
@@ -116,12 +214,24 @@ int cma_program() {
 	int nbr_iter = 0;
 	// Iterate the optimizer until a solution of sufficient quality is found.
 
+	
+
+
+
 	double cur_val;
 	bool first_time = true;
+	int cur_save_trigger = 10;
 	do {
 
 		nbr_iter++;
 		if (nbr_iter > 60){ break; }
+
+		//this is used to update the starting pos (so it fit the movement better)
+		if (nbr_iter >= cur_save_trigger){
+			cur_save_trigger += 10;
+			execute_line(save_line);
+		}
+
 
 		//evolve the parameters
 		cma.step(objective_func);
@@ -162,34 +272,20 @@ int cma_program() {
 			}
 		}
 
-		//we switch the save folder
-		std::stringstream oss;
-		oss << Globals::data_folder_path;
-		oss << "controllers / bipV2 / learning_files_names.txt";
+		//we switch to the primary save file
+		Globals::secondary_save_config = primary_save_config;
 
-		std::ofstream myfile1(oss.str());
-		if (myfile1.is_open())
-		{
-			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
-			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
-		}
-		myfile1.close();
 
 		//and we save the structure
-		con->save(true, true);
+		con->save(true, false);
 
-		//we restore the save folder for the evolution
-		std::ofstream myfile2(oss.str());
-		if (myfile2.is_open())
-		{
-			myfile2 << "learning_walk_state.rs" << std::endl;
-			myfile2 << "learning_walk.sbc" << std::endl;
-		}
-		myfile2.close();
+		//and go back t the secondary save file
+		Globals::secondary_save_config = "";
 
+		
 		delete con;
 
-
+		
 		
 	} while (cma.solution().value > 1E-20);
 	//*/
@@ -339,21 +435,27 @@ SimbiconOnjectiveFunction::ResultType SimbiconOnjectiveFunction::eval(const Sear
 
 
 	//test the simulation
-	execute_line(exe_line);
+	int result=execute_line(exe_line);
 
 	//read the result
-	std::ifstream myfile;
-	myfile.open("eval_result.txt");
-	myfile >> std::fixed >> std::setprecision(8) >> last_eval;
-	myfile.close();
-
+	if (result == 0){
+		std::ifstream myfile;
+		myfile.open("eval_result.txt");
+		myfile >> std::fixed >> std::setprecision(8) >> last_eval;
+		myfile.close();
+	}
+	else{
+		last_eval = 10E20;
+		std::cout << "execution_failed, return_val:" <<result<<std::endl;
+	}
 
 	return last_eval;
 }
 
 
-void execute_line(std::string line){
-	system(line.c_str());
+int execute_line(std::string line){
+	int return_val=system(line.c_str());
+	return return_val;
 }
 
 

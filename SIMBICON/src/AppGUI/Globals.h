@@ -102,6 +102,15 @@ public:
 	
 	//this bollean specify that we are in the evolution mode 
 	static bool evolution_mode;
+	//and this one specify if we want a save at the end of the evolution
+	//the name is here to indicate a second config to save the current simulation
+	static bool save_mode; 
+	static std::string primary_save_config;
+	static std::string secondary_save_config;
+	//this variable is here to let the user specifya controller that overide the input.conf
+	static std::string save_mode_controller;
+	//this bool is here to tell the system  to close the program after saving the state
+	static bool close_after_saving;
 
 	//these params define the ground plane - for drawing purposes only
 	static double a, b, c, d;

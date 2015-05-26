@@ -98,6 +98,11 @@ public:
 	static int steps_before_evaluation;
 	static int nbr_evaluation_steps;
 
+	//those variablex are here to give us a way to prioritise one strategy of speedcontrol over the others
+	static double ipm_alteration_effectiveness; 
+	static double virtual_force_effectiveness;
+
+
 	SimGlobals(void){
 	}
 	~SimGlobals(void){

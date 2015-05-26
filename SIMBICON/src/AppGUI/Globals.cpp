@@ -58,6 +58,12 @@ std::string Globals::data_folder_path = "../configuration_data/";
 bool Globals::use_tk_interface = true;
 bool Globals::use_gl_interface = true;
 bool Globals::evolution_mode=false;
+bool Globals::save_mode = false;
+std::string Globals::primary_save_config = "";
+std::string Globals::secondary_save_config = "";
+std::string Globals::save_mode_controller = "";
+bool Globals::close_after_saving = false;
+
 
 double Globals::a=0, Globals::b=1, Globals::c=0, Globals::d=0;
 

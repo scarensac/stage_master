@@ -82,3 +82,6 @@ bool SimGlobals::is_evaluation = false;
 int SimGlobals::steps_before_evaluation = 2;
 int SimGlobals::nbr_evaluation_steps= 1;
 
+
+double SimGlobals::ipm_alteration_effectiveness=1;
+double SimGlobals::virtual_force_effectiveness=1;

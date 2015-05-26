@@ -80,7 +80,7 @@ void SetWindow(int Width, int Height)
 	SetConsoleWindowInfo(Handle, TRUE, &Rect);            // Set Window Size
 }
 
-void execute_line(std::string line);
+int execute_line(std::string line);
 
 std::string get_data_folder_path(int lookup_nbr);
 

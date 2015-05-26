@@ -94,9 +94,19 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 					throwError("The physical world must contain at least one articulated figure that can be controlled!");
 				}
 				
-				//first i need to add the part of the path to go to the configutation_data folder
-				path = std::string((trim(line)));
-				path = interpret_path(path);
+				//if I am in save mode I'll simply
+				if (Globals::save_mode&&(!Globals::save_mode_controller.empty())){
+					std::ostringstream oss;
+					oss << Globals::data_folder_path;
+					oss << "controllers/";
+					oss << Globals::save_mode_controller;
+					path = oss.str();
+				}
+				else{
+					//first i need to add the part of the path to go to the configutation_data folder
+					path = std::string((trim(line)));
+					path = interpret_path(path);
+				}
 
 				//and now we cna use it
 				strcpy(effective_path, path.c_str()); 
@@ -154,7 +164,7 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	//we simulate the effect of the liquid
 	SimGlobals::vect_forces.clear();
-	std::map<uint, WaterImpact> resulting_impact;
+	resulting_impact.clear();
 	world->compute_water_impact(con->get_character(),SimGlobals::water_level, resulting_impact);
 
 	//I'll add a force for the control of the speed (only for now, I will have to convert it to virtual torques)
@@ -384,7 +394,7 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 	Vector3d com_vel = con->get_v();
 	if (com_vel.y < 0&& phase>0.2){
 		step.z += -con->velDSagittal / 20;
-		step.z += step_delta;
+		step.z += step_delta*SimGlobals::ipm_alteration_effectiveness;
 	}
 	//and adjust the stepping in the coronal plane in order to account for desired step width...
 	step.x = adjustCoronalStepLocation(step.x);
@@ -565,41 +575,59 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 	std::string line;
 	std::ostringstream os;
 	os << Globals::data_folder_path;
-	os << "controllers/bipV2/learning_files_names.txt";
-	std::ifstream myfile(os.str());
-	if (myfile.is_open())
-	{
-		std::ostringstream oss;
+	os << Globals::primary_save_config;
 
-		//so we read the name we want for the state file
-		if (std::getline(myfile, line)){
-			//we add the prefix
-			oss << Globals::data_folder_path << "controllers/bipV2/";
-			oss << line;
+	//the form of that function is to not have to do a lot of copy of the code (and because I'm too lazy to move it into another subfunction
+	bool continues = false;
+	int save_config_idx = 0;
+	do{
+		continues = false;
+		std::ifstream myfile(os.str());
+		if (myfile.is_open())
+		{
+			std::ostringstream oss;
 
-			if (save_position){
-				
-				//and we write it	
-				getCharacter()->saveReducedStateToFile(oss.str());
-			}
-		}
-
-		//we read the name we want for the control file
-		if (std::getline(myfile, line)){
-			if (save_controller){
+			//so we read the name we want for the state file
+			if (std::getline(myfile, line)){
 				//we add the prefix
-				std::ostringstream oss2;
-				oss2 << Globals::data_folder_path<<"controllers/bipV2/";
-				oss2 << line;
+				oss << Globals::data_folder_path << "controllers/bipV2/";
+				oss << line;
 
-				//and we write it	
-				getController()->writeToFile(oss2.str(), &oss.str());
+				if (save_position){
+
+					//and we write it	
+					getCharacter()->saveReducedStateToFile(oss.str());
+				}
 			}
+
+			//we read the name we want for the control file
+			if (std::getline(myfile, line)){
+				if (save_controller){
+					//we add the prefix
+					std::ostringstream oss2;
+					oss2 << Globals::data_folder_path << "controllers/bipV2/";
+					oss2 << line;
+
+					//and we write it	
+					getController()->writeToFile(oss2.str(), &oss.str());
+				}
+			}
+
+			myfile.close();
+		}
+		else{
+			exit(5612);
 		}
 
-		myfile.close();
-	}
-	else{
-		exit(5612);
-	}
+		//now we check if there is a secondary save config
+		if (save_config_idx==0&&!Globals::secondary_save_config.empty()){
+			os.clear();
+			os.str("");
+			os << Globals::data_folder_path;
+			os << Globals::secondary_save_config;
+			continues = true;
+			save_config_idx = 1;
+		}
+
+	} while (continues);
 }

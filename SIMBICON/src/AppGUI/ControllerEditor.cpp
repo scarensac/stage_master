@@ -325,8 +325,14 @@ void ControllerEditor::stepTaken() {
 		conF->save();
 
 		Globals::drawControlShots = false;
-		//Tcl_UpdateLinkedVar(Globals::tclInterpreter, "toggleControlshots");
+		
+		if (Globals::use_tk_interface){
+			Tcl_UpdateLinkedVar(Globals::tclInterpreter, "toggleControlshots");
+		}
 
+		if (Globals::close_after_saving){
+			exit(0);
+		}
 	}
 }
 
@@ -386,6 +392,9 @@ void ControllerEditor::processTask(){
 	static double initial_phi = 0;
 	static double last_phi = 0;
 	static double ratio = 1;
+
+
+	
 	
 
 
@@ -394,6 +403,15 @@ void ControllerEditor::processTask(){
 	static double phi_it = 0;
 	std::vector<double> phi_vect;
 	std::vector<Vector3d> speed_vect;
+
+	//those variables are herefor the evolution
+	//for those I use 2 variables 'cause I do my speed evaluation on 2 steps
+	static double last_step_speed_z = 0;
+	static double last_step_speed_z2 = 0;
+	static double last_step_speed_x = 0;
+	static double last_step_speed_x2 = 0;
+	static double avgSpeedx = 0;
+
 
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
 	while (simulationTime/maxRunningTime < Globals::animationTimeToRealTimeRatio){
@@ -436,7 +454,9 @@ void ControllerEditor::processTask(){
 	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
 
 			//store the current speed to be able to know the avg speed at the end
-			avgSpeed += conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity()).z;
+			Vector3d effective_speed = conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity());
+			avgSpeed += effective_speed.z;
+			avgSpeedx += effective_speed.x;
 			timesVelSampled++;
 
 			//if phi is lower than the last position of our trajectory, it means we changed phase and so we need to 
@@ -472,7 +492,7 @@ void ControllerEditor::processTask(){
 					Globals::animationRunning = 0;
 					std::ofstream myfile("eval_result.txt");
 					if (myfile.is_open()){
-						myfile << std::fixed << std::setprecision(8) << (double)10E20;
+						myfile << std::fixed << std::scientific << std::setprecision(8) << (double)10E20;
 						myfile.close();
 					}
 					else{
@@ -491,16 +511,42 @@ void ControllerEditor::processTask(){
 					if (cumul_time >SimGlobals::nbr_evaluation_steps ){
 						try{
 							Globals::animationRunning = 0;
+							
+							//we penalise this simulation if the speed ain't correct
+							//the accepted error is 5%
+							double z_speed = (last_step_speed_z + last_step_speed_z2) / 2;
+							double accepted_error = std::fmax(std::abs(SimGlobals::velDSagittal / 20), 0.01);
+							if (std::abs(z_speed - SimGlobals::velDSagittal) > accepted_error){
+								eval_result += (double)10E15;
+							}
+
+							//we do the same for the x axis
+							double x_speed = (last_step_speed_x + last_step_speed_x2) / 2;
+							accepted_error = std::fmax(std::abs(SimGlobals::velDCoronal / 20), 0.01);
+							if (std::abs(x_speed - SimGlobals::velDCoronal) > accepted_error){
+								eval_result += (double)10E15;
+							}
+
+
 							std::ofstream myfile("eval_result.txt");
 							if (myfile.is_open()){
-								myfile << std::fixed << std::setprecision(8) << (double)eval_result;
+								myfile << std::fixed << std::scientific << std::setprecision(12) << (double)eval_result;
 								myfile.close();
 							}
 							else{
 								std::cout << "damn dat fail" << std::endl;
 							}
 
-							exit(0);
+							if (Globals::save_mode){
+								Globals::drawControlShots = true;
+								Globals::close_after_saving = true;
+								Globals::evolution_mode = false;
+								Globals::animationRunning = 1;
+							}
+
+							if (!Globals::save_mode&&!Globals::close_after_saving){
+								exit(0);
+							}
 						}
 						catch (...){
 							exit(0);
@@ -512,7 +558,7 @@ void ControllerEditor::processTask(){
 						Globals::animationRunning = 0;
 						std::ofstream myfile("eval_result.txt");
 						if (myfile.is_open()){
-							myfile << std::fixed << std::setprecision(8) << (double)10E20;
+							myfile << std::fixed << std::scientific << std::setprecision(8) << (double)10E20;
 							myfile.close();
 						}
 						else{
@@ -524,7 +570,7 @@ void ControllerEditor::processTask(){
 					}
 
 					//here I'll do the evaluation
-					//*
+					/*
 					//this version just sum the weights on the lower body
 					std::vector<Joint*> vect_lower_body;
 					conF->getController()->character->getCharacterBottom(vect_lower_body);
@@ -532,6 +578,12 @@ void ControllerEditor::processTask(){
 						eval_result += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
 					}
 					//*/
+					for (auto it = conF->resulting_impact.begin(); it != conF->resulting_impact.end(); ++it){
+						WaterImpact impact = it->second;
+						eval_result+= impact.drag_torque.length();
+					}
+
+
 
 				}
 			}
@@ -558,8 +610,20 @@ void ControllerEditor::processTask(){
 
 				phi_it = 0;
 				//compute the speed and show it to the user
+				avgSpeed /= timesVelSampled; 
+				avgSpeedx /= timesVelSampled;
 
-				avgSpeed /= timesVelSampled;
+				if (Globals::evolution_mode){
+					last_step_speed_x2 = last_step_speed_x;
+					last_step_speed_x = avgSpeedx;
+
+					last_step_speed_z2 = last_step_speed_z;
+					last_step_speed_z = avgSpeed;
+				}
+
+
+
+
 
 				count_step++;
 				static double avg_speed = 0;
@@ -583,7 +647,7 @@ void ControllerEditor::processTask(){
 				
 				Vector3d v = conF->getLastStepTaken();
 				
-				if (!Globals::evolution_mode){
+				if (!Globals::evolution_mode&&!Globals::close_after_saving){
 					if (conF->getController()->recovery_step){
 						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
 							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
@@ -599,6 +663,7 @@ void ControllerEditor::processTask(){
 
 				//reset the speed for the next step
 				avgSpeed = 0;
+				avgSpeedx = 0;
 				timesVelSampled = 0;
 				step_time_end = 0;
 

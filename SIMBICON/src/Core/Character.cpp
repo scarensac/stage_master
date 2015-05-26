@@ -691,5 +691,9 @@ void Character::saveReducedStateToFile(char* fName){
 	DynamicArray<double> state;
 	getState(&state);
 
+	//those line will simply position the caracter at the origin
+	state[0] = 0;
+	state[2] = 0;
+
 	saveReducedStateToFile(fName, state);
 }

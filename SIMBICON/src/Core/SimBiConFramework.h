@@ -78,7 +78,11 @@ private:
 	Trajectory3D alternateFootTraj;
 
 public:
+	//this variable store the current value of the ipm_alteration system
 	double step_delta;
+
+	//tis variable contain the impact of the water for the previous step
+	std::map<uint, WaterImpact> resulting_impact;
 
 public:
 	SimBiConFramework(char* input, char* conFile = NULL);
