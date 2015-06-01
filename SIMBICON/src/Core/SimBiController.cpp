@@ -581,7 +581,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 
 
 	//here I'l start the stance foot control system
-
+	foot_contact_control();
 	
 	//this is a ponderation if we are near to fall
 	for (uint i=0;i<torques.size();i++){
@@ -654,7 +654,6 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 			controlParams[jIndex].strength = curState->sTraj[i]->evaluateStrength(phiToUse);
 		}
 	}
-
 }
 
 /**
@@ -1324,6 +1323,8 @@ void SimBiController::foot_contact_control(){
 	if (getPhase() < 0.14){
 		return;
 	}
+
+
 
 	//so first I need the ground force I can attribute with each corner of the foot
 }

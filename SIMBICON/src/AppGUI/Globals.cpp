@@ -55,9 +55,13 @@ bool Globals::useShader = true;
 bool Globals::useConsole = true;
 std::string Globals::init_folder_path = "init/";
 std::string Globals::data_folder_path = "../configuration_data/";
+std::string Globals::binaries_folder_path = "../Binaries/";
 bool Globals::use_tk_interface = true;
 bool Globals::use_gl_interface = true;
-bool Globals::evolution_mode=false;
+bool Globals::evolution_mode = false;
+double Globals::ipm_alteration_cost = 0;
+double Globals::virtual_force_cost = 0;
+
 bool Globals::save_mode = false;
 std::string Globals::primary_save_config = "";
 std::string Globals::secondary_save_config = "";

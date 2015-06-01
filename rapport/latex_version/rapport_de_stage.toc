@@ -1,0 +1,26 @@
+\select@language {french}
+\contentsline {section}{\numberline {1}R\IeC {\'e}sum\IeC {\'e}}{3}
+\contentsline {section}{\numberline {2}Introduction}{3}
+\contentsline {section}{\numberline {3}Etat de l'art}{3}
+\contentsline {subsubsection}{Animation de personnages humains}{3}
+\contentsline {subsubsection}{Contr\IeC {\^o}le dans l'espace des joints}{4}
+\contentsline {subsubsection}{Ma\IeC {\^\i }trise de l'\IeC {\'e}quilibre au cours de la marche}{5}
+\contentsline {subsubsection}{Contr\IeC {\^o}le de la vitesse}{5}
+\contentsline {subsubsection}{Contr\IeC {\^o}le du mouvement en milieu aquatique}{6}
+\contentsline {subsubsection}{Biom\IeC {\'e}canique de la marche en milieu aquatique}{6}
+\contentsline {section}{\numberline {4}mod\IeC {\'e}lisation des fluides}{6}
+\contentsline {subsection}{\numberline {4.1}forces hydrodinamiques}{7}
+\contentsline {subsection}{\numberline {4.2}pouss\IeC {\'e}e d'Archim\IeC {\`e}de}{7}
+\contentsline {section}{\numberline {5}Contr\IeC {\^o}le du mouvement}{7}
+\contentsline {subsection}{\numberline {5.1}mod\IeC {\'e}lisation du personnage}{8}
+\contentsline {subsection}{\numberline {5.2}g\IeC {\'e}n\IeC {\'e}rateur de mouvement}{8}
+\contentsline {subsubsection}{compensateur de gravit\IeC {\'e}}{9}
+\contentsline {subsection}{\numberline {5.3}conservation de l'\IeC {\'e}quilibre}{10}
+\contentsline {subsubsection}{Mod\IeC {\`e}le du pendule invers\IeC {\'e}}{10}
+\contentsline {subsubsection}{balance feedback}{11}
+\contentsline {subsection}{\numberline {5.4}contr\IeC {\^o}le de vitesse}{11}
+\contentsline {subsubsection}{contr\IeC {\^o}le de vitesse par force virtuelle}{11}
+\contentsline {subsubsection}{alt\IeC {\'e}ration des r\IeC {\'e}sultats de l'IPM}{12}
+\contentsline {subsection}{\numberline {5.5}off-line optimisation}{12}
+\contentsline {section}{\numberline {6}r\IeC {\'e}sultats}{12}
+\contentsline {section}{\numberline {7}References}{12}

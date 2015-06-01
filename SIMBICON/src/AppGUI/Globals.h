@@ -95,6 +95,8 @@ public:
 	static std::string init_folder_path;
 	//this string will contain the path to the data folder
 	static std::string data_folder_path;
+	//this string will contain the path to the binaries folder
+	static std::string binaries_folder_path;
 	
 	//those booleans are used to activate or disactivate the tk and gl interfaces (for evolution)
 	static bool use_tk_interface;
@@ -102,6 +104,11 @@ public:
 	
 	//this bollean specify that we are in the evolution mode 
 	static bool evolution_mode;
+	//those variable contain the cost of the usage of each speed control strategy
+	static double ipm_alteration_cost;
+	static double virtual_force_cost;
+
+
 	//and this one specify if we want a save at the end of the evolution
 	//the name is here to indicate a second config to save the current simulation
 	static bool save_mode; 

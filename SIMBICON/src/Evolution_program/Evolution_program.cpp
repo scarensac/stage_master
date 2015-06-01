@@ -29,7 +29,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	//the first thing I do is to look for the configuration_data folder
 	std::ostringstream oss;
 
-	Globals::data_folder_path = get_data_folder_path(5);
+	Globals::data_folder_path = get_folder_path("configuration_data", 5);
+	Globals::binaries_folder_path = get_folder_path("Binaries", 5, "\\");
 
 	oss << Globals::data_folder_path;
 	oss << "init/";
@@ -64,7 +65,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		launch_simulation(false,false);
 	}
 	else{
-		/*
+		//*
+
+		SimGlobals::water_level = 0.25;
+
+
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
 		std::string secondary_save_config = "controllers/bipV2/learning_files_names.txt";
 
@@ -77,8 +82,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::ofstream myfile1(oss.str());
 		if (myfile1.is_open())
 		{
-			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << "_state.rs" << std::endl;
-			myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << ".sbc" << std::endl;
+			myfile1 << "min_weighted_acc/" << "learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
+			myfile1 << "min_weighted_acc/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
 		}
 		myfile1.close();
 
@@ -101,30 +106,31 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		//*
 		Globals::save_mode = true;
+		Globals::useShader = false;
 		Globals::evolution_mode = 1;
 		SimGlobals::steps_before_evaluation = 10;
 		SimGlobals::nbr_evaluation_steps = 5;
 		//Globals::animationRunning = 1;
 		SimGlobals::liquid_density = 1000;
-		SimGlobals::water_level = 0.25;
 		launch_simulation(true,true);
 		//*/
 
 		/*
 		std::ostringstream oss;
-		oss << "..\\Binaries\\Release\\Evolution_program.exe " << 0.25;
+		oss << Globals::binaries_folder_path;
+		oss << "Release\\Evolution_program.exe " << 0.25;
 		oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << ".sbc";
 		std::string save_line = oss.str();
 		execute_line(save_line);
 		//*/
 		
-		//*
-		SimGlobals::water_level = 0.0;
+		/*
+		SimGlobals::water_level = 0;
 		do{
-			SimGlobals::water_level += 0.25;
 			std::cout << "starting evolution for water_lvl:" << SimGlobals::water_level << std::endl;
-			cma_program();
-		} while (SimGlobals::water_level<0.99);
+			cma_program("min_weighted_acc");
+			SimGlobals::water_level += 0.25;
+		} while (SimGlobals::water_level<1.1);
 		//*/
 
 		//
@@ -151,7 +157,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 
-int cma_program() {
+int cma_program(std::string save_folder_name) {
 
 	// Adjust the floating-point format to scientific and increase output precision.
 	std::cout.setf(std::ios_base::scientific);
@@ -162,7 +168,8 @@ int cma_program() {
 	//we create the objective function
 	SimbiconOnjectiveFunction objective_func;
 	std::ostringstream oss;
-	oss << "..\\Binaries\\Release\\Evolution_program.exe " << SimGlobals::water_level;
+	oss << Globals::binaries_folder_path;
+	oss << "Release\\Evolution_program.exe " << SimGlobals::water_level;
 	objective_func.exe_line = oss.str();
 	oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
 	std::string save_line = oss.str();
@@ -182,8 +189,8 @@ int cma_program() {
 	std::ofstream myfile1(oss.str());
 	if (myfile1.is_open())
 	{
-		myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
-		myfile1 << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
+		myfile1 << save_folder_name << "/learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
+		myfile1 << save_folder_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
 	}
 	myfile1.close();
 
@@ -460,7 +467,7 @@ int execute_line(std::string line){
 
 
 #include <sys/stat.h>
-std::string get_data_folder_path(int lookup_nbr){
+std::string get_folder_path(std::string name, int lookup_nbr, std::string delim){
 	std::stringstream oss; 
 
 	struct stat st;
@@ -468,9 +475,9 @@ std::string get_data_folder_path(int lookup_nbr){
 		//now the tactic will be to look at every folder and check if we find a data folder
 		std::stringstream oss2;
 		oss2 << oss.str();
-		oss2 << "configuration_data";
+		oss2 << name;
 		if (stat(oss2.str().c_str(), &st) == 0 && st.st_mode == 16895) {
-			oss2 << "/";
+			oss2 << delim;
 			return oss2.str();
 		}
 
@@ -480,7 +487,7 @@ std::string get_data_folder_path(int lookup_nbr){
 			exit(69);
 		}
 
-		oss << "../";
+		oss << ".."<<delim;
 	} 
 	std::cout << "the configuration_data folder canno't be found" << std::endl;
 	system("pause");

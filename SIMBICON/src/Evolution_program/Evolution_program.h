@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include <windows.h>
+#include <string>
 
 int _tmain(int argc, _TCHAR* argv[]);
 
 //first example containing the tutorial for cma
-int cma_program();
+int cma_program(std::string save_folder_name);
 
 //this function launch the simulation
 void launch_simulation(bool use_tk_interface=true, bool use_gl_interface=true);
@@ -82,7 +83,7 @@ void SetWindow(int Width, int Height)
 
 int execute_line(std::string line);
 
-std::string get_data_folder_path(int lookup_nbr);
+std::string get_folder_path(std::string name, int lookup_nbr, std::string delim="/");
 
 //string convert functions
 std::wstring s2ws(const std::string& str);
