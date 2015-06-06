@@ -108,6 +108,7 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 					path = interpret_path(path);
 				}
 
+				//std::cout << "loading controller:" << path << std::endl;
 				//and now we cna use it
 				strcpy(effective_path, path.c_str()); 
 				con->loadFromFile(effective_path);
@@ -263,6 +264,7 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		else if (step_delta < -0.09){
 			step_delta = -0.09;
 		}
+		
 
 		previous_speed= avg_speed;
 
@@ -588,6 +590,7 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 			std::ostringstream oss;
 
 			//so we read the name we want for the state file
+
 			if (std::getline(myfile, line)){
 				//we add the prefix
 				oss << Globals::data_folder_path << "controllers/bipV2/";
@@ -613,10 +616,12 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 				}
 			}
 
+
 			myfile.close();
 		}
 		else{
-			exit(5612);
+			std::cout << "failed save"<<std::endl;
+			exit(56);
 		}
 
 		//now we check if there is a secondary save config
@@ -628,6 +633,7 @@ void SimBiConFramework::save(bool save_controller, bool save_position){
 			continues = true;
 			save_config_idx = 1;
 		}
+
 
 	} while (continues);
 }

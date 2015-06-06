@@ -26,7 +26,7 @@
 #include <sstream>
 #include "utils.h"
 #include "AppGUI\Globals.h"
-
+#include <iostream>
 
 /**
  * Output the message to a file...
@@ -39,13 +39,22 @@ void logPrint(char *format, ...){
 	vsprintf(message, format, vl);
 	va_end(vl);
 
+	//in case the folde rdon't exist yet
+	static bool first_time = true;
+	if (first_time){
+		system("mkdir out");
+		first_time = false;
+	}
+
 	//TODO change this
+	static FILE *fp = fopen("out\\log.txt", "wt");
 
-    static FILE *fp = fopen("out\\log.txt", "wt");
+	if (fp != NULL){
+		fprintf(fp, "%s", message);
+		fflush(fp);
+	}
 
-    fprintf(fp, "%s", message);
-    fflush(fp);
-
+    
 }
 
 

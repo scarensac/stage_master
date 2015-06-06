@@ -150,9 +150,14 @@ public:
 	inline Point3d getParentJointPosition(){return pJPos;}
 
 	/**
-		returns the name of this joint
+	returns the name of this joint
 	*/
 	inline const char* getName() { return name; }
+
+	/**
+	returns the name of this joint
+	*/
+	inline std::string getSName() { return std::string(name); }
 
 };
 

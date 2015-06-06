@@ -376,6 +376,9 @@ void TrajectoryComponent::generate_trajectory(){
 		baseTraj = *(ref_trajectories[idx_min].second);
 		//*/
 
+
+		//*
+		//this version will create a trajectorie by combining the 2 adjascent trajectories using a square distance
 		int idx_traj_max = ref_trajectories.size() - 1;
 		int idx_min = -1;
 		for (int i = 0; i < (int)ref_trajectories.size(); ++i){
@@ -412,11 +415,6 @@ void TrajectoryComponent::generate_trajectory(){
 				cur_phi += 0.1;
 			}
 		}
-
-		//*
-		//this version will create a trajectorie by combining the 2 adjascent trajectories using a square distance
-
-
 		//*/
 	}
 }

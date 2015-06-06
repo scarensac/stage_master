@@ -88,3 +88,5 @@ std::string get_folder_path(std::string name, int lookup_nbr, std::string delim=
 //string convert functions
 std::wstring s2ws(const std::string& str);
 std::string ws2s(const std::wstring& wstr);
+
+void update_saving_config(std::string primary_config, std::string secondary_config);

@@ -609,6 +609,7 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 		controlParams[i].relToCharFrame = false;
 	}
 
+
 	double phiToUse = getPhase();
 	//make sure that we only evaluate trajectories for phi values between 0 and 1
 	if (phiToUse>1)
@@ -635,6 +636,19 @@ void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quatern
 		//but it's not a real tajectory so I have to ignore them
 		if (jIndex < -1){
 			continue;
+		}
+
+		//I'll remove the control of the arms
+		Joint* cur_joint = character->getJoint(jIndex);
+		if (cur_joint != NULL){
+			std::string jName=cur_joint->getSName();
+			if (jName == "rElbow" || jName == "lElbow"){
+				controlParams[jIndex].controlled = false;
+				continue;
+			}
+			if (jName == "pelvis_torso"){
+				//curState->sTraj[i]->relToCharFrame = false;
+			}
 		}
 
 		//get the desired joint orientation to track - include the feedback if necessary/applicable
@@ -1427,7 +1441,7 @@ void SimBiController::resolveJoints(SimBiConState* state){
 This method is used to write the current controller to a file
 */
 void SimBiController::writeToFile(std::string fileName, std::string* stateFileName){
-	char fname[100], statename[100];
+	char fname[256], statename[256];
 	strcpy(fname, fileName.c_str());
 
 	if (stateFileName != NULL){
@@ -1482,11 +1496,17 @@ void SimBiController::writeToFile(char* fileName, char* stateFileName){
 	fprintf( f, "%s %d\n", getConLineString(CON_START_AT_STATE), startingState );
 	fprintf( f, "%s %s\n", getConLineString(CON_STARTING_STANCE), 
 		(stanceFoot == lFoot)?"left":"right" );
-	if( stateFileName == NULL )
-		fprintf( f, "%s %s\n", getConLineString(CON_CHARACTER_STATE), initialBipState );
-	else
-		fprintf( f, "%s %s\n", getConLineString(CON_CHARACTER_STATE), stateFileName );
+	if (stateFileName == NULL){
+		fprintf(f, "%s %s\n", getConLineString(CON_CHARACTER_STATE), initialBipState);
+	}
+	else{
+		fprintf(f, "%s %s\n", getConLineString(CON_CHARACTER_STATE), stateFileName);
+	}
 
+	//at the end I now add the speed control system alteration values
+	fprintf(f, "%s %lf\n", getConLineString(CON_IPM_ALTERATION_EFFECTIVENESS), SimGlobals::ipm_alteration_effectiveness);
+	fprintf(f, "%s %lf\n", getConLineString(CON_VIRTUAL_FORCE_EFFECTIVENESS), SimGlobals::virtual_force_effectiveness);
+	
 	fclose(f);
 }
 
@@ -1602,6 +1622,18 @@ void SimBiController::loadFromFile(char* fName){
 			case CON_NOT_IMPORTANT:
 				tprintf("Ignoring input line: \'%s\'\n", line);
 				break;
+			case CON_IPM_ALTERATION_EFFECTIVENESS:{
+				double buff;
+				sscanf(line, "%lf", &buff);
+				SimGlobals::ipm_alteration_effectiveness = buff;
+			}
+				break;
+			case CON_VIRTUAL_FORCE_EFFECTIVENESS:{
+				double buff;
+				sscanf(line, "%lf", &buff);
+				SimGlobals::virtual_force_effectiveness= buff;
+			}
+				break;
 			default:
 				throwError("Incorrect SIMBICON input file: \'%s\' - unexpected line.", buffer);
 		}
@@ -1671,6 +1703,8 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 	static double cur_phi_limit_x = coronal_comp->baseTraj.getMinPosition();
 	static int cur_knot_nbr_x = 0;
 
+
+
 	if (learning_mode){
 		//store the current speed to be able to know the avg speed at the end
 		avgSpeed_z += character->getHeading().getComplexConjugate().rotate(character->getRoot()->getCMVelocity()).z;
@@ -1723,12 +1757,14 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 		}
 	}
 	else{
+		bool recovery_step_asked = false;
+
+
 		//I finish the calculation of the avg speed
 		avgSpeed_z /= timesVelSampled;
 		avgSpeed_x_left /= timesVelSampled;
 		avgSpeed_x_right /= timesVelSampled;
 
-		recovery_step = false;
 		TrajectoryComponent* affected_component = NULL;
 
 
@@ -1757,6 +1793,17 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 		variation_moy /= nbr_values;
 
+		/*
+		//this is just a printer to help showing the curse
+		//carefull it break th system bu since I only wanna see the observed speed on the first iteration I don't care
+		for (int i = 0; i < (int)vel_sagittal.size(); ++i){
+			affected_component->baseTraj.setKnotValue(i, vel_sagittal[i]);
+		}
+		affected_component->baseTraj.setKnotValue(vel_sagittal.size(), v.z / velDSagittal);
+		affected_component->baseTraj.setKnotPosition(vel_sagittal.size(), phi_last_step);
+		return;
+		//*/
+
 		if (variation_moy < variation_moy_limit_z){
 
 			//we handle the points stored in the buffer
@@ -1777,7 +1824,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					sup_point_variation = variation_moy*sup_point_variation / std::abs(sup_point_variation);
 				}
 
-				double new_val = sup_point_traj_val + sup_point_variation / 2;
+				double new_val = sup_point_traj_val + sup_point_variation ;
 
 				//I now need to calculate the value for the next point in the trajectory
 				// I'll use a linear interpolation for it
@@ -1795,7 +1842,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				}
 
 				//and we set the value in the curve
-				val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation / 2;
+				val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation ;
 				affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
@@ -1820,7 +1867,6 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			for (int i = 0; i < nbr_values; ++i){
 				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) / traj_delta);
 			}
-
 
 			//I'll now handle the other points (the ones even after the point I just created
 			//simply using a linear interpolation to know how they should be updated (limiting the possible variation the the variation_moy/2
@@ -1872,12 +1918,45 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				}
 			}
 
-
 		}
 		else{
+			static int count_chained_steps = 0;
+			//I do smth in the case of continuous recovery steps
+			if (recovery_step){
+				count_chained_steps++;
+			}
+			else{
+				count_chained_steps = 0;
+			}
+
+			if (count_chained_steps > 5){
+				//if we have more than 5 recovery steps we reset the curve
+				//if it is the case I reset the whole cursve to 1
+				for (int i = 0; i < affected_component->baseTraj.getKnotCount(); ++i){
+					affected_component->baseTraj.setKnotValue(i, 1);
+				}
+			}
+
+		
+
 			//this should mean the caracter is currenlty in an unstable state
-			recovery_step = true;
+			recovery_step_asked = true;
 		}
+
+		//now I'll add a protection to prevent getting stupidely high indépendent values in the curve
+		//I'll limit the delta to the velD to 2 times the absolute val of the velD
+		double val_limit_sup = 3;
+		double val_limit_inf = -1;
+		for (int i = 0; i < affected_component->baseTraj.getKnotCount(); ++i){
+			double cur_val = affected_component->baseTraj.getKnotValue(i);
+			if (cur_val>val_limit_sup){
+				affected_component->baseTraj.setKnotValue(i, val_limit_sup);
+			}
+			else if (cur_val<val_limit_inf){
+				affected_component->baseTraj.setKnotValue(i, val_limit_inf);
+			}
+		}
+
 		//we are finished with the sagittal trajectory
 
 		//now I need to handle the coronal trajectory
@@ -1932,7 +2011,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 						sup_point_variation = variation_moy*sup_point_variation / std::abs(sup_point_variation);
 					}
 
-					double new_val = sup_point_traj_val + sup_point_variation / 2;
+					double new_val = sup_point_traj_val + sup_point_variation;
 
 					//I now need to calculate the value for the next point in the trajectory
 					// I'll use a linear interpolation for it
@@ -1950,7 +2029,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					}
 
 					//and we set the value in the curve
-					val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation / 2;
+					val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation;
 					affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
@@ -1966,6 +2045,8 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) - stance*traj_delta);
 				}
 				//*/
+
+				
 
 				//I'll now handle the other points (the ones even after the point I just created
 				//simply using a linear interpolation to know how they should be updated (limiting the possible variation the the variation_moy/2
@@ -2019,20 +2100,55 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				}
 				//*/
 
+				
 			}
 			else{
+				//the main problem for the corronal comp is that we need to repair both curves
+				
+
+
+				static int count_chained_steps = 0;
+				//I do smth in the case of continuous recovery steps
+				if (recovery_step){
+					count_chained_steps++;
+				}
+				else{
+					count_chained_steps = 0;
+				}
+
+				if (count_chained_steps > 5){
+					//if we have more than 5 recovery steps we reset the curve
+					//if it is the case I reset the whole cursve to the desired speed
+					affected_component = velD_coronal_component(RIGHT_STANCE);
+					for (int i = 0; i < affected_component->baseTraj.getKnotCount(); ++i){
+						affected_component->baseTraj.setKnotValue(i, velDCoronal);
+					}
+
+					affected_component = velD_coronal_component(LEFT_STANCE);
+					for (int i = 0; i < affected_component->baseTraj.getKnotCount(); ++i){
+						affected_component->baseTraj.setKnotValue(i, velDCoronal);
+					}
+				}
+
+				
+
+
 				//this should mean the caracter is currenlty in an unstable state
-				recovery_step = true;
+				recovery_step_asked = true;
 			}
 		}
 
-
-
-
-
 		//*/
 	
-	
+		//now finish to ckeck if we need a recovery step
+		if (recovery_step_asked){
+			recovery_step = true;
+		}
+		else{
+			recovery_step = false;
+		}
+
+
 		//we reinitialize the system
 		vel_sagittal.clear();
 		vel_coronal.clear();

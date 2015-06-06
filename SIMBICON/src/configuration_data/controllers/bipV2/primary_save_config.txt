@@ -1,2 +1,2 @@
-min_weighted_acc/learning_walk_waterlvl0.25_state.rs
-min_weighted_acc/learning_walk_waterlvl0.25.sbc
+min_all_2_8_1_alte_ipm_torso_true/learning_walk_waterlvl0_state.rs
+min_all_2_8_1_alte_ipm_torso_true/learning_walk_waterlvl0.sbc

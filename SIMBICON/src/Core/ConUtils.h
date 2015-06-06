@@ -79,6 +79,9 @@
 #define CON_MAX_FEEDBACK				56
 #define CON_MIN_FEEDBACK				57
 
+#define CON_IPM_ALTERATION_EFFECTIVENESS 81
+#define CON_VIRTUAL_FORCE_EFFECTIVENESS 82
+
 
 /**
 	This method is used to determine the type of a line that was used in the input file for a rigid body.

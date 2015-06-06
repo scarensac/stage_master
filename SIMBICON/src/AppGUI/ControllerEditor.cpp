@@ -102,6 +102,7 @@ void ControllerEditor::loadFramework( int controlShot ){
 		conF = NULL;
 		tprintf("Error: %s\n", msg);
 		logPrint("Error: %s\n", msg);
+		exit(-1);
 	}
 
 }
@@ -322,7 +323,12 @@ void ControllerEditor::stepTaken() {
 		//*/
 
 		//we just same the position and the controller
+		
 		conF->save();
+
+		if (Globals::close_after_saving){
+			exit(0);
+		}
 
 		Globals::drawControlShots = false;
 		
@@ -330,9 +336,7 @@ void ControllerEditor::stepTaken() {
 			Tcl_UpdateLinkedVar(Globals::tclInterpreter, "toggleControlshots");
 		}
 
-		if (Globals::close_after_saving){
-			exit(0);
-		}
+		
 	}
 }
 
@@ -507,22 +511,141 @@ void ControllerEditor::processTask(){
 					static double cumul_time = 0;
 					cumul_time += SimGlobals::dt;
 
+					
+					//here I'll do the evaluation
+					//first some var used by multiples eval
+					std::vector<Joint*> vect_lower_body;
+					conF->getController()->character->getCharacterBottom(vect_lower_body);
+
+					//*
+					//this version just sum the torques on the lower body
+					double eval_buff_torque = 0;
+					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+						eval_buff_torque += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
+					}
+					eval_result += 2 * eval_buff_torque / (1.2*1E6);
+					//*/
+					//*
+					//this version just sum the drag torque
+					double eval_buff_drag = 0;
+					for (auto it = conF->resulting_impact.begin(); it != conF->resulting_impact.end(); ++it){
+						WaterImpact impact = it->second;
+						eval_buff_drag += impact.drag_torque.length();
+					}
+					eval_result += 8 * eval_buff_drag / (6 * 1E4);
+					//*/
+					/*
+					//this version minimise the maximum necessary trque and we do it for each step
+					static double cur_step_eval = 0;
+					static bool first_pass = true;
+					std::vector<Joint*> vect_lower_body;
+					static std::vector<double> vect_max_torques;
+
+					if (last_phi > phi){
+					eval_result += cur_step_eval;
+					vect_max_torques.clear();
+					first_pass = true;
+					}
+
+					if (first_pass){
+					conF->getController()->character->getCharacterBottom(vect_lower_body);
+					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+					vect_max_torques.push_back( conF->getController()->torques[vect_lower_body[i]->get_idx()].length());
+					}
+					}
+					else{
+					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+					double new_val = conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
+					if (new_val>vect_max_torques[i]){
+					vect_max_torques[i] = new_val;
+					}
+					}
+					}
+					cur_step_eval = 0;
+					for (int i = 0; i < (int)vect_max_torques.size(); ++i){
+					cur_step_eval += vect_max_torques[i];
+					}
+
+					first_pass = false;
+					//*/
+					//*
+					//this version will minimize the weighted acc on both the target positions and the effective result
+					//std::vector<Joint*> vect_lower_body;
+					//conF->getController()->character->getCharacterBottom(vect_lower_body);
+					static double cur_step_eval = 0;
+					static bool first_pass = true;
+					static std::vector<Vector3d> vect_ang_speed;
+					static std::vector<Vector3d> vect_ang_speed_desired_pose;
+
+					if (last_phi > phi){
+						eval_result += cur_step_eval/ (4*1E1);
+						cur_step_eval = 0;
+						vect_ang_speed.clear();
+						vect_ang_speed_desired_pose.clear();
+						first_pass = true;
+					}
+
+					if (first_pass){
+						conF->getController()->character->getCharacterBottom(vect_lower_body);
+
+						//we init te vector for the desired pos speed
+						//we create the interface to modify the target pose
+						ReducedCharacterState poseRS(&conF->getController()->desiredPose);
+
+						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+							//we init the vector for the actual speeds
+							vect_ang_speed.push_back(vect_lower_body[i]->getChild()->getAngularVelocity());
+							vect_ang_speed_desired_pose.push_back(poseRS.getJointRelativeAngVelocity(vect_lower_body[i]->get_idx()));
+						}
+
+					}
+					else{
+						ReducedCharacterState poseRS(&conF->getController()->desiredPose);
+
+						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
+
+
+							//we calc the variation and ponderate by the child mass
+							Vector3d new_val = vect_lower_body[i]->getChild()->getAngularVelocity();
+							double d_acc = (new_val - vect_ang_speed[i]).length() / SimGlobals::dt;
+							cur_step_eval += d_acc*d_acc*vect_lower_body[i]->getChild()->getMass() / 10E10 *0.8;
+							vect_ang_speed[i] = new_val;
+
+							//and do the same for the desired pos
+							new_val = poseRS.getJointRelativeAngVelocity(vect_lower_body[i]->get_idx());
+							d_acc = (new_val - vect_ang_speed_desired_pose[i]).length() / SimGlobals::dt;
+							cur_step_eval += d_acc*d_acc*vect_lower_body[i]->getChild()->getMass() / 10E10 *0.2;
+							vect_ang_speed[i] = new_val;
+						}
+					}
+
+					first_pass = false;
+
+					//*/
+
+					
+					
 					//we stop if we have enougth
 					if (cumul_time >SimGlobals::nbr_evaluation_steps ){
 						try{
+							//just add the result of the eval that only add at the end of the steps
+							eval_result += cur_step_eval / (4*1E1);
+
+
+
 							Globals::animationRunning = 0;
 							
 							//we penalise this simulation if the speed ain't correct
 							//the accepted error is 5%
 							double z_speed = (last_step_speed_z + last_step_speed_z2) / 2;
-							double accepted_error = std::fmax(std::abs(SimGlobals::velDSagittal / 20), 0.01);
+							double accepted_error = std::fmax(std::abs(SimGlobals::velDSagittal / 100), 0.005);
 							if (std::abs(z_speed - SimGlobals::velDSagittal) > accepted_error){
 								eval_result += (double)10E15;
 							}
 
 							//we do the same for the x axis
 							double x_speed = (last_step_speed_x + last_step_speed_x2) / 2;
-							accepted_error = std::fmax(std::abs(SimGlobals::velDCoronal / 20), 0.01);
+							accepted_error = std::fmax(std::abs(SimGlobals::velDCoronal / 100), 0.005);
 							if (std::abs(x_speed - SimGlobals::velDCoronal) > accepted_error){
 								eval_result += (double)10E15;
 							}
@@ -530,8 +653,8 @@ void ControllerEditor::processTask(){
 
 							//*
 							//this passage penalise the usage of the speed strategies
-							eval_result += Globals::ipm_alteration_cost*SimGlobals::ipm_alteration_effectiveness;
-							eval_result += Globals::virtual_force_cost*SimGlobals::virtual_force_effectiveness;
+							eval_result += eval_result*Globals::ipm_alteration_cost*std::abs(conF->step_delta/0.09);
+							eval_result += eval_result*Globals::virtual_force_cost*SimGlobals::virtual_force_effectiveness;
 							//*/
 
 
@@ -575,112 +698,8 @@ void ControllerEditor::processTask(){
 						exit(0);
 
 					}
-
-					//here I'll do the evaluation
-					/*
-					//this version just sum the weights on the lower body
-					std::vector<Joint*> vect_lower_body;
-					conF->getController()->character->getCharacterBottom(vect_lower_body);
-					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
-						eval_result += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
-					}
-					//*/
-					/*
-					//this version just sum the drag torque
-					for (auto it = conF->resulting_impact.begin(); it != conF->resulting_impact.end(); ++it){
-						WaterImpact impact = it->second;
-						eval_result += impact.drag_torque.length();
-					}
-					//*/
-					/*
-					//this version minimise the maximum necessary trque and we do it for each step
-					static double cur_step_eval = 0;
-					static bool first_pass = true;
-					std::vector<Joint*> vect_lower_body;
-					static std::vector<double> vect_max_torques;
 					
-					if (last_phi > phi){
-						eval_result += cur_step_eval;
-						vect_max_torques.clear();
-						first_pass = true;
-					}
 					
-					if (first_pass){
-						conF->getController()->character->getCharacterBottom(vect_lower_body);
-						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
-							vect_max_torques.push_back( conF->getController()->torques[vect_lower_body[i]->get_idx()].length());
-						}
-					}
-					else{
-						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
-							double new_val = conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
-							if (new_val>vect_max_torques[i]){
-								vect_max_torques[i] = new_val;
-							}
-						}
-					}
-					cur_step_eval = 0;
-					for (int i = 0; i < (int)vect_max_torques.size(); ++i){
-						cur_step_eval += vect_max_torques[i];
-					}
-
-					first_pass = false;
-					//*/
-					//*
-					//this version will minimize the weighted acc on both the target positions and the effective result
-					std::vector<Joint*> vect_lower_body;
-					conF->getController()->character->getCharacterBottom(vect_lower_body);
-					static double cur_step_eval = 0;
-					static bool first_pass = true;
-					static std::vector<Vector3d> vect_ang_speed;
-					static std::vector<Vector3d> vect_ang_speed_desired_pose;
-
-					if (last_phi > phi){
-						eval_result += cur_step_eval;
-						cur_step_eval = 0;
-						vect_ang_speed.clear();
-						vect_ang_speed_desired_pose.clear();
-						first_pass = true;
-					}
-
-					if (first_pass){
-						conF->getController()->character->getCharacterBottom(vect_lower_body);
-
-						//we init te vector for the desired pos speed
-						//we create the interface to modify the target pose
-						ReducedCharacterState poseRS(&conF->getController()->desiredPose);
-						
-						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
-							//we init the vector for the actual speeds
-							vect_ang_speed.push_back(vect_lower_body[i]->getChild()->getAngularVelocity());
-							vect_ang_speed_desired_pose.push_back(poseRS.getJointRelativeAngVelocity(vect_lower_body[i]->get_idx()));
-						}
-
-					}
-					else{
-						ReducedCharacterState poseRS(&conF->getController()->desiredPose);
-
-						for (int i = 0; i < (int)vect_lower_body.size(); ++i){
-
-
-							//we calc the variation and ponderate by the child mass
-							Vector3d new_val = vect_lower_body[i]->getChild()->getAngularVelocity();
-							double d_acc = (new_val - vect_ang_speed[i]).length() / SimGlobals::dt;
-							cur_step_eval += d_acc*d_acc*vect_lower_body[i]->getChild()->getMass()/10E10 *0.8;
-							vect_ang_speed[i] = new_val;
-
-							//and do the same for the desired pos
-							new_val = poseRS.getJointRelativeAngVelocity(vect_lower_body[i]->get_idx());
-							d_acc = (new_val - vect_ang_speed_desired_pose[i]).length() / SimGlobals::dt;
-							cur_step_eval += d_acc*d_acc*vect_lower_body[i]->getChild()->getMass()/10E10 *0.2;
-							vect_ang_speed[i] = new_val;
-						}
-					}
-
-					first_pass = false;
-
-					//*/
-
 				}
 			}
 
@@ -746,12 +765,12 @@ void ControllerEditor::processTask(){
 				if (!Globals::evolution_mode&&!Globals::close_after_saving){
 					if (conF->getController()->recovery_step){
 						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
 	
 					}
 					else{
 						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta);
+							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
 					}
 				}
 

@@ -18,6 +18,9 @@
 
 #include <conio.h>//for kbhit
 
+const std::string cur_evo_name = "min_all_2_8_1_alte_ipm_torso_true";
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	std::setlocale(LC_ALL, "en_US.UTF-8");
@@ -39,9 +42,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	//try to launch the normal program
 	//*
 	if (argc > 1){
+		
+		Globals::evolution_mode = 1;
+		SimGlobals::steps_before_evaluation = 10;
+		SimGlobals::nbr_evaluation_steps = 5;
+		Globals::animationRunning = 1;
+		SimGlobals::liquid_density = 1000;
+		SimGlobals::water_level = wcstof(argv[1], NULL);
+		SimGlobals::velDSagittal = 0.7;
+
+		
 		for (int i = 2; i < argc; ++i){
 			std::string  cur_arg= ws2s(std::wstring(argv[i]));
 			if (cur_arg == "save"){
+
+				SimGlobals::steps_before_evaluation = 50;
 				Globals::save_mode = true;
 				Globals::primary_save_config = "controllers/bipV2/primary_save_config.txt";
 				Globals::secondary_save_config = "controllers/bipV2/learning_files_names.txt";
@@ -53,61 +68,34 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 		}
 
-
-
-		Globals::evolution_mode = 1;
-		SimGlobals::steps_before_evaluation = 10;
-		SimGlobals::nbr_evaluation_steps = 5;
-		Globals::animationRunning = 1;
-		SimGlobals::liquid_density = 1000;
-		SimGlobals::water_level = wcstof(argv[1], NULL);	
+		Globals::ipm_alteration_cost = 0.1;
+		
 		
 		launch_simulation(false,false);
 	}
 	else{
 		//*
 
-		SimGlobals::water_level = 0.25;
-
+		SimGlobals::water_level = 1;
 
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
 		std::string secondary_save_config = "controllers/bipV2/learning_files_names.txt";
 
+		update_saving_config(primary_save_config, secondary_save_config);
 
-		oss.clear();
-		oss.str("");
-		oss << Globals::data_folder_path;
-		oss << primary_save_config;
 
-		std::ofstream myfile1(oss.str());
-		if (myfile1.is_open())
-		{
-			myfile1 << "min_weighted_acc/" << "learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
-			myfile1 << "min_weighted_acc/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
-		}
-		myfile1.close();
-
-		//*
-		std::stringstream oss2;
-		oss2 << Globals::data_folder_path;
-		oss2 << secondary_save_config;
-		std::ofstream myfile2(oss2.str());
-		if (myfile2.is_open())
-		{
-			myfile2 << "learning_walk_state.rs" << std::endl;
-			myfile2 << "learning_walk.sbc" << std::endl;
-		}
-		myfile2.close();
 		//I don't want the secondary save in that program (just needed to fill that file for later use)
 		//so I disactivate the secondary save
 		Globals::primary_save_config = secondary_save_config;
 		Globals::secondary_save_config = primary_save_config;
 
-
-		//*
+		/*
+		std::ostringstream oss;
+		oss << "bipV2/" << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
+		Globals::save_mode_controller = oss.str();
 		Globals::save_mode = true;
 		Globals::useShader = false;
-		Globals::evolution_mode = 1;
+		//Globals::evolution_mode = 1;
 		SimGlobals::steps_before_evaluation = 10;
 		SimGlobals::nbr_evaluation_steps = 5;
 		//Globals::animationRunning = 1;
@@ -116,19 +104,52 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*/
 
 		/*
-		std::ostringstream oss;
-		oss << Globals::binaries_folder_path;
-		oss << "Release\\Evolution_program.exe " << 0.25;
-		oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << 0.25 << ".sbc";
-		std::string save_line = oss.str();
-		execute_line(save_line);
+		SimGlobals::water_level = 0;
+
+		double eval_sum = 0;
+		int nbr_eval = 0;
+		
+		do{
+			update_saving_config(primary_save_config, secondary_save_config);
+
+			std::ostringstream oss;
+			oss << Globals::binaries_folder_path;
+			oss << "Release\\Evolution_program.exe " << SimGlobals::water_level;
+			oss << " save bipV2/" << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
+			std::string save_line = oss.str();
+			int result = execute_line(save_line);
+			
+			//read the result
+			//the second return value is the one when that fucking BS of glut return a retarded exception when I clos ethe program
+			if (result == 0 || result == -1073740771){
+				std::cout << std::defaultfloat << "finishing save for water_lvl:" << SimGlobals::water_level << std::endl;
+				double last_eval;
+				std::ifstream myfile;
+				myfile.open("eval_result.txt");
+				myfile >> std::scientific  >> last_eval;
+				myfile.close();
+				std::cout << std::scientific << "evaluation result:" << last_eval << std::endl;
+				if (last_eval < 10E12){
+					nbr_eval++;
+					eval_sum += last_eval;
+				}
+			}
+			
+			
+			
+			SimGlobals::water_level += 0.05;
+		} while (SimGlobals::water_level<1.11);
+
+		//now we write the avg eval
+		std::cout << std::scientific << std::setprecision(8) << "average evaluation:" << eval_sum / (double)nbr_eval<<std::endl;
+
 		//*/
 		
-		/*
+		//*
 		SimGlobals::water_level = 0;
 		do{
 			std::cout << "starting evolution for water_lvl:" << SimGlobals::water_level << std::endl;
-			cma_program("min_weighted_acc");
+			cma_program(cur_evo_name);
 			SimGlobals::water_level += 0.25;
 		} while (SimGlobals::water_level<1.1);
 		//*/
@@ -171,7 +192,7 @@ int cma_program(std::string save_folder_name) {
 	oss << Globals::binaries_folder_path;
 	oss << "Release\\Evolution_program.exe " << SimGlobals::water_level;
 	objective_func.exe_line = oss.str();
-	oss << " save bipV2/" << "water_lvl_evo/" << "learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
+	oss << " save bipV2/" << save_folder_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
 	std::string save_line = oss.str();
 
 
@@ -279,15 +300,50 @@ int cma_program(std::string save_folder_name) {
 			}
 		}
 
+		//I I detect the ipm alte I add it
+		if (cur_pos < result.size()){
+			SimGlobals::ipm_alteration_effectiveness = result[cur_pos];
+			//limit it to 1 (since I want it to go down )
+			if (SimGlobals::ipm_alteration_effectiveness > 1){
+				SimGlobals::ipm_alteration_effectiveness = 1;
+			}
+			++cur_pos;
+		}
+
+		//*
+		//also I'll prevent the system from doing the ondulations with the pelvis
+		Trajectory* cur_traj = con->getController()->getState(0)->getTrajectory(objective_func.vect_traj_name[0].c_str());
+		for (int j = 0; j < (int)cur_traj->components.size(); ++j){
+			TrajectoryComponent* traj_comp = cur_traj->components[j];
+			for (int i = 0; i < (int)traj_comp->baseTraj.getKnotCount(); ++i){
+				traj_comp->baseTraj.setKnotValue(i, std::fmin(0.1, traj_comp->baseTraj.getKnotValue(i)));
+			}
+		}
+		//*/
+		//*
+		//I only wanna learn the x component of the walk so I'l override the others with the value I had
+		cur_traj = con->getController()->getState(0)->getTrajectory(objective_func.vect_traj_name[5].c_str());
+		for (int j = 0; j < (int)cur_traj->components.size(); ++j){
+			TrajectoryComponent* traj_comp = cur_traj->components[0];
+			traj_comp->baseTraj.setKnotValue(0, 0.000340);
+			traj_comp->baseTraj.setKnotValue(1, -0.100323);
+			traj_comp->baseTraj.setKnotValue(2, -0.001158);
+
+			traj_comp = cur_traj->components[2];
+			traj_comp->baseTraj.setKnotValue(0, 0.0);
+			traj_comp->baseTraj.setKnotValue(1, 0.015874);
+			traj_comp->baseTraj.setKnotValue(2, 0.0);
+		}
+
 		//we switch to the primary save file
-		Globals::secondary_save_config = primary_save_config;
+		Globals::primary_save_config = primary_save_config;
 
 
 		//and we save the structure
-		con->save(true, false);
+		con->save(true, true);
 
 		//and go back t the secondary save file
-		Globals::secondary_save_config = "";
+		Globals::primary_save_config = secondary_save_config;
 
 		
 		delete con;
@@ -371,6 +427,7 @@ SimbiconOnjectiveFunction::SimbiconOnjectiveFunction(){
 	vect_traj_name.push_back("SWING_Ankle");
 	vect_traj_name.push_back("STANCE_Ankle");
 	vect_traj_name.push_back("swing_foot");
+	vect_traj_name.push_back("pelvis_torso");
 
 
 	//this should load all the concerned trajectories
@@ -384,6 +441,8 @@ SimbiconOnjectiveFunction::SimbiconOnjectiveFunction(){
 		}
 	}
 
+	//then we add the step delta at the end
+	//variable_vector.push_back(SimGlobals::ipm_alteration_effectiveness);
 
 	//and delete the structure
 	delete con;
@@ -434,6 +493,46 @@ SimbiconOnjectiveFunction::ResultType SimbiconOnjectiveFunction::eval(const Sear
 		}
 	}
 
+	//I I detect the ipm alte I add it
+	if (cur_pos < input.size()){
+		SimGlobals::ipm_alteration_effectiveness = input[cur_pos];
+		//limit it to 1 (since I want it to go down )
+		if (SimGlobals::ipm_alteration_effectiveness > 1){
+			SimGlobals::ipm_alteration_effectiveness = 1;
+		}
+		++cur_pos;
+	}
+	else{
+		SimGlobals::ipm_alteration_effectiveness = 1;
+	}
+
+	//*
+	//also I'll prevent the system from doing the ondulations with the pelvis
+	Trajectory* cur_traj = con->getController()->getState(0)->getTrajectory(vect_traj_name[0].c_str());
+	for (int j = 0; j < (int)cur_traj->components.size(); ++j){
+		TrajectoryComponent* traj_comp = cur_traj->components[j];
+		for (int i = 0; i < (int)traj_comp->baseTraj.getKnotCount(); ++i){
+			traj_comp->baseTraj.setKnotValue(i, std::fmin(0.1, traj_comp->baseTraj.getKnotValue(i)));
+		}
+	}
+	//*/
+	//*
+	//I only wanna learn the x component of the walk so I'l override the others with the value I had
+	cur_traj = con->getController()->getState(0)->getTrajectory(vect_traj_name[5].c_str());
+	for (int j = 0; j < (int)cur_traj->components.size(); ++j){
+		TrajectoryComponent* traj_comp = cur_traj->components[0];
+		traj_comp->baseTraj.setKnotValue(0, 0.000340);
+		traj_comp->baseTraj.setKnotValue(1, -0.100323);
+		traj_comp->baseTraj.setKnotValue(2, -0.001158);
+
+		traj_comp = cur_traj->components[2];
+		traj_comp->baseTraj.setKnotValue(0, 0.0);
+		traj_comp->baseTraj.setKnotValue(1, 0.015874);
+		traj_comp->baseTraj.setKnotValue(2, 0.0);
+	}
+	//*/
+
+
 	//and we save the structure
 	con->save(true, false);
 
@@ -445,7 +544,8 @@ SimbiconOnjectiveFunction::ResultType SimbiconOnjectiveFunction::eval(const Sear
 	int result=execute_line(exe_line);
 
 	//read the result
-	if (result == 0){
+    //the second return value is the one when that fucking BS of glut return a retarded exception when I clos ethe program
+	if (result == 0 || result == -1073740771){
 		std::ifstream myfile;
 		myfile.open("eval_result.txt");
 		myfile >> std::fixed >> std::setprecision(8) >> last_eval;
@@ -512,3 +612,31 @@ std::string ws2s(const std::wstring& wstr)
 	return converterX.to_bytes(wstr);
 }
 
+void update_saving_config(std::string primary_config, std::string secondary_config)
+{
+	std::ostringstream oss;
+	oss.clear();
+	oss.str("");
+	oss << Globals::data_folder_path;
+	oss << primary_config;
+
+	std::ofstream myfile1(oss.str());
+	if (myfile1.is_open())
+	{
+		myfile1 << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << "_state.rs" << std::endl;
+		myfile1 << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc" << std::endl;
+	}
+	myfile1.close();
+
+	//*
+	std::stringstream oss2;
+	oss2 << Globals::data_folder_path;
+	oss2 << secondary_config;
+	std::ofstream myfile2(oss2.str());
+	if (myfile2.is_open())
+	{
+		myfile2 << "learning_walk_state.rs" << std::endl;
+		myfile2 << "learning_walk.sbc" << std::endl;
+	}
+	myfile2.close();
+}

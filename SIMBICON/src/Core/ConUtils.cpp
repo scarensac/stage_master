@@ -77,9 +77,11 @@ static ConKeyWord keywords[] = {
 	{"vTrajZ", CON_V_TRAJZ_START},
 	{"/vTrajZ", CON_V_TRAJZ_END},
 	{"rootPredictiveTorqueScale", CON_ROOT_PRED_TORQUE_SCALE},
-	{"minFeedback", CON_MIN_FEEDBACK},
-	{"maxFeedback", CON_MAX_FEEDBACK}
+	{ "minFeedback", CON_MIN_FEEDBACK },
+	{ "ipmAlterationEffectiveness", CON_IPM_ALTERATION_EFFECTIVENESS },
+	{ "virtualForceEffectiveness", CON_VIRTUAL_FORCE_EFFECTIVENESS }
 };
+
 
 /**
 	This method is used to determine the type of a line that was used in the input file for a rigid body.

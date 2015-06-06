@@ -109,7 +109,7 @@ checkbutton .camerafollowup -text "Follow Character" -variable followCharacter -
 .ground select
 pack .labelView -side top -fill x -in .viewoptions -anchor w
 #pack .axes .colprimitives .forces .target .fps .shadow .ground -side top -fill y -in .viewoptions -anchor w
-pack .target .ground .forces .colprimitives .camerafollowup -side top -fill y -in .viewoptions -anchor w
+pack .target .ground .forces .colprimitives .camerafollowup .shadow .ground -side top -fill y -in .viewoptions -anchor w
 
 
 
