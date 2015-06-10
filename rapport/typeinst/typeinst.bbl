@@ -1,0 +1,102 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+
+\bibitem{barela2006biomechanical}
+Barela, A.M., Stolf, S.F., Duarte, M.: Biomechanical characteristics of adults
+  walking in shallow water and on land. Journal of Electromyography and
+  Kinesiology  16(3),  250--256 (2006)
+
+\bibitem{chevutschi2009comparison}
+Chevutschi, A., Alberty, M., Lensel, G., Pardessus, V., Thevenon, A.:
+  Comparison of maximal and spontaneous speeds during walking on dry land and
+  water. Gait \& posture  29(3),  403--407 (2009)
+
+\bibitem{coros2009robust}
+Coros, S., Beaudoin, P., van~de Panne, M.: Robust task-based control policies
+  for physics-based characters. In: ACM Transactions on Graphics (TOG).
+  vol.~28, p. 170. ACM (2009)
+
+\bibitem{coros2010generalized}
+Coros, S., Beaudoin, P., van~de Panne, M.: Generalized biped walking control.
+  In: ACM Transactions on Graphics (TOG). vol.~29, p. 130. ACM (2010)
+
+\bibitem{geijtenbeek2012interactive}
+Geijtenbeek, T., Pronost, N.: Interactive character animation using simulated
+  physics: A state-of-the-art review. In: Computer Graphics Forum. vol.~31, pp.
+  2492--2515. Wiley Online Library (2012)
+
+\bibitem{geijtenbeek2012simple}
+Geijtenbeek, T., Pronost, N., van~der Stappen, A.F.: Simple data-driven control
+  for simulated bipeds. In: Proceedings of the ACM SIGGRAPH/Eurographics
+  Symposium on Computer Animation. pp. 211--219. Eurographics Association
+  (2012)
+
+\bibitem{hansen2006cma}
+Hansen, N.: The cma evolution strategy: a comparing review. In: Towards a new
+  evolutionary computation, pp. 75--102. Springer (2006)
+
+\bibitem{kajita20013d}
+Kajita, S., Kanehiro, F., Kaneko, K., Yokoi, K., Hirukawa, H.: The 3d linear
+  inverted pendulum mode: A simple modeling for a biped walking pattern
+  generation. In: Intelligent Robots and Systems, 2001. Proceedings. 2001
+  IEEE/RSJ International Conference on. vol.~1, pp. 239--246. IEEE (2001)
+
+\bibitem{kwatra2010fluid}
+Kwatra, N., Wojtan, C., Carlson, M., Essa, I., Mucha, P.J., Turk, G.: Fluid
+  simulation with articulated bodies. Visualization and Computer Graphics, IEEE
+  Transactions on  16(1),  70--80 (2010)
+
+\bibitem{lentine2011creature}
+Lentine, M., Gretarsson, J.T., Schroeder, C., Robinson-Mosher, A., Fedkiw, R.:
+  Creature control in a fluid environment. Visualization and Computer Graphics,
+  IEEE Transactions on  17(5),  682--693 (2011)
+
+\bibitem{miyoshi2005functional}
+Miyoshi, T., Shirota, T., Yamamoto, S.I., Nakazawa, K., Akai, M.: Functional
+  roles of lower-limb joint moments while walking in water. Clinical
+  Biomechanics  20(2),  194--201 (2005)
+
+\bibitem{mussa1997nonlinear}
+Mussa-Ivaldi, F.A.: Nonlinear force fields: a distributed system of control
+  primitives for representing and learning movements. In: Computational
+  Intelligence in Robotics and Automation, 1997. CIRA'97., Proceedings., 1997
+  IEEE International Symposium on. pp. 84--90. IEEE (1997)
+
+\bibitem{neff2002modeling}
+Neff, M., Fiume, E.: Modeling tension and relaxation for computer animation.
+  In: Proceedings of the 2002 ACM SIGGRAPH/Eurographics symposium on Computer
+  animation. pp. 81--88. ACM (2002)
+
+\bibitem{orselli2011joint}
+Orselli, M.I.V., Duarte, M.: Joint forces and torques when walking in shallow
+  water. Journal of biomechanics  44(6),  1170--1175 (2011)
+
+\bibitem{van1995guided}
+Van~de Panne, M., Lamouret, A.: Guided optimization for balanced locomotion.
+  Springer (1995)
+
+\bibitem{si2014realistic}
+Si, W., Lee, S.H., Sifakis, E., Terzopoulos, D.: Realistic biomechanical
+  simulation and control of human swimming. ACM Transactions on Graphics (TOG)
+  34(1), ~10 (2014)
+
+\bibitem{stam1999stable}
+Stam, J.: Stable fluids. In: Proceedings of the 26th annual conference on
+  Computer graphics and interactive techniques. pp. 121--128. ACM
+  Press/Addison-Wesley Publishing Co. (1999)
+
+\bibitem{tan2011articulated}
+Tan, J., Gu, Y., Turk, G., Liu, C.K.: Articulated swimming creatures. In: ACM
+  Transactions on Graphics (TOG). vol.~30, p.~58. ACM (2011)
+
+\bibitem{yang2004layered}
+Yang, P.F., Laszlo, J., Singh, K.: Layered dynamic control for interactive
+  character swimming. In: Proceedings of the 2004 ACM SIGGRAPH/Eurographics
+  symposium on Computer animation. pp. 39--47. Eurographics Association (2004)
+
+\bibitem{yin2007simbicon}
+Yin, K., Loken, K., van~de Panne, M.: Simbicon: Simple biped locomotion
+  control. In: ACM Transactions on Graphics (TOG). vol.~26, p. 105. ACM (2007)
+
+\end{thebibliography}

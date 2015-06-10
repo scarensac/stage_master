@@ -67,6 +67,7 @@ std::string Globals::primary_save_config = "";
 std::string Globals::secondary_save_config = "";
 std::string Globals::save_mode_controller = "";
 bool Globals::close_after_saving = false;
+Vector3d Globals::avg_speed=Vector3d(0,0,0);
 
 
 double Globals::a=0, Globals::b=1, Globals::c=0, Globals::d=0;

@@ -60,7 +60,12 @@ résultat 1 phrase
 %
 \section{Introduction}
 %
+La simulation de mouvements humains réaliste est un point clef dans la création d'un environnement virtuel. Les mondes virtuels étant de plus en plus complexes il est devenu difficile d'arriver à réaliser des interactions réalistes entre les personnages animés et l'environnement à l'aide des méthodes d'animation cinématique. Un nombre grandissant de travaux se portent maintenant sur la création de contrôleurs basés physiques. Bien que ceux-ci permettent d'obtenir naturellement
+
+
 1/ 1.5 page (à faire à la fin) abstract en écrivant +, sans les résultats et sans présenter précisément la méthode
+
+
 Contexte
 Problématique
 Finir par le plan du document
@@ -75,31 +80,31 @@ Finir par le plan du document
 Dans le cadre de l'animation de personnages on dispose d'un squelette composé de corps solides reliés par des articulations permettant un certain nombre de degrés de libertés entre ces derniers. Il existe deux catégories de méthodes d'animation. La première, l'animation cinématique, décrit simplement les trajectoires des articulations au cours du temps. Bien que facile à réaliser cette méthode possède le défaut de rendre les interactions avec un environnement dynamique très compliquées. La seconde catégorie, l'animation basée physique, aborde le problème sous un tout autre angle. Cette fois –ci on manipulera le squelette à l'aide d'interactions physiques. On peut classer les interactions avec le squelette dans trois catégories \cite{geijtenbeek2012interactive}: \newline
 \begin{itemize}
 \item{L'application de moments au niveau des articulations. Le principe est d'appliquer des moments au niveau des articulations pour faire se déplacer les éléments relativement entre eux suivant les degrés de liberté.}
-\item{La seconde consiste à appliquer des forces directement sur les différents corps solides pour les animer. Cependant, un personnage réel ne possédant pas la possibilité d'effectuer ce genre d'action, les résultats obtenus peuvent sembler surnaturels. Cette technique a d'ailleurs été surnommé "hand-of-god" \cite{van1995guided}. }
-\item{La dernière méthode consiste à considérer des force comme la seconde méthode à la différence que celles-ci seront simulées à l'aide de moments sur les différentes articulations concernées. Ce type de forces est appelé forces virtuelles. On la retrouve notamment dans le cadre de contrôle de vitesse et d'équilibre \cite{coros2010generalized}.}
+\item{La seconde consiste à appliquer des forces externes directement sur les différents corps solides pour les déplacer. Ces forces n'ayant pas d'équivalent dans la réalité, les mouvements obtenus peuvent ne pas sembler naturels. Cette technique a d'ailleurs été surnommé "hand-of-god" \cite{van1995guided}. }
+\item{La dernière méthode consiste à simuler des forces externes à l'aide de moments appliqués aux articulations. Ce type de forces est appelé forces virtuelles.}
 \end{itemize}
 
-Pour permettre l'animation du squelette de manière à obtenir les déplacements désirés, des systèmes haut niveau sont créés \cite{geijtenbeek2012interactive}. Ces systèmes prendront en compte des paramètres de haut niveau tels que la vitesse et la posture et les convertiront en interactions avec le squelette définies ci-dessus. 
+En raison du grand nombre de données nécessaire pour produire une animation, l'utilisation manuelle de ces méthodes devient prohibitive. Ce sera donc au contrôleur de générer ces données à partir de paramètres haut niveau. Ces paramètres doivent être intuitifs pour l'utilisateur tels que vitesse, direction du mouvement \cite{coros2010generalized}. Le type de contrôleur le plus commun s'appèle "Contrôleur dans l'espace des articulations".
 
-\subsection{Contrôle dans l'espace des joints} 
-Ce type de méthode se base sur un système similaire à l'animation cinématique. L'utilisateur spécifie une série de positions désirées représentant le mouvement et le système tentera de suivre ces positions dans la limite du possible. Les limites du contrôler sont définies par des moments et des angles maximums aux articulations. La Figure \ref{fig:joint_space_motion_control} présente une vue d'ensemble généraliste de ce type de systèmes. Le bloc "balance and pose control" a pour rôle de convertir les paramètres choisis par l'utilisateur en une cible cinématique définissant les angles et le vitesses pour chaque articulation. Ces paramètres peuvent être de haut niveau (vitesse, hauteur des pas) ou de bas niveau (trajectoire des articulations). Cette cible cinématique permettra au bloc "local feedback control" de calculer le moment nécessaire pour chaque articulation. A ceci s'ajoute des contrôleurs de feedback qui affecteront des moments supplémentaires suivant des règles intégrées au modèle. 
+\subsection{Contrôle dans l'espace des articulations} 
+De manière similaire à similaire à l'animation cinématique, ce type de contrôleur une série de poses désirées représentant le mouvement. Les limites du contrôler sont définies par des moments et des angles maximums aux articulations. La Figure \ref{fig:joint_space_motion_control} gauche présente une vue d'ensemble d'un tel contrôleur. Le bloc "balance and pose control" a pour rôle de convertir les paramètres choisis par l'utilisateur en une cible cinématique définissant les angles et le vitesses pour chaque articulation. Ces paramètres peuvent être de haut niveau (vitesse, hauteur des pas) ou des poses de références. Le bloc "local feedback control" les moments nécessaires pour atteindre la pose désirée pour chaque articulation. Ce bloc permet d'intégrer des mécanismes de calcul de moment supplémentaire (e.g. pour contrôle de la vitesse). 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{joint_space_motion_control.png}
 \includegraphics[scale=0.5]{state_machine.png}
-\caption{A gauche, exemple de contrôleur dans l'espace des joints \cite{geijtenbeek2012interactive}. A droite, exemple de machine à état pour la marche \cite{yin2007simbicon}}
+\caption{A gauche, exemple de contrôleur dans l'espace des articulations \cite{geijtenbeek2012interactive}. A droite, exemple de machine à état pour la marche \cite{yin2007simbicon}}
 \label{fig:joint_space_motion_control}
 \label{fig:state_machine}
 \end{figure}
 
 
 
-Bien qu'il existe plusieurs méthodes permettant de suivre les positions spécifiées (antagonist feedback \cite{neff2002modeling}, non-linear force field \cite{mussa1997nonlinear}), la méthode la plus commune est le "proportionnal-derivative control" (PD-control). Un PD-contrôleur calcule un torque pour chaque articulation linéairement proportionnel à la différence entre l'état actuel et l'état désiré. Il prend en compte la différence entre les angles mais aussi la différence entre les vitesses angulaires 
+Bien qu'il existe plusieurs méthodes permettant de suivre les poses désirées (antagonist feedback \cite{neff2002modeling}, non-linear force field \cite{mussa1997nonlinear}), la méthode la plus commune est le "proportionnal-derivative control" (PD-control). Un PD-contrôleur calcule un moment  \(\tau\) pour chaque articulation proportionnel à la différence entre l'état actuel () et l'état désiré. Il prend en compte non seulement la différence entre les angles mais aussi la différence entre les vitesses angulaires. 
 \[
 \tau=k_p(\theta_d - \theta) + k_v(\dot{\theta_d} - \dot{\theta})
 \]
-Avec \(\tau\) le moment à l'articulation, \(\theta\) et \((\dot{\theta_d}\) l'angle et la vitesse désirée, \(\theta\) et \((\dot{\theta}\) l'angle et la vitesse actuelles et \(k_p\) et \(k_v\) des constantes.
-Parmi les systèmes basés sur un PD-contrôleur on trouve notamment le SIMBICON (SIMple BIped CONtroler) \cite{yin2007simbicon}. Le modèle est basé sur une machine à état fini. Chaque état est défini par une série de poses clefs qui définiront les poses désirées au cours du mouvement. La transition d'un état à un autre peut s'effectuer après un certain temps ou bien lors d'un nouveau contact entre un pied et le sol. La figure \ref{fig:state_machine} illustre la composition d'un contrôleur SIMBICON pour la marche. Dans cet exemple chaque état est composé de deux poses clefs. La spécification des poses clefs possèdent quelques spécificités propres au SIMBICON. Les angles des articulations sont exprimés dans un repère local à l'exception de l'articulation entre le bassin et le dos et de celle de la hanche en phase de vol sont exprimées dans le repère du monde. Enfin la hanche d'appui ne possède pas de positions cibles. Le moment \(\tau_b \) à appliquer à la hanche d'appui est calculé de manière à ce que le moment total sur le pelvis corresponde au moment permettant d'obtenir l'orientation définie par l'utilisateur. Ce moment \(\tau \) désiré est déterminé par le PD-contrôleur en prenant pour angle cible la somme de l'angle définit dans la trajectoire du pelvis plus l'angle de heading (figure \ref{fig:torques_pelvis}).
+Avec \(\theta_d\) et \(\dot{\theta_d}\) l'angle et la vitesse désirée, \(\theta\) et \(\dot{\theta}\) l'angle et la vitesse courrante et \(k_p\) et \(k_v\) de constantes de vitesse et de position appelées les gains du PD-contrôleur .
+Parmi les systèmes basés sur un PD-contrôleur on trouve notamment le SIMBICON (SIMple BIped CONtroler) \cite{yin2007simbicon}. Ce système est basé sur une machine à état fini. Chaque état est défini par une série de poses clefs qui définiront les poses désirées au cours du mouvement. La transition d'un état à un autre peut s'effectuer après un certain temps ou bien lors d'un nouveau contact entre un pied et le sol. La figure \ref{fig:state_machine} droite illustre la composition d'un contrôleur SIMBICON pour la marche. La spécification des poses clefs des états possèdent quelques spécificités propres au SIMBICON. Les angles des articulations sont exprimés dans un repère local à l'exception de l'articulation entre le bassin et le dos et de celle de la hanche en phase de vol sont exprimées dans le repère du monde. Enfin la hanche d'appui ne possède pas de positions cibles. Le moment \(\tau_b \) à appliquer à la hanche d'appui est calculé de manière à ce que le moment total sur le pelvis corresponde au moment permettant d'obtenir l'orientation définie par l'utilisateur. Ce moment \(\tau \) désiré est déterminé par le PD-contrôleur en prenant pour angle cible la somme de l'angle définit dans la trajectoire du pelvis plus l'angle de heading (figure \ref{fig:torques_pelvis}).
 \[
 \tau_b=\tau - \tau_a - \tau_{torso}
 \]
@@ -114,11 +119,11 @@ Avec \(\tau_a \) le moment appliqué sur la hanche de balance et \(\tau_{torso} 
 \label{fig:jacob}
 \end{figure}
 
-Le défaut du PD-contrôleur est qu'il est nécessaire de connaitre les bonnes valeurs pour les gains si l'on veut obtenir un résultat correct. Des gains trop faibles ne permettrait pas de suivre le mouvement définit. Des gains trop forts provoqueraient un mouvement saccadé et des possibles oscillations autour de la position désirée. On peut déterminer les bons paramètres par une série d'essais successifs mais cela ne permettrait pas d'obtenir un système robuste à des variations de géométrie dans le squelette. Pour pallier à ce problème le SIMBICON utilise un système de feedforward \cite{yin2007simbicon} sur les moments des articulations permettant ainsi d'obtenir une partie des moments nécessaire sans avoir à utiliser des gains élevés.
-Il existe d'autres méthodes permettant de calculer automatiquement une partie des moments. On trouve notamment un système de compensation de gravité \cite{coros2010generalized}. Le principe est de calculer pour chaque partie du personnage une force virtuelle compensant la gravité. Donc pour chaque polygone nous appliquons une force \(F_{GC}=-mg\) au centre des masses, le signe négatif indiquant une force vers le haut. Cette force est ensuite convertie en moment pour chaque articulation se trouvant dans la chaine reliant le point d'application de la force et le pelvis \(\tau=J_i^T F\). \(J_i ^T\) est la transposée de la jacobienne de la chaine reliant le pelvis et le point d'application de la force. La figure \ref{fig:jacob} illustre la chaine affectée par la compensation de gravité d'un bras.
-La jacobienne d'une chaine de \(k\) articulations contient les informations indiquant l'impact d'une rotation de chaque degré de liberté de la chaine sur le point final de la chaine. Chaque $J(p)_i ^T$ peut être calculé par le produit vectoriel entre l'axe de la rotation et le vecteur allant de l'articulation \(i\) et le point d'application
+Le défaut du PD-contrôleur est qu'il est nécessaire de connaitre les bonnes valeurs pour les gains si l'on veut obtenir un résultat correct. Des gains trop faibles ne permettraient pas de suivre le mouvement définit. Des gains trop forts provoqueraient un mouvement saccadé et des possibles oscillations autour de la position désirée. On peut déterminer les paramètres optimaux pour une configuration (mouvement, géométrie du personnage, interaction avec l'environnement, ...) par une série d'essais successifs mais le contrôleur obtenu ne serait pas robuste aux variations de configuration entrainant des deséquilibres. Pour pallier ce problème SIMBICON utilise un système de feedforward \cite{yin2007simbicon} qui permet d'apprendre une partie des moments nécessaires. Les PD-contrôler n'étant plus utilisés pour les calculs des gains bas sont suffisant. 
+L'extention du SIMBICON proposé par \cite{coros2010generalized} présente un système de compensation de gravité permettant égalemnt de claculer une partie des moments nécessaires. Le principe est de calculer pour chaque partie du personnage une force virtuelle compensant la gravité. Donc pour chaque membre du personnage une force virtuelle \(F_{GC}=-mg\) est appliquée au centre des masses, le signe négatif indiquant une force vers le haut. Cette force est ensuite convertie en moment pour chaque articulation se trouvant dans la chaine reliant le point d'application de la force et le pelvis \(\tau=J_i^T F\); où \(J_i ^T\) est la transposée de la jacobienne de la chaine reliant le pelvis et le point d'application de la force. La figure \ref{fig:jacob} illustre la chaine affectée par la compensation de gravité d'un bras.
+La jacobienne d'une chaine de \(k\) articulations contient les informations indiquant l'impact d'une rotation de chaque degré de liberté de la chaine sur la position du point d'application de la force. Chaque $J(p)_i ^T$ peut être calculé par le produit vectoriel entre l'axe de la rotation $\alpha_i$ et le vecteur allant de l'articulation \(i\) et le point d'application $p$.
 \[
-J(p)_i ^T =\begin{bmatrix}
+J_i ^T (p)=\begin{bmatrix}
 \frac{\partial p_x}{\partial \alpha_i} & \frac{\partial p_y}{\partial \alpha_i} & \frac{\partial p_z}{\partial \alpha_i} \\
 \end{bmatrix}
 = (\alpha_i \times (p-p_i))^T
@@ -132,7 +137,7 @@ Cette méthode de compensation de gravité est appliquée à tous les membres du
 
 \subsection{Maîtrise de l'équilibre au cours de la marche}
 
-Définit tel quel le système ne permettrait pas de supporter des interactions avec l'environnement qui résulteraient en un déséquilibre. En effet il ne disposerait d'aucun système lui permettant de compenser les altérations de la position de personnage introduites par un sol non plat ou bien un obstacle.
+Défini tel quel le système ne permettrait pas de supporter des interactions avec l'environnement qui résulteraient en un déséquilibre. En effet il ne disposerait d'aucun système lui permettant de compenser les pertes d'équilibre.
 
 \begin{figure}[h]
 \centering
@@ -142,7 +147,7 @@ Définit tel quel le système ne permettrait pas de supporter des interactions a
 \label{fig:d_and_v}
 \end{figure}
 
-Pour pallier à ce problème le SIMBICON ajoute un système de balance feedback sur la hanche en phase de vol et le pied d'appui. Le principe est de modifier les angles cibles en fonction de la vitesse du centre des masses et de la distance entre celui-ci et le pied d'appui. 
+Pour pallier ce problème le SIMBICON ajoute un système de balance feedback sur la hanche en phase de vol et le pied d'appui. Le principe est de modifier les angles cibles en fonction de la vitesse du centre des masses et de la distance entre celui-ci et le pied d'appui. 
 \[
 \theta_d=\theta_{d0} + c_d*d + c_v*v 
 \]
@@ -191,7 +196,7 @@ La marche en milieu aquatique a été le sujet de plusieurs études dans le mili
 
 *mettre une strip représentant la marche dans 0.25m d'eau*
 
-Le système de contrôle du mouvement est composé de 6 blocs principaux (figure \ref{fig:shema_controler}). Voici une vision globale du fonctionnement du système. 
+Notre système de contrôle du mouvement est composé de 6 blocs principaux (figure \ref{fig:shema_controler}). Voici une vision globale du fonctionnement du système. 
 
 Nous commençons par calculer les forces résultant de l'effet du fluide sur le personnage. Nous utilisons une modélisation simple nous permettant d'obtenir une exécution en temps réel.
 
@@ -365,8 +370,8 @@ $$
 f_{eval}() =
   \begin{cases}
     max_eval       & \quad \text{if not stable} \\
-    max_eval/1000       & \quad \text{if } ||V-V_d||>0.01*V_d \\
-   (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))} & \quad \text{else}\\
+    max_eval/1000       & \quad \text{if } ||V-V_d||>0.01*||V_d|| \\
+   (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z)))} & \quad \text{else}\\
   \end{cases}
 $$
 %
@@ -381,10 +386,56 @@ Nous nous trouvons dans le cas d'un système espace complexe de variables avec d
 %
 \section{Résultats}
 %
-*donner paramètres, méthodologies utilisée pr les expériences, capacités système*
+\subsubsection{Implémentation}
+Le moteur physique utilisé est "Open Dynamics Engine" (ODE). Seul le modèle humain présenté précédemment est utilisé pour les tests. Les collisions entre les différentes parties du personnage ne sont pas prises en compte. La simulation physique s'effectue selon un pas de temps de 0,0005s. Les gains des PD-contrôler utilisés sont repris des fichiers de configurations de travaux précédents \cite{coros2009robust}. La modélisation physique du personnage est également identique à celle utilisée par \cite{coros2009robust}. Les moments aux articulations sont limités à $|\tau|<200Nm$ pour les hanches et les genoux et à $|\tau|<200Nm$ pour les autres articulations.
+Les simulations sont effectuées avec une implémentation en single-thread sur une machine disposant de 8Go de mémoire RAM et une processeur i5 2.5GHz.
+
+Notre phase d'expérience se sépare en deux étapes. La première consiste à effectuer plusieurs évolutions en utilisant différentes combinaisons de poids dans la fonction d'évaluation. Chaque combinaisons de poids sera présenté avec le résultat attendu, le résultat obtenu ainsi qu'une comparaison des résultats obtenue pour les différentes combinaisons de poids. Le seconde sera d'utiliser la combinaison que nous estimerons comme optimale pour créer un contrôler pouvant supporter les variations de vitesse désirée et les variations de niveau de fluide. Nous testerons ensuite la robustesse de ce contrôler à l'application de forces externes et le changement de vitesse coronale.
+
+\subsection{étude de la fonction dévaluation}
+
+\begin{table}[h]
+
+\centering
+\begin{tabular}{lll}
+\hline
+$\alpha$ & $\beta$ & $\gamma$ \\ \hline
+1      & 0     & 0      \\
+0      & 1     & 0      \\
+0      & 0     & 1      \\ 
+3      & 7     & 1      \\
+2      & 8     & 1     
+\end{tabular}
+\caption{tableau récapitulatif des fonctions d'évaluations utilisées}
+\label{fig:eval_func_table}
+\end{table}
+
+Durant cette partie nous effectuerons pour chaque version de la fonction d'évaluation 5 simulations. Chaque simulation sera effectuée un niveau de liquide différents. Les niveau de liquides étudiés sont 0, 0.25, 0.5, 0.75 et 1 (les valeurs son en mètres). Nous effectuerons nos simulations dans un liquide équivalent à de l'eau (masse volumique $\rho =1000kg.m^{-3}$ et coefficient de viscosité  $\mu =1$). Nous utiliserons la dénomination suivante lorsque nous voulons nous référer à une des combinaison $f(\alpha,\beta,\gamma)$.
+
+\subsubsection{étude de f(1,0,0)}
+Cette version ne prend en compte que la composante cherchant à minimiser la somme des torques. Les résultats que nous attendons est sont des mouvements cherchant à rester un maximum au fond de l'eau 
+
+\subsubsection{étude de f(0,1,0)}
+Cette version ne prend en compte que la composante cherchant à minimiser la l'effet de la résistance de l'eau. Cette version ne prenant en compte que le drag cela veux dire que pour une hauteur d'eau de 0 la fonction d'évaluation est inutile, ce qui fait que nous n'étudierons donc pas ce cas. Les résultats que nous attendons est sont des mouvements cherchant à éviter un maximum le contact avec l'eau, donc un personnage cherchant à sortir le jambes de l'eau. On s'attend à apercevoir qu'après un certain niveau d'eau il devient impossible de sortir les jambes de l'eau et donc le personnage cherche à effectuer des mouvements les moins amples et les moins rapides possible dans l'eau. 
+ 
+Comme nous nous y attendions le personnage cherche bien à sortir le pied en phase de vol de l'eau, ce phénomène est déjà presque impossible à une hauteur de 0,5. Il est également intéressant de noter que le personnage cherche à aligner le tibias avec le sens du déplacement pour éviter que l'eau applique une résistance dessus. Ce phénomène est particulièrement remarquable dans la phase de levée du pied. Pour les niveau d'eau ou le personnage lève le pied haut on remarque que le pied a une trajectoire assez courbée vers l'intérieur du personnage. Ce phénomène doit probablement servir à lever le pied aussi haut que possible mais il ne donne pas un résultat visuellement réaliste.  
+
+\subsubsection{étude de f(0,0,1)}
+Cette version ne prend en compte que la composante pénalisant les accélérations élevées. Nous nous attendons à trouver un résultat proche de ceux obtenus pour $f(1,0,0)$. En effet, obtenir des accélérations élevée demanderait des torques élevés. La différence que nous attendons principalement est au niveau de la trajectoire désirée de la cheville d'appui. Nous nous attendons à un résultat ayant bien moins de variations.
+
+Comme prévu on remarque que les résultats sont très similaires à ceux obtenus pour $f(1,0,0)$. Le personnage conserve le pied tellement près du sol que même une faible variation du milieu provoque une chute du personnage du fait d'un contact prématuré du pied en phase de vol avec le sol. Contrairement à ce que nous espérions nous observons toujours des variations assez importante sur la trajectoire de la cheville d'appui. Cela veux dire que ces variations on un importance plus grande que ce que nous pensions.
+
+
+\subsubsection{étude de f(3,6,1)}
+Cette version consiste en une combinaison permettant de faire ressortir un mouvement fortement conditionné par la présence du liquide tout en gardant une idée de ne pas effectuer des efforts trop couteux et de ne pas avoir d'accélérations brusques. Donc on s'attend à avoir des mouvement similaires à $f(0,1,0)$ mais avec des mouvements plus réaliste quand le personnage ne lève pas le pied pour le passer au dessus de l'eau. 
+
+
+\subsubsection{étude de f(1,0,0)}
+Cette version ne prend en compte que la composante cherchant à minimiser la somme des torques. Les résultats que nous attendons est sont des mouvements cherchant à reste un maximum au fond de l'eau 
+
 *faire un comparatif visuel des mouvement obtenus suivant le niv d'eau pr les diff combinaisons d'évaluations*
 *faire une comparaison en désactivant les systèmes créés*
-*si il y en a présenter lestruc qui peuvent être utilisé en tant que feed back*
+*si il y en a présenter les trucs qui peuvent être utilisé en tant que feed back*
 *faire une partie limitation*
 
 \section{Conclusion}
@@ -393,9 +444,12 @@ Nous nous trouvons dans le cas d'un système espace complexe de variables avec d
 %
 
 
+
 %
 \nocite{*}
 \bibliographystyle{splncs03}
 \bibliography{references}
 %
+\newpage
+\section{Annexe}
 \end{document}

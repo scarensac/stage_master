@@ -12,7 +12,7 @@
 \contentsline {section}{\numberline {4}Vue globale du syst\IeC {\`e}me}{9}
 \contentsline {section}{\numberline {5}Mod\IeC {\`e}le physique}{10}
 \contentsline {subsection}{\numberline {5.1}Mod\IeC {\'e}lisation du personnage}{10}
-\contentsline {subsection}{\numberline {5.2}Mod\IeC {\'e}lisation des fluides}{10}
+\contentsline {subsection}{\numberline {5.2}Mod\IeC {\'e}lisation des fluides}{11}
 \contentsline {subsubsection}{Forces hydrodynamiques}{11}
 \contentsline {subsubsection}{Pouss\IeC {\'e}e d'Archim\IeC {\`e}de}{12}
 \contentsline {section}{\numberline {6}Contr\IeC {\^o}le du mouvement}{12}
@@ -27,4 +27,12 @@
 \contentsline {subsubsection}{Fonction objectif}{18}
 \contentsline {subsubsection}{M\IeC {\'e}thode d'\IeC {\'e}volution des param\IeC {\`e}tres}{20}
 \contentsline {section}{\numberline {7}R\IeC {\'e}sultats}{20}
-\contentsline {section}{\numberline {8}Conclusion}{20}
+\contentsline {subsubsection}{Impl\IeC {\'e}mentation}{20}
+\contentsline {subsection}{\numberline {7.1}\IeC {\'e}tude de la fonction d\IeC {\'e}valuation}{20}
+\contentsline {subsubsection}{\IeC {\'e}tude de f(1,0,0)}{21}
+\contentsline {subsubsection}{\IeC {\'e}tude de f(0,1,0)}{21}
+\contentsline {subsubsection}{\IeC {\'e}tude de f(0,0,1)}{21}
+\contentsline {subsubsection}{\IeC {\'e}tude de f(3,6,1)}{22}
+\contentsline {subsubsection}{\IeC {\'e}tude de f(1,0,0)}{22}
+\contentsline {section}{\numberline {8}Conclusion}{22}
+\contentsline {section}{\numberline {9}Annexe}{24}

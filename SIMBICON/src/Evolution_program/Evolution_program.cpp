@@ -18,7 +18,7 @@
 
 #include <conio.h>//for kbhit
 
-const std::string cur_evo_name = "min_all_2_8_1_alte_ipm_torso_true";
+const std::string cur_evo_name = "min_all_4_5_1";
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -76,7 +76,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	else{
 		//*
 
-		SimGlobals::water_level = 1;
+		SimGlobals::water_level = 0.75;
+		SimGlobals::velDSagittal = 0.7;
+
 
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
 		std::string secondary_save_config = "controllers/bipV2/learning_files_names.txt";
@@ -146,12 +148,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*/
 		
 		//*
-		SimGlobals::water_level = 0;
+		SimGlobals::water_level = 0.25;
+		double water_limit = 0.6;
 		do{
 			std::cout << "starting evolution for water_lvl:" << SimGlobals::water_level << std::endl;
 			cma_program(cur_evo_name);
 			SimGlobals::water_level += 0.25;
-		} while (SimGlobals::water_level<1.1);
+		} while (SimGlobals::water_level<water_limit);
 		//*/
 
 		//

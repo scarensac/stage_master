@@ -119,6 +119,9 @@ public:
 	//this bool is here to tell the system  to close the program after saving the state
 	static bool close_after_saving;
 
+	//those are just some var to do the communication to show the speed on the gl window
+	static Vector3d avg_speed;
+
 	//these params define the ground plane - for drawing purposes only
 	static double a, b, c, d;
 

@@ -177,7 +177,7 @@ int camera (ClientData clientData, Tcl_Interp *interp, int argc, CONST84 char **
 	}
 
 	if (strcmp(argv[1], "c_side") == 0){
-		Globals::window->setCameraRotation(Vector3d(0,-PI/2,0));
+		Globals::window->setCameraRotation(Vector3d(0,-PI/2,0.19));
 //		Globals::window->redraw();
 	}
 

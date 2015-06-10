@@ -268,9 +268,12 @@ void GLWindow::draw(){
 		while (fpsTimer.timeEllapsed()<1.0 / Globals::desiredFrameRate);
 	}
 
-	if (Globals::drawFPS)
+	if (Globals::drawFPS){
 		drawFPSandPerf(fpsTimer.timeEllapsed(), timeSpentProcessing / (1 / Globals::desiredFrameRate));
+		gprintf("avgSpeed : x:%7.3lf, z:%7.3lf \n", Globals::avg_speed.x, Globals::avg_speed.z);
 
+	}
+		
 	fpsTimer.restart();
 }
 
@@ -383,7 +386,8 @@ void GLWindow::drawFPSandPerf(double timeSinceLastUpdate, double timeSpentProces
 	glColor3d(0.0,0.0,0.0);
 	glRasterPos2f(0.3f, 0.4f);
 
-	gprintf("FPS: %7.2lf (processing: %7.2lf %%)\n",  oldFrameRate, 100*oldPerformanceRate);
+	gprintf("FPS: %7.2lf  \n", oldFrameRate);
+//	gprintf("FPS: %7.2lf (processing: %7.2lf %%)\n", oldFrameRate, 100 * oldPerformanceRate);
 
 	glPopMatrix();
 }

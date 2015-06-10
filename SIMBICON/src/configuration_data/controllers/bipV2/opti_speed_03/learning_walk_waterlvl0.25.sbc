@@ -1,0 +1,269 @@
+PDParams
+#        joint name              Kp      Kd      MaxTorque    ScaleX        ScaleY        ScaleZ
+    root	3000.000000	300.000000	10000.000000	1.000000	0.200000	1.000000
+    pelvis_torso	200.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    lHip	300.000000	30.000000	10000.000000	1.000000	0.660000	1.000000
+    rHip	300.000000	30.000000	10000.000000	1.000000	0.660000	1.000000
+    torso_head	200.000000	20.000000	10000.000000	1.000000	0.200000	1.000000
+    lShoulder	20.000000	5.000000	10000.000000	0.500000	1.000000	1.000000
+    rShoulder	20.000000	5.000000	10000.000000	0.300000	1.000000	1.000000
+    lKnee	300.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    rKnee	300.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    lElbow	5.000000	1.000000	10000.000000	0.200000	1.000000	1.000000
+    rElbow	5.000000	1.000000	10000.000000	0.200000	1.000000	1.000000
+    lAnkle	75.000000	10.000000	10000.000000	1.000000	0.200000	0.200000
+    rAnkle	75.000000	10.000000	10000.000000	1.000000	0.200000	0.200000
+    lToeJoint	10.000000	0.500000	10000.000000	1.000000	1.000000	1.000000
+    rToeJoint	10.000000	0.500000	10000.000000	1.000000	1.000000	1.000000
+/PDParams
+
+stanceHipDamping 25.000000
+stanceHipMaxVelocity 4.000000
+
+
+
+ConState 0
+	description Default state in the walking controller
+	nextState 0
+	transitionOn footDown
+	stateStance reverse
+	time 0.700000
+
+
+
+	trajectory root
+			strengthTrajectory
+				0.000000 1.000000
+			/strengthTrajectory
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.020000 -0.056647
+				0.500000 0.100000
+				0.980000 -0.417261
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory STANCE_Knee
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.020000 0.094103
+				0.250000 0.045745
+				0.500000 -0.019995
+				0.750000 0.114216
+				1.000000 0.240084
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory SWING_Ankle
+	characterFrameRelative
+			strengthTrajectory
+				0.000000 1.000000
+			/strengthTrajectory
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 0.801489
+				0.100000 0.739697
+				0.200000 1.451637
+				0.300000 0.517452
+				0.400000 0.656624
+				0.500000 -0.031178
+				0.600000 -0.307382
+				0.700000 -0.918670
+				0.800000 -0.772051
+				0.900000 -0.436188
+				1.000000 -0.037784
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory STANCE_Ankle
+	characterFrameRelative
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			feedback linear
+				feedbackProjectionAxis 0.000000 0.000000 1.000000
+				cd 0.200000
+				cv 0.200000
+			/feedback
+			baseTrajectory
+				0.000000 0.013880
+				0.100000 -0.020197
+				0.200000 0.187816
+				0.300000 0.052130
+				0.400000 0.210637
+				0.500000 0.321326
+				0.600000 -0.170326
+				0.700000 -0.099818
+				0.800000 0.164461
+				0.900000 -0.198337
+				1.000000 0.216935
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory swing_foot
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 -0.111643
+				0.250000 -0.017201
+				1.000000 -0.061899
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			baseTrajectory
+				0.000000 1.224095
+				0.250000 0.693437
+				0.500000 0.636740
+				0.750000 0.812612
+				1.000000 1.215882
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			baseTrajectory
+				0.000000 -0.170298
+				0.100000 -0.127177
+				0.200000 -0.150723
+				0.300000 -0.066141
+				0.400000 0.013352
+				0.500000 0.088292
+				0.600000 -0.034174
+				0.700000 0.403676
+				0.800000 -0.226663
+				0.900000 0.405864
+				1.000000 0.119171
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory velD
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 -0.100291
+				0.100000 -0.085772
+				0.200000 -0.077630
+				0.300000 -0.035800
+				0.400000 -0.017542
+				0.500000 -0.000039
+				0.600000 0.014683
+				0.700000 0.035262
+				0.800000 0.062464
+				0.900000 0.102770
+				1.000000 0.124621
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis -1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 -0.097082
+				0.100000 -0.083509
+				0.200000 -0.074541
+				0.300000 -0.034101
+				0.400000 -0.015664
+				0.500000 0.001108
+				0.600000 0.016338
+				0.700000 0.037043
+				0.800000 0.064310
+				0.900000 0.104855
+				1.000000 0.128249
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			baseTrajectory
+				0.000000 1.146975
+				0.120401 1.140178
+				0.200000 1.307018
+				0.300000 1.123065
+				0.400000 1.006059
+				0.500000 0.866140
+				0.600000 0.821079
+				0.700000 0.886173
+				0.802676 0.853884
+				0.909699 1.052636
+				1.000000 1.330671
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory STANCE_Shoulder
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance left
+			baseTrajectory
+				0.000000 1.570000
+				1.000000 1.570000
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory SWING_Shoulder
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.000000 1.570000
+				1.000000 1.570000
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory pelvis_torso
+	characterFrameRelative
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.010033 0.000340
+				0.505017 -0.100323
+				0.986622 -0.001158
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 0.077083
+				1.000000 0.345359
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.000000 0.000000
+				0.280602 0.015874
+				0.990000 0.000000
+			/baseTrajectory
+		/component
+	/trajectory
+/ConState
+
+
+startAtState 0
+startingStance right
+loadCharacterState ../configuration_data/controllers/bipV2/opti_speed_03/learning_walk_waterlvl0.25_state.rs
+ipmAlterationEffectiveness 1.000000
+virtualForceEffectiveness 1.000000

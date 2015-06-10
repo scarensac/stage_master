@@ -405,9 +405,9 @@ public:
 		}
 
 		//otherwise it must be a time-based transition
-		//I disable it because it has no meaning
+		//I disable it because it has no meaning//though it is usefull for static walk so I'll activete it for now
 		if (phi >= 1){
-
+			return true;
 		}
 			//return true;
 

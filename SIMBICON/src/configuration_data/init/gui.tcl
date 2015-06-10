@@ -197,7 +197,7 @@ wm resizable . 0 0
 
 #pack .simsettings -in .mainframe -side top -fill x
 pack .viewoptions -in .mainframe -side top -fill x
-#pack .camerasettings .followchar -in .mainframe -side top -fill x
+pack .camerasettings -in .mainframe -side top -fill x
 pack .simulatorlabel .simulatorframe .currPos -in .mainframe -side top -fill x
 pack .characterframe -in .mainframe -side top -fill x
 pack .waterlvl -in .mainframe -side top -fill x

@@ -255,9 +255,11 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		static double previous_speed = avg_speed;
 
 		double d_v = con->velDSagittal - (avg_speed*.75+previous_speed*0.25);
-		if (d_v < 0.3){
-			step_delta -= (d_v)*0.1;
+		if (std::abs(d_v) > 0.3){
+			d_v = 0.3*(d_v / std::abs(d_v));
 		}
+		step_delta -= (d_v)*0.1;
+
 		if (step_delta > 0){
 			step_delta = 0;
 		}

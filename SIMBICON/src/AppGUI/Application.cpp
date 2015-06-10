@@ -124,13 +124,13 @@ void Application::drawGround(){
 		glEnable(GL_TEXTURE_2D);
 		waterTexture->activate();
 		glBegin(GL_QUADS);
-		x = size; z = size * 100;
+		x = 1; z = size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
-		x = -size; z = -size * 100;
+		x = -1; z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = size * 100;
@@ -163,7 +163,7 @@ void Application::init(){
 
 
 	std::ostringstream oss2;
-	oss2 << Globals::data_folder_path << "textures/darkGrid.bmp";
+	oss2 << Globals::data_folder_path << "textures/blueGrid.bmp";
 	char dest2[230];
 	strcpy(dest2, oss2.str().c_str());
 	waterTexture = new GLTexture(dest2);

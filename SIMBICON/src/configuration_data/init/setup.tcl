@@ -17,6 +17,7 @@ if {$laptop == 1} {
 } else {
 	wm geometry . +1000+0
 	launch ControllerEditor 1000 450
+#	launch ControllerEditor 1280 720
 	finalizeUI
 }
 

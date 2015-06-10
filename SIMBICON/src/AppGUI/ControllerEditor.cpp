@@ -523,7 +523,7 @@ void ControllerEditor::processTask(){
 					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
 						eval_buff_torque += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
 					}
-					eval_result += 2 * eval_buff_torque / (1.2*1E6);
+					eval_result += 4 * eval_buff_torque / (1.2*1E6);
 					//*/
 					//*
 					//this version just sum the drag torque
@@ -532,7 +532,7 @@ void ControllerEditor::processTask(){
 						WaterImpact impact = it->second;
 						eval_buff_drag += impact.drag_torque.length();
 					}
-					eval_result += 8 * eval_buff_drag / (6 * 1E4);
+					eval_result += 5 * eval_buff_drag / (6 * 1E4);
 					//*/
 					/*
 					//this version minimise the maximum necessary trque and we do it for each step
@@ -728,13 +728,15 @@ void ControllerEditor::processTask(){
 				avgSpeed /= timesVelSampled; 
 				avgSpeedx /= timesVelSampled;
 
-				if (Globals::evolution_mode){
-					last_step_speed_x2 = last_step_speed_x;
-					last_step_speed_x = avgSpeedx;
+				last_step_speed_x2 = last_step_speed_x;
+				last_step_speed_x = avgSpeedx;
 
-					last_step_speed_z2 = last_step_speed_z;
-					last_step_speed_z = avgSpeed;
-				}
+				last_step_speed_z2 = last_step_speed_z;
+				last_step_speed_z = avgSpeed;
+
+				Globals::avg_speed.z = (last_step_speed_z2 + last_step_speed_z) / 2;
+				Globals::avg_speed.x = (last_step_speed_x2 + last_step_speed_x) / 2;
+
 
 
 
