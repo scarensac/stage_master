@@ -201,10 +201,10 @@ pack .camerasettings -in .mainframe -side top -fill x
 pack .simulatorlabel .simulatorframe .currPos -in .mainframe -side top -fill x
 pack .characterframe -in .mainframe -side top -fill x
 pack .waterlvl -in .mainframe -side top -fill x
-pack .waterstr -in .mainframe -side top -fill x
+#pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
-#pack .desiredheading -in .mainframe -side top -fill x
-pack .timefactor -in .mainframe -side top -fill x
+pack .desiredheading -in .mainframe -side top -fill x
+#pack .timefactor -in .mainframe -side top -fill x
 pack .velCoronal -in .mainframe -side top -fill x
 pack .velSagittal -in .mainframe -side top -fill x
 pack .stepwidth -in .mainframe -side top -fill x

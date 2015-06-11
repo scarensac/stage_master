@@ -45,7 +45,7 @@
 \title{Contrôle du mouvement sur support\\ mou ou liquide}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{Lecture Notes in Computer Science: Authors' Instructions}
+%\titlerunning{Lecture Notes in Computer Science: Authors' Instructions}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -55,7 +55,7 @@
 %
 \author{Samuel Carensac}
 %
-\authorrunning{Lecture Notes in Computer Science: Authors' Instructions}
+%\authorrunning{Lecture Notes in Computer Science: Authors' Instructions}
 % (feature abused for this document to repeat the title also on left hand pages)
 
 % the affiliations are given next; don't give your e-mail address
@@ -70,40 +70,43 @@
 % "llncs.dem" accompanies the document class "llncs.cls".
 %
 
-\toctitle{Lecture Notes in Computer Science}
-\tocauthor{Authors' Instructions}
+%\toctitle{Lecture Notes in Computer Science}
+%\tocauthor{Authors' Instructions}
 \maketitle
 
 
 \begin{abstract}
- L'animation basée physique est de plus en plus étudiée car elle permet de réaliser les interactions avec l'environnement beaucoup plus simplement. Bien qu'il existe des contrôleurs permettant la simulation des interaction d'un personnage en milieu liquide ceux-ci ne se sont que la nage. Nous présentons une stratégie de contrôle de mouvement d'un personnage virtuel en immersion partielle dans un liquide. L'effet des liquides sur le mouvement du personnage est modélisé à l'aide de formules d'hydrodynamiques simples. Notre contrôleur permet de combiner différents styles de marches, d'assurer l'équilibre par le placement intelligent du pied et d'assurer le contrôle précis de la vitesse du personnage. Le controler a été test dans une situ de manche dans un niveau d'eau. dire que on a  fait de l'opti sur 4 niveau. 
-A la suite de cette optimisation nous avons obtenu un contrôleur capable de s'adapter automatiquement à ..... une quantité de liquide, variation de densité, variations de vitesses désirée...
-\keywords{*We would like to encourage you to list your keywords within
-the abstract section*}
+ L'animation basée physique est de plus en plus étudiée car elle permet de réaliser les interactions avec l'environnement beaucoup plus simplement. Bien qu'il existe des contrôleurs permettant la simulation des interaction d'un personnage en milieu liquide ceux-ci ne se sont que la nage. Nous présentons une stratégie de contrôle de mouvement d'un personnage virtuel en immersion partielle dans un liquide. L'effet des liquides sur le mouvement du personnage est modélisé à l'aide de formules d'hydrodynamiques simples. Notre contrôleur permet de combiner différents styles de marches, d'assurer l'équilibre par le placement intelligent du pied et d'assurer le contrôle précis de la vitesse du personnage. Nous avons déterminé les paramètre optimaux pour diverses critères d'évaluations à l'aide d'une phase d'optimisation. Cette optimisation a été effectuée sur cinq niveaux de liquide régulièrement répartis.
+A la suite de cette optimisation nous avons obtenu un contrôleur capable de s'adapter automatiquement aux variations de niveau d'immersion, de densité du liquide, de vitesses désirée. Notre contrôleur présente également une robustesse correcte à l'application de forces externes
+\keywords{***We would like to encourage you to list your keywords within
+the abstract section***}
 \end{abstract}
 
 \section{Introduction}
 %
-La simulation de mouvements humains réaliste est un point clef dans la création d'un environnement virtuel.*faire une phrase qui dit ce qu'est un monde complexe et une disant comment l'anim ciné gère les interactions dire que historiquement on a util la ciné en prems*.   Les mondes virtuels étant de plus en plus complexes il est devenu difficile d'arriver à réaliser des interactions réalistes entre les personnages animés et l'environnement à l'aide des méthodes d'animation cinématique. *dire que les anim physique util des force et pk ça permet de bien avoir les interactions* Un nombre grandissant de travaux se portent maintenant sur la création de contrôleurs basés physiques. Bien que ceux-ci permettent d'obtenir naturellement les interaction avec l'environnement, la manipulation du personnage devient bien plus complexe car l'on a pas de contrôle direct sur la position des membres des personnages animés.
 
-Le défi principal d'un contrôleur physique est de permettre la paramétrisation haut niveau du système. Ces paramètres peuvent être vitesse, heading, .... Le besoin de simuler un très grand nombre de styles de déplacement (marche, course, saut, ...) rend la création d'un contrôleur générique extrêmement difficile. De même la maitrise des interactions avec l'environnement ajoute également une très grande complexité au système. C'est pourquoi les contrôleurs existants se concentrent sur l'étude d'un nombre limité de styles de déplacement et d'interactions avec l'environnement *ref à l'état de l'art*. Les travaux que nous présentons dans ce document se focalisent sur le contrôle de la marche dans des conditions d'immersion partielle du bas du corps dans un liquide.*l'objectif scientifique que nous nous somme fixé est de def et d'implémenter les mécanismes nécessaire à un contrôler physique permettant l'anim temps réel d'un perso virtuel en interaction avec un liquide* . Notre contrôleur est également capable d'une grande liberté de style de marche et d'un contrôle précis de la vitesse de déplacement du personnage.
+%Il existe deux catégories de méthodes d'animation. La première, l'animation cinématique, décrit simplement les trajectoires des articulations au cours du %temps. Bien que facile à réaliser cette méthode possède le défaut de rendre les interactions avec un environnement dynamique très compliquées. La %seconde catégorie, l'animation basée physique, aborde le problème sous un tout autre angle.
 
-Notre stratégie de contrôle s'inspire de plusieurs contrôleurs existants. Notre système est composé de cinq composants clefs. Le premier est une modélisation des effet des liquides sur le personnage à l'aide de formulation de concepts d'hydrodynamique.
-Le second est un système permettant d'interpoler plusieurs trajectoires cibles en fonction de la vitesse désirée. Le troisième permet l'adaptation du contrôle du mouvement pour de prendre en compte l'influence du liquide.  Le quatrième consiste à planifier le mouvement de la jambe en phase de vol. Le dernier gère le contrôle précis de la vitesse et de l'équilibre.
+La simulation de mouvements humains réaliste est un point clef dans la création d'un environnement virtuel. Au cours des années, les environnements utilisés sont devenus de plus en plus diversifiés et on trouve maintenant des environnements complexes présentant un nombre important d'éléments pouvant influencer le déplacement du personnage. La première méthode mise en place pour gérer les déplacements du personnage, appelée animation cinématique, consistait à définir précisément toutes les positions qu'occupe le personnage au cours du mouvement. Les interactions avec l'environnement étaient donc définies une à une par une série de positions exactes.  Les mondes virtuels étant de plus en plus complexes il est devenu difficile d'arriver à réaliser des interactions réalistes entre les personnages animés et l'environnement à l'aide des méthodes d'animation cinématique. L'animation basée physique utilise des phénomènes physiques (force et moments) pour manipuler le personnage. Cela permet de ne pas avoir un mouvement qui sera directement impacté par l'environnement et non une trajectoire fixe ce qui simplifie la gestion des environnements complexes. Un nombre grandissant de travaux se portent maintenant sur la création de contrôleurs basés physiques. Bien que ceux-ci permettent d'obtenir naturellement les interaction avec l'environnement, la manipulation du personnage devient bien plus complexe car l'on a pas de contrôle direct sur la position des membres des personnages animés.
 
-Finir par le plan du document (mettre des voir dnas le paragraphé précédent)
-mettre le plan général sans rentrer dnas les sous sections
+Le défi principal d'un contrôleur physique est de permettre la paramétrisation haut niveau du système. Ces paramètres peuvent par exemple être la vitesse, la direction du mouvement ou le style de déplacement. Le besoin de simuler un très grand nombre de styles de déplacement (marche, course, saut, ...) rend la création d'un contrôleur générique extrêmement difficile. De même la maitrise des interactions avec l'environnement ajoute également une très grande complexité au système. C'est pourquoi les contrôleurs existants se concentrent sur l'étude d'un nombre limité de styles de déplacement et d'interactions avec l'environnement  \cite{geijtenbeek2012interactive}. Les travaux que nous présentons dans ce document se focalisent sur le contrôle de la marche dans des conditions d'immersion partielle du bas du corps dans un liquide. Notre objectif scientifique est de définir et d'implémenter les mécanismes nécessaires à un contrôleur physique permettant l'animation en temps réel d'un personnage virtuel en interaction avec un liquide. Notre contrôleur est également capable d'une grande liberté de style de marche et d'un contrôle précis de la vitesse de déplacement du personnage.
+
+Notre stratégie de contrôle s'inspire de plusieurs contrôleurs existants. Notre système est composé de cinq composants clefs. Le premier est une modélisation des effet des liquides sur le personnage à l'aide de formulation de concepts d'hydrodynamique (section \ref{sec:model_fluide}).
+Le second est un système permettant d'interpoler plusieurs trajectoires cibles en fonction de la vitesse désirée (section \ref{sec:multi_state}). Le troisième permet l'adaptation du contrôle du mouvement pour de prendre en compte l'influence du liquide (section \ref{sec:grav_comp}).  Le quatrième consiste à planifier le mouvement de la jambe en phase de vol (section \ref{sec:IPM}). Le dernier gère le contrôle précis de la vitesse et de l'équilibre (section \ref{sec:speed_control}).
+
+Ce document s'organise suivant la structure suivante. La section \ref{sec:previous_works} présente l'état de l'art des domaines abordés. La vue d'ensemble de notre contribution se trouve dans la section \ref{sec:overview} . Les sections \ref{sec:model_physique} et \ref{sec:controler} présentent les détails de notre contrôleur. La méthode d'optimisation du contrôleur est présenté dans la section \ref{sec:optimisation}. Enfin, nous présentons nos résultats dans la section \ref{sec:resultats} et finirons ce document par une courte conclusion \ref{sec:conclusion}.
+
+Un lexique présentant les termes importants que nous utiliserons se trouve en annexe (section \ref{sec:lexique})
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 %
 \section{État de l'art}
+\label{sec:previous_works}
 %
 \subsection{Animation de personnages humains} 
-Pour pouvoir réaliser l'animation d'un personnage, il est nécessaire de disposer d'une structure représentant ce dernier. La structure la plus utilisée est un squelette modélisation du personnage utilise divers corps rigide reliés par des articulations. Chaque articulation dispose de un à trois degrés de liberté de rotation sur lesquels pourront être appliqués des moments. *expliquer coment le moment modifie l'angle $\tau=\alpha_i$* . Des limites sont mises en place sur les articulations (angles maximums, moments maximum) pour représenter les limites anatomiques du personnage. 
-%metre ces truc en intro
-%Il existe deux catégories de méthodes d'animation. La première, l'animation cinématique, décrit simplement les trajectoires des articulations au cours du %temps. Bien que facile à réaliser cette méthode possède le défaut de rendre les interactions avec un environnement dynamique très compliquées. La %seconde catégorie, l'animation basée physique, aborde le problème sous un tout autre angle.
+Pour pouvoir réaliser l'animation d'un personnage, il est nécessaire de disposer d'une structure représentant ce dernier. La structure la plus utilisée est un squelette modélisation du personnage utilise divers corps rigide reliés par des articulations. Chaque articulation dispose de un à trois degrés de liberté de rotation sur lesquels pourront être appliqués des moments. L'application d'un moment $\tau$ sur une articulation permet de générer une accélération angulaire $\alpha_i$ suivant la formule suivante $\tau=\alpha_i$. Des limites sont mises en place sur les articulations (angles maximums, moments maximum) pour représenter les limites anatomiques du personnage. 
  En animation physique On peut classer les interfaces de contrôle du squelette en trois catégories \cite{geijtenbeek2012interactive}:
 \begin{itemize}
 \item{Dans la première, le squelette est animé par l'application de moments aux des articulations.}
@@ -215,12 +218,13 @@ La marche en milieu aquatique a été le sujet de plusieurs études dans le mili
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Contributions}
+\label{sec:overview}
 
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.6]{strips/min_drag_25cm.png}
-\caption{Marche d'un personnage cherchant à minimiser les forces de résistance du liquide dans 25cm d'eau}
+\caption{Marche d'un personnage cherchant à minimiser les forces de résistance du liquide dans 25cm de liquide. La ligne bleu représente le niveau de liquide.}
 \label{fig:min_drag_25}
 \end{figure}
 
@@ -257,6 +261,8 @@ Le contrôle de la vitesse est obtenu à l'aide d'une force virtuelle similaire 
 
 %
 \section{Modèle physique}
+\label{sec:model_physique}
+
 \subsection{Modélisation du personnage}
 %
 \begin{figure}[h]
@@ -275,6 +281,7 @@ Le personnage utilisé est composé de corps solides simples (visible figure \re
 %
 \subsection{Modélisation des fluides}
 %
+\label{sec:model_fluide}
 Lorsque l'on déplace un corps solide à l'intérieur d'un fluide, ce dernier applique trois réactions principales sur le solide. La première est une force de résistance du fluide qui est produite par le déplacement du fluide fluide se trouvant sur la trajectoire du solide. La seconde est une force de friction entre le fluide et le solide. Ces deux réactions du fluide ont pour effet d'entraver le déplacement du solide. La dernière est la poussée d'Archimède, provenant des différences de pression sur la surface du solide, et a pour effet de repousser le solide vers la surface.
 Plutôt que de réaliser une modélisation réaliste du fluide (à l'aide des équation de Navier-Stokes par exemple), nous allons baser notre modèle sur la définition d'une hauteur de liquide et les formules de base de dynamique des fluides pour représenter l'influence du liquide sur le personnage. Notre modèle ne considère pas les perturbations du fluide provoquées par le déplacement du personnage. Cette modélisation a l'avantage d'être beaucoup moins couteuse en puissance de calcul ce qui nous permet de conserver une exécution en temps réel tout en permettant une simulation réaliste.
 %
@@ -303,6 +310,7 @@ F_{PA}=-V_i \rho g
 Le volume immergé \(V_i\) est calculé à l'aide du volume immergé des représentations physiques des différents membres du personnage.  Pour les sphères et les cylindres (jambes et orteils) le volume immergé est calculé en utilisant les formules de géométrie existantes. Pour les prismes droits (pieds) nous découpons le volume en voxels et faisons la somme des volumes des voxels dont le centre se trouve en dessous du niveau de l'eau.
 %
 \section{Contrôle du mouvement}
+\label{sec:controler}
 %
 Notre système se base sur la version du SIMBICON présentée par \cite{coros2010generalized}. Les angles des trajectoires pour les chevilles, le pelvis, le dos et la tête sont spécifiées dans le repère du personnage. Ce repère est équivalant au repère du monde à la différence qu'il est orienté de manière à ce que l'axe z corresponde à la direction que face le personnage. Les angles des trajectoires pour les épaules, les coudes, le genou de la jambe d'appui et les orteils sont spécifiés dans le repère local aux articulations.
 
@@ -321,6 +329,7 @@ $$
 Avec $f$ la trajectoire finale,$(f_1,V_1)$ et $(f_2,V_2)$ les deux trajectoires les plus proches de la vitesse désirée.
 % 
 \subsection{Compensateur de gravité}
+\label{sec:grav_comp}
 Notre système de compensation de gravité se base sur celui présenté par \cite{coros2010generalized}.Nous avons modifié ce système pour permettre la prise en compte d'un milieu liquide. En effet, du fait de la poussée d'Archimède le poids à supporter par le personnage est moins grand lorsqu'il est plongé dans un fluide. De ce fait au lieu de compenser le poids réel de chaque membre du personnage, il faut compenser le poids effectif (poids observable dans le fluide). Notre modification consiste donc à calculer la force résultant de la poussée d'Archimède sur chaque membre du personnage et de soustraire celle-ci à la force virtuelle à appliquer. Il parait intéressant de noter qu'il ne suffit pas simplement de diminuer l'intensité de la force à appliquer. En effet suivant la modélisation des membres du personnage, il est fréquent que la densité soit variable à l'intérieur de ceux-ci. Par exemple, dans notre modélisation seul les bras possèdent une densité uniforme. De ce fait le point d'application de la force  $F_{gc}$ compensant la gravité et celui de la force $F_{PA}$ causée par la poussée d'Archimède seront différent, ce qui nous oblige à déterminer le point d'application de la force finale $F$:
 $$
 F=F_{gc}- F_{PA}
@@ -382,12 +391,13 @@ Vu qu'il semble impossible d'utiliser une simple loi dépendant de la vitesse d�
 Ce système de contrôle de vitesse est extrêmement efficace et robuste. Cependant, si l'on utilise un $\Delta(x,z)$ trop élevé dans le but d'accélérer le personnage cela risque d'empêcher l'IPM de maintenir l'équilibre. C'est pourquoi nous avons mis une limite aux valeurs du $\Delta(x,z)$. Nous fixons cette valeur à 0,09m, ce qui correspond à la valeur maximale permettant de conserver l'équilibre avec un personnage immergé jusqu'à la taille dans de l'eau, les autres situations de test supportant des valeurs plus élevées cela parait être une bonne sécurité. 
 %
 
-\subsection{Optimisation hors ligne}
+\section{Optimisation hors ligne}
+\label{sec:optimisation}
 %
 Le nombre très important de paramètres que prend le système en entrée rend très difficile la recherche manuelle d'une solution optimale à un problème. C'est pourquoi ce travail de recherche est effectué à l'aide d'un système d'optimisation hors ligne. Le principe est d'explorer l'espace des paramètres et conserver la "meilleure solution" trouvée. La notion de "meilleure solution"  est définie à l'aide d'une fonction objectif qui permettra d'évaluer la qualité de chaque ensemble de paramètres. Par exemple, il est possible de faire la somme des moments appliqués aux articulations durant un certain temps pour obtenir une fonction évaluant l'énergie dépensé par le personnage. L'exploration de l'espace des paramètres peut se faire de manière aléatoire, mais il est plus rapide d'utiliser un algorithme tel que la descente de gradient. L'optimisation hors ligne permet donc d'obtenir un mouvement optimal pour les critères définis dans la fonction d'évaluation. Ce qui veut dire que le mouvement obtenu possèdera des caractéristiques propres à la fonction d'évaluation qui a été utilisée.
 
 
-Les paramètres que nous optimiserons sont la trajectoire du pied en phase de vol (positions) et les trajectoires angulaires associées aux éléments suivants:
+Les paramètres que nous optimiserons sont la trajectoire du pied en phase de vol (positions) et les trajectoires angulaires selon l'axe coronal associées aux éléments suivants:
 \begin{itemize}
 \item{le pelvis;}
 \item{l'articulation du dos;}
@@ -396,10 +406,10 @@ Les paramètres que nous optimiserons sont la trajectoire du pied en phase de vo
 \item{le genou d'appui;}
 \end{itemize}
 
-Nous n'optimisons pas les articulations des bras et du cou de manière à obtenir un modèle à partir duquel un utilisateur peut spécifier des actions utilisant ces membres. Nous n'optimisons pas non plus les gains des différents PD-contrôleurs. Nous utilisons des gains qui ont été génériques*réécrire*
+Nous n'optimisons pas les articulations des bras et du cou de manière à obtenir un modèle à partir duquel un utilisateur peut spécifier des actions utilisant ces membres. Les gains des différents PD-contrôleurs ne sont pas optimisés. Nous utilisons des gains génériques permettant une grande variété de mouvements. 
 
 %
-\subsubsection{Fonction objectif}
+\subsection{Fonction objectif}
 %
 Nous allons construire notre fonction d'optimisation $f_{eval}$ en utilisant d'une part une combinaison pondérée de critères d'évaluation représentant un but physique et d'autre part des heuristiques. Notre fonction d'évaluation se base sur trois critères 
 \begin{equation}
@@ -409,7 +419,7 @@ f_{eval}=\sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{drag}
 Chacune des $f_i$ est normalisée par la valeur moyenne obtenue en effectuant une série optimisation du système en utilisant uniquement la fonction $f_i$ comme fonction d'évaluation. Les poids $\alpha$, $\beta$, $\gamma$ nous permettent de choisir facilement l'importance qu'aura une composante dans le résultat final. Les critères d'évaluation que nous utilisons sont les suivants:
 \begin{itemize}
 \item{\textit{Minimisation de l'énergie} ($f_{energ}$). Le but de ce critère est de faire tendre le résultat vers une simulation utilisant le minimum d'énergie dépensé par le personnage. Cela nous permettra d'éviter les mouvement superflus. Ce critère calculé par la calcul par le calcul de la somme des moments aux articulations $f_{energ}=\sum_{\substack{i}}{\tau_i}$} 
-\item{\textit{Minimisation de la résistance de l'eau}. ($f_{drag}$) Ce critère aura pour effet de favoriser les mouvements du personnage effectués hors de l'eau et de chercher des trajectoires évitant les pics de vitesses en dessous de l'eau. Ce critère est calculé par la somme des moments produits par la force de résistance de l'eau sur chacune des articulations . Ces moment sont calculé par le produit vectoriel entre les force de résistance de l'eau et le vecteur allant de l'articulation au point d'application de la force; $f_{energ}=\sum_{\substack{i}}\sum_{\substack{j}}((P_j(x,y,z)-P_i(x,y,z)) \otimes  F_j)$ avec $P_j(x,y,z)$ le point d'application de la force et $P_i(x,y,z)$ la position de l'articulation affectée.}
+\item{\textit{Minimisation de la résistance du liquide}. ($f_{drag}$) Ce critère aura pour effet de favoriser les mouvements du personnage effectués hors du liquide et de chercher des trajectoires évitant les pics de vitesses en dessous du liquide. Ce critère est calculé par la somme des moments produits par la force de résistance du liquide sur chacune des articulations . Ces moment sont calculé par le produit vectoriel entre les force de résistance du liquide et le vecteur allant de l'articulation au point d'application de la force; $f_{energ}=\sum_{\substack{i}}\sum_{\substack{j}}((P_j(x,y,z)-P_i(x,y,z)) \otimes  F_j)$ avec $P_j(x,y,z)$ le point d'application de la force et $P_i(x,y,z)$ la position de l'articulation affectée.}
 \item{\textit{Minimisation des accélérations angulaires} ($f_{acc}$). Notre but est de parvenir à obtenir un mouvement et des trajectoires à reproduire lisses. Lors de test préliminaires nous avons observé des fortes variations dans les positions désirées pour certaines articulations (i.e. la cheville d'appui). Ceci nous fait penser que la méthode d'évolution avait apprit des détails optimisant le mouvement mais le rendant moins robuste. En introduisant ce critère nous voulons minimiser ces détails pour rendre le contrôler plus robuste. Ce critère est calculé par la somme des accélérations angulaires des poses désirées $\ddot{\theta_d}_i$ et de celles du mouvement observé $\ddot{\theta}_i$.  Pour donner une plus grande importance au mouvement final avons attribué une pondération de 0.25 aux accélérations des poses désirées et une pondération de 0.75 aux accélérations du mouvement observé: $f_{acc}=0.25*\sum_{\substack{i}}\ddot{\theta_d}_i+0.75*\sum_{\substack{i}}\ddot{\theta}_i$ }
 \end{itemize}
 
@@ -421,20 +431,21 @@ $$
 Enfin nous ajoutons des heuristiques nous autorisant à définir les limites strictes des solutions que nous acceptons:
 \begin{itemize}
 \item{\textit{vérification de la vitesse} ($f_{speed}$). Bien que nous disposons de systèmes nous assurant que la vitesse spécifiée sera la vitesse respectée (section \ref{sec:speed_control}), il est possible que l'optimisation arrive à trouver des combinaisons de paramètres qui rendent la convergence vers la vitesse désirée très longue voire impossible (par exemple si l'on a une vitesse positive avec des paramètres pour aller vers l'arrière). Cette heuristique est représentée par une pénalisation très élevée si la vitesse courante et la vitesse désirée excède 1\% de la vitesse désirée: si $||V-V_d||>0.01*||V_d||$ alors $f_{speed}=10^{10}$}
-\item{\textit{stabilité du mouvement} ($f_{balance}$).  Cette heuristique sert à nous assurer que nous nous trouvons bien dans un état stable, c'est à dire un état utilisant la spécification désirée du pied en phase de vol pour le début du pas. Cette heuristique est représentée par une pénalisation très élevée si l'on détecte un pas pour lequel le mouvement est déclaré instable alors $f_{balance}=10^{15}$  }
+\item{\textit{stabilité du mouvement} ($f_{balance}$).  Cette heuristique sert à nous assurer que nous nous trouvons bien dans un état stable, c'est à dire un état utilisant la spécification désirée du pied en phase de vol pour le début du pas. Cette heuristique est représentée par une pénalisation très élevée si l'on détecte un pas pour lequel le mouvement est déclaré instable alors $f_{balance}=10^{15}$.  }
 \end{itemize}
  La version complète de notre fonction objectif est donc:
 
 \begin{equation}
-f_{eval}() =\sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) + f_{speed} + f_{balance}
+f_{eval}() =\sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) \\
++ f_{speed} + f_{balance}
 \label{eq:complete_eval}
 \end{equation}
 
 
 
 %
-\subsubsection{Méthode d'évolution des paramètres}
-Nous nous trouvons dans le cas d'un système espace complexe de variables avec de nombreux minimum locaux. De manière similaire à de nombreux articles concernant l'animation basée physique (*citer 3/4 articles*) nous utiliserons la méthode de "covariance matrix adapation" (CMA) \cite{hansen2006cma} pour explorer l'espace des solutions. CMA est une méthode d'évolution cherchant à apprendre la matrice de covariance de l'espace de recherche à l'aide d'un échantillonnage aléatoire.
+\subsection{Méthode d'évolution des paramètres}
+Nous nous trouvons dans le cas d'un système espace complexe de variables avec de nombreux minimum locaux. De manière similaire à de nombreux travaux concernant l'animation basée physique \cite{geijtenbeek2012simple,tan2011articulated} nous utiliserons la méthode de "covariance matrix adapation" (CMA) \cite{hansen2006cma} pour explorer l'espace des solutions. CMA est une méthode d'évolution cherchant à apprendre la matrice de covariance de l'espace de recherche à l'aide d'un échantillonnage aléatoire.
 
 
 
@@ -443,69 +454,145 @@ Nous nous trouvons dans le cas d'un système espace complexe de variables avec d
 
 %
 \section{Résultats}
+\label{sec:resultats}
 %
 \subsubsection{Implémentation}
-Le moteur physique utilisé est "Open Dynamics Engine" (ODE). La simulation physique s'effectue selon un pas de temps de 0,0005s. Seul le modèle humain présenté précédemment est utilisé pour les tests. Les collisions entre les différentes parties du personnage ne sont pas prises en compte. Les gains des PD-contrôler utilisés sont repris des fichiers de configurations de travaux précédents \cite{coros2009robust}. La modélisation physique du personnage est également identique à celle utilisée par \cite{coros2009robust}. Les moments aux articulations sont limités à $|\tau|<200Nm$ pour les hanches et les genoux et à $|\tau|<100Nm$ pour les autres articulations.
+Le moteur physique utilisé est "Open Dynamics Engine" (ODE). La simulation physique s'effectue selon un pas de temps de $5*10^{-4}s$. Seul le modèle humain présenté précédemment est utilisé pour les tests. Les collisions entre les différentes parties du personnage ne sont pas prises en compte. Les gains des PD-contrôler utilisés sont repris des fichiers de configurations de travaux précédents \cite{coros2009robust}. La modélisation physique du personnage est également identique à celle utilisée par \cite{coros2009robust}. Les moments aux articulations sont limités à $|\tau|<200Nm$ pour les hanches et les genoux et à $|\tau|<100Nm$ pour les autres articulations.
 Les simulations sont effectuées avec une implémentation en single-thread sur une machine disposant de 8Go de mémoire RAM et une processeur i5 2.5GHz.
 
-La présentation de nos résultats s'organise suivant deux étapes. La première consiste à effectuer plusieurs optimisations en utilisant différentes combinaisons de poids dans la fonction d'évaluation. Nous commencerons par étudier l'impact de chaque fonction objectif élémentaire \ref{eq:simple_objective}. Puis nous étudierons plusieurs compositions versions de la fonction d'optimisation. La seconde sera d'utiliser la combinaison que nous estimerons comme optimale pour créer un contrôler pouvant supporter les variations de vitesse désirée et les variations de niveau de fluide. Nous testerons ensuite la robustesse de ce contrôler à l'application de forces externes et le changement de vitesse coronale.
+La présentation de nos résultats s'organise suivant deux étapes. La première consiste à effectuer plusieurs optimisations en utilisant différentes combinaisons de poids dans la fonction d'évaluation. Nous commencerons par étudier l'impact de chaque fonction objectif élémentaire (équation \ref{eq:simple_objective}). Puis nous étudierons plusieurs versions de la fonction d'optimisation. La seconde sera d'utiliser la combinaison que nous estimerons comme optimale pour créer un contrôleur pouvant supporter les variations de vitesse désirée et les variations du niveau de fluide. Nous testerons ensuite la robustesse de ce contrôler à l'application de forces externes, à des modifications du milieu liquide et à des changements de vitesse désirée. Nous encourageons le lecteur à visionner la vidéo accompagnant ce document pour une meilleure vision des résultats.
 
 \subsection{étude de la fonction d'évaluation}
 
-Durant cette partie nous effectuerons pour chaque version de la fonction d'évaluation 5 simulations. Chaque simulation sera effectuée un niveau de liquide différents. Les niveau de liquides étudiés sont 0, 0.25, 0.5, 0.75 et 1 (les valeurs sont en mètres). Nous effectuerons nos simulations dans un liquide équivalent à de l'eau (masse volumique $\rho =1000kg.m^{-3}$ et coefficient de viscosité  $\mu =1$). Sauf contre indication les simulations sont effectuées pour une vitesse de $0.7m.s^{-1}$. Nous étudions d'abord l'influence de chaque critère d'optimisation sur le mouvement.
+Durant cette partie nous effectuerons pour chaque version de la fonction d'évaluation cinq simulations. Chaque simulation sera effectuée un niveau de liquide différent. Les niveau de liquides étudiés sont 0, 0.25, 0.5, 0.75 et 1 (les valeurs sont en mètres). Nous effectuerons nos simulations dans un liquide équivalent à de l'eau (masse volumique $\rho =1000kg.m^{-3}$ et coefficient de viscosité  $\mu =1$). Sauf contre indication les simulations sont effectuées pour une vitesse de $0.7m.s^{-1}$. Nous étudions d'abord l'influence de chaque critère d'optimisation sur le mouvement.
 
 \subsubsection{Étude de la minimisation de l'énergie}
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.37]{strips/min_torque_25cm.png}
-\includegraphics[scale=0.5]{strips/min_torque_75cm.png}
-\caption{Marche d'un personnage cherchant à minimiser l'énergie dépensée du liquide dans 25cm d'eau (gauche) et dans 75cm d'eau (droite)}
+\includegraphics[scale=0.3]{strips/min_torque_25cm.png}
+\includegraphics[scale=0.4]{strips/min_torque_75cm.png}
+\caption{Marche d'un personnage cherchant à minimiser l'énergie dépensée du liquide dans 25cm de liquide (gauche) et dans 75cm de liquide (droite)}
 \label{fig:min_energ}
 \end{figure}
 
 
-Cette version ne prend en compte que la composante cherchant à minimiser l'énergie dépensée par le personnage. Les résultats que nous attendons est sont des mouvements cherchant à rester un maximum au fond de l'eau.
+Ce critère ne prend en compte que l'énergie dépensée par le personnage. Les résultats que nous attendons sont des mouvements cherchant à rester un maximum au fond du liquide.
 
-Comme nous nous y attendions le personnage lève très peu le pied en phase de vol lorsque le niveau d'eau est faible \ref{fig:_energ} (gauche). Nous remarquons tout de même une augmentation de la hauteur des pas dès que le niveau d'eau atteint les genoux \ref{fig:_energ} (droite). *mettre expliquation hypothétique?*
+Comme nous nous y attendions le personnage lève très peu le pied en phase de vol lorsque le niveau de liquide est faible (figure \ref{fig:min_energ} (gauche)). Nous remarquons tout de même une augmentation de la hauteur des pas dès que le niveau du liquide atteint les genoux (figure \ref{fig:min_energ} (droite)). Ce changement est probablement due à l'action du liquide sur la jambe. Pour éviter de gaspiller de l'énergie en déplaçant le tibias avec un angle provoquant une forte opposition du liquide, le contrôleur préfère utiliser de l'énergie pour lever le pied de manière à aligner légèrement le tibias sur le sens du mouvement. 
 
-\subsubsection{Étude de la minimisation de la résistance de l'eau}
+\subsubsection{Étude de la minimisation de la résistance du liquide}
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.5]{strips/min_torque_75cm.png}
-\includegraphics[scale=0.37]{strips/min_drag_25cm_from_back.png}
-\caption{Marche d'un personnage cherchant à minimiser l'opposition du liquide au mouvement dans 75cm d'eau (gauche) et dans 25cm d'eau vue de dos (droite) *Attention l'img de droite n'est pas la bonne car je n'ai pas encore le controler du 75cm pr le drag*}
+\includegraphics[scale=0.4]{strips/min_drag_75cm.png}
+\includegraphics[scale=0.4]{strips/min_drag_25cm_from_back.png}
+\caption{Marche d'un personnage cherchant à minimiser l'opposition du liquide au mouvement dans 75cm de liquide (haut) et dans 25cm de liquide vue de dos (bas)}
 \label{fig:min_drag2}
 \end{figure}
 
-Cette version ne prend en compte que la composante cherchant à minimiser la l'effet de la résistance de l'eau. Cette version ne prenant en compte que le drag cela veux dire que pour une hauteur d'eau de 0 la fonction d'évaluation est inutile, ce qui fait que nous n'étudierons donc pas ce cas. Les résultats que nous attendons est sont des mouvements cherchant à éviter un maximum le contact avec l'eau, donc un personnage cherchant à sortir le jambes de l'eau. On s'attend à apercevoir qu'après un certain niveau d'eau il devient impossible de sortir les jambes de l'eau et donc le personnage cherche à effectuer des mouvements les moins amples et les moins rapides possible dans l'eau. 
+Cette version ne prend en compte que la résistance du liquide. Cela veux dire que pour une hauteur de liquide de 0m la fonction d'évaluation est inutile, ce qui fait que nous n'étudierons donc pas ce cas. Les résultats que nous attendons sont des mouvements cherchant à éviter un maximum le contact avec le liquide, donc un personnage cherchant à sortir les jambes du liquide. On s'attend à apercevoir qu'après un certain niveau de liquide il devient impossible de sortir les jambes du liquide et donc le personnage cherche à effectuer des mouvements les moins amples et les moins rapides possible dans l'eau. 
  
-Comme nous nous y attendions le personnage cherche bien à sortir le pied en phase de vol de l'eau \ref{fig:min_drag_25}, ce phénomène est déjà presque impossible à une hauteur de 0,5m. Au dessus de 0,5m le contrôle choisit de ne plus lever la jambe et cherche à obtenir le mouvement optimal en restant au fond du liquide  \ref{fig:min_drag_25} (gauche). Il est également intéressant de noter que le personnage cherche à aligner le tibias avec le sens du déplacement pour éviter que l'eau applique une résistance dessus. Ce phénomène est particulièrement remarquable dans la phase de levée du pied. Pour les niveau d'eau ou le personnage cherche à sortir le pied hors de l'eau on remarque que le pied a une trajectoire assez courbée vers l'intérieur du personnage  \ref{fig:min_drag2} (droite). Ce phénomène doit probablement servir à lever le pied aussi haut que possible mais il ne donne pas un résultat visuellement réaliste.  
+Comme nous nous y attendions le personnage cherche bien à sortir le pied en phase de vol du liquide (figure \ref{fig:min_drag_25}), ce phénomène est déjà presque impossible à une hauteur de 0,5m. Au dessus de 0,5m le contrôle choisit de ne plus lever la jambe et cherche à obtenir le mouvement optimal en restant au fond du liquide (figure \ref{fig:min_drag_25} (gauche)). Il est également intéressant de noter que le personnage cherche à aligner le tibias avec le sens du déplacement pour éviter que l'eau n'applique une résistance dessus. Ce phénomène est particulièrement remarquable dans la phase de levée du pied. Pour les niveau de liquide ou le personnage cherche à sortir le pied hors du liquide on remarque que le pied a une trajectoire assez courbée vers l'intérieur du personnage (figure \ref{fig:min_drag2} (droite)). Ce phénomène doit probablement servir à lever le pied aussi haut que possible mais il ne donne pas un résultat visuellement réaliste.  
 
 \subsubsection{Minimisation des accélérations angulaires}
-Cette version ne prend en compte que la composante pénalisant les accélérations élevées. Nous nous attendons à trouver un résultat proche de ceux obtenus pour $f(1,0,0)$. En effet, obtenir des accélérations élevée demanderait des torques élevés. La différence que nous attendons principalement est au niveau de la trajectoire désirée de la cheville d'appui. Nous nous attendons à un résultat ayant bien moins de variations.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.4]{strips/min_acc_75cm.png}
+\caption{Marche d'un personnage cherchant à minimiser l'opposition les accélérations angulaires dans 75cm de liquide.}
+\label{fig:min_acc}
+\end{figure}
 
-Comme prévu on remarque que les résultats sont très similaires à ceux obtenus pour $f(1,0,0)$. Le personnage conserve le pied tellement près du sol que même une faible variation du milieu provoque une chute du personnage du fait d'un contact prématuré du pied en phase de vol avec le sol. Contrairement à ce que nous espérions nous observons toujours des variations assez importante sur la trajectoire de la cheville d'appui. Cela veux dire que ces variations on un importance plus grande que ce que nous pensions.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{strips/stance_ankle_min_torque.png}
+\includegraphics[scale=0.5]{strips/stance_ankle_min_acc.png}
+\caption{Trajectoires cibles pour la cheville pour le critère de minimisation d'énergie (gauche) et le critère de minimisation des accélérations angulaires (droite)}
+\label{fig:traj_ankle_min_torque}
+\label{fig:traj_ankle_min_acc}
+\end{figure}
+Ce critère ne prend en compte que la composante pénalisant les accélérations élevées. Nous nous attendons à trouver un résultat proche de ceux obtenus pour le critère de minimisation de l'énergie. En effet, obtenir des accélérations élevée demanderait des torques élevés. La différence que nous attendons principalement est au niveau de la trajectoire désirée de la cheville d'appui. Nous nous attendons à observer une courbe bien plus lisse que celle observée pour le critère de minimisation de l'énergie.
 
-Maintenant nous allons étudier quelques combinaisons de la fonction d'évaluation \ref{eq:complete_eval}  Nous utiliserons la dénomination suivante lorsque nous voulons nous référer à une des combinaison $f(\alpha,\beta,\gamma)$. Dans cette partie nous ne réétudierons pas les niveaux d'eau pour lesquels les résultats étaient similaires pour les trois critères d'optimisation (0, 0.75 et 1) car une combinaison des résultat donnerais de toute façon le même résultat. Donc nous n'étudierons que les niveau d'eau suivants 0,25 et 0,5. Le but de cette étude et de trouver une combinaison permettant d'obtenir un mouvement fortement conditionné par la présence du liquide, dépensant une quantité d'énergie assez faible et ne présentant pas d'accélérations brusques.
+On remarque que le mouvement obtenu lève le pied en phase de vol moins haut que lors de l'utilisation du critère de minimisation de l'énergie. On remarque également que cette fonction pousse plus à pencher le torse pour gagner de la vitesse.
+ Contrairement à ce que nous espérions nous observons toujours des variations plus importantes sur la trajectoire de la cheville d'appui avec ce critère (voir figure \ref{fig:traj_ankle_min_acc} (droite)). Je pense que c'est du au fait que vue que le pied en phase de vol est très proche du sol le contrôler à besoin d'assurer un équilibre très précis pour éviter que celui-ci ne touche le sol.
+
+
+Nous allons maintenant étudier quelques combinaisons de la fonction d'évaluation (équation \ref{eq:complete_eval}) Nous utiliserons la dénomination suivante lorsque nous voulons nous référer à une des combinaison $f(\alpha,\beta,\gamma)$. Dans cette partie nous ne réétudierons pas les niveaux de liquide pour lesquels les résultats étaient similaires pour les trois critères d'optimisation (0, 0.75 et 1) car une combinaison des résultats donnerais de toute façon le même résultat. Donc nous n'étudierons que les niveaux de liquide suivants 0,25 et 0,5. Le but de cette étude est de trouver une combinaison permettant d'obtenir un mouvement fortement conditionné par la présence du liquide, dépensant une quantité d'énergie assez faible et ne présentant pas d'accélérations brusques. 
 
 \subsubsection{étude de f(2,8,1)}
 
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{strips/2_8_1_25cm.png}
+\includegraphics[scale=0.35]{strips/2_8_1_25cm_from_back.png}
+\includegraphics[scale=0.4]{strips/2_8_1_50cm.png}
+\caption{Marche d'un personnage selon la fonction d'évaluation f(2,8,1) dans 25cm de liquide vu de coté (gauche) et vu de dos (droite) et dans 50cm de liquide vu de coté (bas). }
+\label{fig:f281}
+\end{figure}
+
+Tout d'abord on remarque que l'on conserve bien les caractéristiques du critère de minimisation de la résistance du liquide, c'est à dire que le personnage levé le pied même pour une hauteur de liquide élevée (figure \ref{fig:f281} (gauche) et figure \ref{fig:f281} (bas). Cependant on remarque qu'il y a toujours le mouvement latéral du pied en phase de vol sur une hauteur de 0.25m de liquide (voir figure \ref{fig:f281} (droite)). Nous allons donc tenter de diminuer l'influence du critère de minimisation de la résistance du liquide pour faire disparaître ce mouvement latéral.
+
 \subsubsection{étude de f(3,6,1)}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{strips/3_6_1_25cm.png}
+\includegraphics[scale=0.35]{strips/3_6_1_25cm_from_back.png}
+\includegraphics[scale=0.4]{strips/3_6_1_50cm.png}
+\caption{Marche d'un personnage selon la fonction d'évaluation f(3,6,1) dans 25cm de liquide vu de coté (gauche) et vu de dos (droite) et dans 50cm de liquide vu de coté (bas)}
+\label{fig:f361}
+\end{figure}
+
+Nous constatons que cette fois-ci il n'y à pas de mouvement latéral sur le pied lors de la marche dans 0.25m de liquide (voir figure \ref{fig:f361} (droite)). Nous avons toujours un mouvement fortement conditionné par l'impact du liquide (figure \ref{fig:f361} (gauche) et (bas)). Cependant on remarque tout de même que le personnage ne sort plus le pied du liquide lors de l'immersion dans 0.25m de liquide (figure \ref{fig:f361} (gauche)). Nous allons maintenant voir si diminuer encore l'influence du critère de minimisation de la résistance du liquide à une influence sur le résultat ou si celui-ci reste stable.
 
 \subsubsection{étude de f(4,5,1)}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.4]{strips/4_5_1_50cm.png}
+\caption{Marche d'un personnage selon la fonction d'évaluation f(4,5,1) dans 50cm de liquide.}
+\label{fig:f451}
+\end{figure}
 
-*faire un comparatif visuel des mouvement obtenus suivant le niv d'eau pr les diff combinaisons d'évaluations*
-*faire une comparaison en désactivant les systèmes créés*
-*si il y en a présenter les trucs qui peuvent être utilisé en tant que feed back*
-*faire une partie limitation*
+On remarque que cette combinaison de paramètre diminue la hauteur à laquelle le pied est levé même si celui-ci ne sort pas du liquide avec la fonction f(3,6,1) (voir figure \ref{fig:f451}). Nous sommes donc moins intéressé par cette fonction d'évaluation. 
 
 \subsection{étude du contrôleur complexe}
 
+Au vu des résultats précédents nous utiliserons la fonction d'évaluation f(3,6,1) pour la création du contrôleur complexe. Ce contrôleur sera créé en utilisant les trajectoire spécifiques aux vitesses $0,3m*s^{-1}$ et $0,7m*s^{-1}$. Nous utilisons un système similaire à celui utilisé pour la combinaison des courbes de vitesse pour combiner les courbes spécifiques à un niveau de liquide. Donc pour chacune des vitesses de référence nous aurons 5 trajectoires, une pour chacun des niveau de liquide suivants 0cm, 25cm, 50cm, 75cm, 100cm. Ce contrôleur permet une animation en temps réel. Nous observons un minimum de 27fps sur la totalité de nos conditions d'expérimentation.
+
+Avant de créer notre contrôler nous allons vérifier si l'on ne peut pas trouver une relation entre les trajectoires des différents niveaux de liquide utilisées par une articulation. L'existence de telles relations nous permettrait de simplifier la spécification nécessaire à notre contrôleur. Dans un premier temps nous allons regarder d'une manière globale si on peut trouver des articulations avec des trajectoires similaires sur plusieurs niveaux de liquide. Dans un second temps nous regarderons pour chaque point des trajectoires si l'on ne peut pas trouver une relation linéaire décrivant son évolution entre les différents niveaux de liquide.
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{trajs_swing_ankle.png}
+\caption{Comparaison des trajectoires cibles pour chaque niveau de liquide (en mètres) de la cheville en phase de vol. La trajectoire $avg$ est une moyenne des autres trajectoires à l'exception de la trajectoire du niveau de liquide 0m car trop différente des autres.}
+\label{fig:comp_traj_swing_foot}
+\end{figure}
+
+Nous ne trouvons une similarité entre les trajectoire de référence pour divers niveaux de liquide que pour l'articulation de la cheville en phase de vol (figure \ref{fig:comp_traj_swing_foot}). On peut voir sur le graphique qu'a l'exception de la courbe correspondant au personnage en dehors du liquide les courbes sont très similaires. Nous avons donc calculé la moyenne des courbe en ne prenant pas en compte le niveau de liquide 0m et utilisons cette nouvelle courbe en temps que trajectoire pour toutes les courbes de références des niveaux de liquides supérieurs ou égal à 0.25m. 
+
+Nous avons donc ensuite effectué une étude de l'évolution de l'angle de chaque point en fonction de la hauteur de liquide (voir annexe \ref{sec:evo_key_points_with_wlvl}). Nous ne considérons pas la cheville ne phase de vol car nous avons déjà proposé une solution pour prendre en compte les similitudes. On remarque que les points présentant une relation entre les niveaux de liquide sont isolés les un des autres. Nous pouvons tout de même observer que le point clef final de la trajectoire de l'articulation entre le pelvis et le torse est fortement corrélé avec la hauteur de liquide. Cette trajectoire n'étant composé que de deux points clef il nous semble intéressant de prendre en compte cette corrélation. Cette observation est particulièrement intéressante car cette trajectoire à un grand impact sur le mouvement du fait de la masse importante du torse. Nous implémentons cette corrélation à travers un système qui modifiera ce point dans les trajectoires selon la formule suivante $\theta_d=0.4623*x-0.0156$ avec $x$ la hauteur de liquide.
+
+\subsubsection{Contrôle du personnage et interactions avec l'environnement}
+
+Notre contrôleur permet la variation dynamique des vitesses désirées suivant les axes sagittal et coronal (***citer figure***). Il est également possible modifier de la largeur des pas au cours du mouvement (***citer figure***).
+
+Le contrôleur est capable de s'adapter aux variations de niveau de liquide ainsi qu'aux variations de propriétés physiques du liquide (densité, viscosité). Notre système est capable de supporter des forces externes simulées par l'intermédiaire de boules solides de 5kg projetées sur le personnage. 
+
+
+\subsection{Limitations}
+Notre contrôleur possède plusieurs limitations provenant de diverses origines. Une limitation majeure de notre système est la présence d'un seuil fixe permettant la détection des instabilités. Il est très dur d'obtenir un seuil adapté car suivant la situation il serait préférable d'avoir un seuil plus ou moins élevé. Durant la phase de convergence vers le mouvement stable il nous est nécessaire d'avoir un seuil élevé pour permettre au système d'évoluer assez rapidement à partir d'un position initiale potentiellement non adaptée au mouvement. Mais l'utilisation d'un seuil élevé lors de la phase d'équilibre empêche  une réaction efficace du personnage. 
+Une seconde limitation de notre système est qu'il n'assure pas un contact ferme entre le pied d'appuis et le sol. Ce phénomène est du au fait qu'il est très difficile d'obtenir une trajectoire de la cheville d'appui assurant un maintien correct du contact avec le sol. Il est fréquent que lors de nos simulations le personnage arrive à faire glisser le pied au sol. Ce phénomène est particulièrement visible lorsque l'on introduit un déséquilibre à l'aide d'une force externe. 
+Une troisième limitation est le besoin de définir plusieurs ensembles de trajectoires pour permettre un suivi correct de la vitesse en gardant un mouvement naturel. 
+Enfin le modèle simplifié que nous avons utilisé pour la simulation du liquide ne nous permet pas d'assurer que les mouvement obtenus sont parfaitement réalistes. Nous ne prenons pas en compte les perturbation du liquide provoquées par le personnage alors qu'il est probable que celle-ci soient non négligeables. Cette remarque est particulièrement justifiée pour les mouvement ou le personnage élève le pied en phase de vol hors du liquide ce qui provoque probablement des perturbations importantes du liquide.
+
 \section{Conclusion}
+\label{sec:conclusion}
 %
-*faire une conclusion qui contient la partie travaux futur*
+Nous avons présenté un contrôleur basé physique permettant l'animation d'un personnage bipède à travers un milieu liquide. Notre contrôleur se sert d'un ensemble de trajectoires cibles pour pouvoir adapter son style de déplacement aux conditions de l'environnement. Nous obtenons une marche robuste et un suivit précis de la vitesse désirée par l'intermédiaire d'un placement intelligent du pied et de l'utilisation de systèmes incrémentaux pour prendre en compte l'influence de l'environnement. Enfin nous avons utilisée une méthode d'optimisation hors ligne pour obtenir un déplacement caractéristique des différents niveaux de liquide considérés.
+Nous avons proposé une paramétrisation de notre contrôleur permettant l'adaptation dynamique du mouvement aux variations de vitesse désirée, aux changements de quantité de liquide ainsi qu'à la modification des propriétés physiques de ce dernier. Nous avons également montré un maintient de l'équilibre après application de forces externes.
+
+Nous pensons que des extensions du contrôleur sont possibles. L'ajout de contrôleurs supplémentaires sur les articulations clefs telles que la cheville d'appui permettrait de gagner en robustesse du mouvement. Une amélioration de la capacité à détecter la perte d'équilibre permettrait également au système de gagner grandement en robustesse. Il serait intéressant de mettre en place un modèle plus réaliste pour les liquides et de mettre en place des milieux déformables (tel que la neige) pour déterminer quels sont les composants manquants au système pour obtenir un déplacement réaliste. Enfin l'extension de notre contrôleur à de nouveaux déplacements tel que la course ou les déplacements statiques est une piste de travail intéressante. 
+
+La présentation d'un article cours pour la conférence ACM motion in games 2015 est prévu.
 %
 
 
@@ -516,5 +603,17 @@ Maintenant nous allons étudier quelques combinaisons de la fonction d'évaluati
 \bibliography{references}
 %
 \newpage
-\section{Annexe}
+
+\appendix
+\section{Lexique}
+\label{sec:lexique}
+\subsubsection{pas.} Nous définissons un pas comme le mouvement permettant de déplacer un pied en contact avec le sol à une nouvelle position présentant un contact avec le sol
+
+
+\section{Visualisation des styles de marches du contrôleur complexe pour les hauteurs de liquide et les vitesses de références}
+\label{sec:complex_controler}
+
+\section{Courbes d'évolutions des points clefs des trajectoires de référence en fonction du niveau de liquide}
+\label{sec:evo_key_points_with_wlvl}
+
 \end{document}

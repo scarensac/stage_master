@@ -36,6 +36,8 @@
 
 #define RefTrajectory std::pair<double, Trajectory1D*>
 #define RefTrajectories std::vector<RefTrajectory > 
+#define RefTrajectoriesMapItem std::pair<double, RefTrajectories>
+#define RefTrajectoriesMap std::vector<RefTrajectoriesMapItem>
 
 
 
@@ -49,7 +51,7 @@ public:
 	//this is the array of basis functions that specify the trajectories for the sagittal plane.
 	Trajectory1D baseTraj;
 	//this is the container that indicate the ref trajectories (the ref trajectories contain one traj for each speed)
-	RefTrajectories ref_trajectories;
+	RefTrajectoriesMap ref_trajectories;
 
 	//if this variable is set to true, then when the stance of the character is the left side, the 
 	//static target provided by this trajectory should be negated
@@ -138,7 +140,7 @@ public:
 	/**
 	This method is used to write a ref_trajectory to a file (the idx is the idx in the ref_trajectories vector)
 	*/
-	void writeRefTrajectory(FILE* f,int idx);
+	void writeRefTrajectory(FILE* f, int speed_idx, int liquid_lvl_idx);
 
 	/**
 		This method is used to write a trajectory to a file

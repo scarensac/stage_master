@@ -309,6 +309,6 @@ ConState 0
 
 startAtState 0
 startingStance left
-loadCharacterState ../data/controllers/bipV2/fWalkState.rs
+loadCharacterState ../../configuration_data/controllers/bipV2/fWalkState.rs
 
 

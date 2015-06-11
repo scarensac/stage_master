@@ -1,0 +1,537 @@
+PDParams
+#        joint name              Kp      Kd      MaxTorque    ScaleX        ScaleY        ScaleZ
+    root	3000.000000	300.000000	10000.000000	1.000000	0.200000	1.000000
+    pelvis_torso	200.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    lHip	300.000000	30.000000	10000.000000	1.000000	0.660000	1.000000
+    rHip	300.000000	30.000000	10000.000000	1.000000	0.660000	1.000000
+    torso_head	200.000000	20.000000	10000.000000	1.000000	0.200000	1.000000
+    lShoulder	20.000000	5.000000	10000.000000	0.500000	1.000000	1.000000
+    rShoulder	20.000000	5.000000	10000.000000	0.300000	1.000000	1.000000
+    lKnee	300.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    rKnee	300.000000	30.000000	10000.000000	1.000000	0.200000	1.000000
+    lElbow	5.000000	1.000000	10000.000000	0.200000	1.000000	1.000000
+    rElbow	5.000000	1.000000	10000.000000	0.200000	1.000000	1.000000
+    lAnkle	75.000000	10.000000	10000.000000	1.000000	0.200000	0.200000
+    rAnkle	75.000000	10.000000	10000.000000	1.000000	0.200000	0.200000
+    lToeJoint	10.000000	0.500000	10000.000000	1.000000	1.000000	1.000000
+    rToeJoint	10.000000	0.500000	10000.000000	1.000000	1.000000	1.000000
+/PDParams
+
+stanceHipDamping 25.000000
+stanceHipMaxVelocity 4.000000
+
+
+
+ConState 0
+	description Default state in the walking controller
+	nextState 0
+	transitionOn footDown
+	stateStance reverse
+	time 0.700000
+
+
+
+	trajectory root
+			strengthTrajectory
+				0.000000 1.000000
+			/strengthTrajectory
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.020000 0.034251
+				0.500000 0.100000
+				0.980000 0.082448
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.020000 -0.066571
+				0.500000 0.100000
+				0.980000 0.055228
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.020000 -0.142174
+				0.500000 0.100000
+				0.980000 -0.076916
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.020000 -0.014799
+				0.500000 0.004451
+				0.980000 -0.064509
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.020000 0.016989
+				0.500000 -0.076034
+				0.980000 0.092844
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory STANCE_Knee
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.020000 0.046406
+				0.250000 0.031582
+				0.500000 -0.001295
+				0.750000 -0.140236
+				1.000000 0.025816
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.020000 0.016813
+				0.250000 0.084606
+				0.500000 -0.062719
+				0.750000 0.007589
+				1.000000 -0.118968
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.020000 0.062597
+				0.250000 -0.016667
+				0.500000 -0.080356
+				0.750000 0.057460
+				1.000000 -0.160857
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.020000 0.152122
+				0.250000 -0.022401
+				0.500000 -0.101967
+				0.750000 0.177507
+				1.000000 0.058500
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.020000 0.332557
+				0.250000 0.268695
+				0.500000 -0.097163
+				0.750000 0.353124
+				1.000000 0.152033
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory SWING_Ankle
+	characterFrameRelative
+			strengthTrajectory
+				0.000000 1.000000
+			/strengthTrajectory
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			referenceLiquidLevel 0,0.25
+			baseTrajectory (0,)
+				0.000000 1.233485
+				0.100000 0.850723
+				0.200000 1.196324
+				0.300000 0.486652
+				0.400000 -0.125215
+				0.500000 -0.200739
+				0.600000 -0.423157
+				0.700000 -0.503559
+				0.800000 -0.589116
+				0.900000 -0.642184
+				1.000000 -0.413176
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0	1.50874225
+				0.1	1.15714575
+				0.2	1.2111145
+				0.3	0.54467225
+				0.4	0.0787495
+				0.5	-0.33750175
+				0.6	-0.0784435
+				0.7	-0.8133555
+				0.8	-0.416813
+				0.9	-0.6837175
+				1	-0.17052675
+			/baseTrajectory
+			
+		/component
+	/trajectory
+
+	trajectory STANCE_Ankle
+	characterFrameRelative
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			feedback linear
+				feedbackProjectionAxis 0.000000 0.000000 1.000000
+				cd 0.200000
+				cv 0.200000
+			/feedback
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.000000 0.209027
+				0.100000 -0.018592
+				0.200000 0.059525
+				0.300000 0.038831
+				0.400000 0.094003
+				0.500000 0.190734
+				0.600000 -0.067552
+				0.700000 -0.010010
+				0.800000 -0.063570
+				0.900000 -0.001359
+				1.000000 0.204332
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.000000 0.261686
+				0.100000 -0.196654
+				0.200000 0.071837
+				0.300000 0.090189
+				0.400000 0.097076
+				0.500000 0.217452
+				0.600000 -0.100039
+				0.700000 0.074153
+				0.800000 -0.099964
+				0.900000 0.166686
+				1.000000 0.090031
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.000000 0.374834
+				0.100000 -0.107178
+				0.200000 0.100212
+				0.300000 0.057328
+				0.400000 0.066118
+				0.500000 0.341715
+				0.600000 -0.126606
+				0.700000 -0.004586
+				0.800000 0.005771
+				0.900000 0.063547
+				1.000000 0.337461
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.000000 0.225103
+				0.100000 -0.245410
+				0.200000 0.059737
+				0.300000 0.239774
+				0.400000 0.066449
+				0.500000 0.475934
+				0.600000 -0.153221
+				0.700000 0.053707
+				0.800000 0.083610
+				0.900000 0.013263
+				1.000000 0.133251
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.000000 0.286087
+				0.100000 -0.084105
+				0.200000 0.314896
+				0.300000 0.075265
+				0.400000 0.014335
+				0.500000 0.405293
+				0.600000 -0.202032
+				0.700000 -0.148823
+				0.800000 0.107347
+				0.900000 -0.322561
+				1.000000 0.237105
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory swing_foot
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.000000 -0.074349
+				0.250000 -0.025958
+				1.000000 0.092069
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.000000 -0.004723
+				0.250000 -0.005539
+				1.000000 0.102099
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.000000 0.024129
+				0.250000 -0.067161
+				1.000000 0.183736
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.000000 0.207200
+				0.250000 -0.064342
+				1.000000 0.151172
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.000000 0.095072
+				0.250000 -0.041782
+				1.000000 0.230041
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.000000 0.920230
+				0.250000 0.792450
+				0.500000 0.876193
+				0.750000 0.928189
+				1.000000 1.006018
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.000000 0.882885
+				0.250000 0.721950
+				0.500000 0.721960
+				0.750000 0.850815
+				1.000000 0.944496
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.000000 0.978828
+				0.250000 0.672250
+				0.500000 0.480662
+				0.750000 0.707853
+				1.000000 0.901171
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.000000 0.947002
+				0.250000 0.814844
+				0.500000 0.760216
+				0.750000 0.825149
+				1.000000 0.881623
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.000000 1.121689
+				0.250000 0.768157
+				0.500000 0.711050
+				0.750000 0.796290
+				1.000000 0.848552
+			/baseTrajectory
+			
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.000000 -0.070334
+				0.100000 -0.129474
+				0.200000 -0.094233
+				0.300000 -0.010886
+				0.400000 0.110813
+				0.500000 0.091696
+				0.600000 0.160899
+				0.700000 0.159266
+				0.800000 0.189655
+				0.900000 0.345660
+				1.000000 0.080502
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.000000 -0.024515
+				0.100000 -0.147250
+				0.200000 -0.118002
+				0.300000 0.015927
+				0.400000 0.096065
+				0.500000 0.133099
+				0.600000 0.285392
+				0.700000 0.101372
+				0.800000 0.183386
+				0.900000 0.285531
+				1.000000 0.274214
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.000000 -0.061597
+				0.100000 -0.254835
+				0.200000 -0.156043
+				0.300000 0.056361
+				0.400000 0.115282
+				0.500000 0.178401
+				0.600000 0.365946
+				0.700000 0.153745
+				0.800000 0.108061
+				0.900000 0.232634
+				1.000000 0.244239
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.000000 -0.072433
+				0.100000 -0.224518
+				0.200000 -0.196080
+				0.300000 -0.099770
+				0.400000 -0.101944
+				0.500000 0.205633
+				0.600000 0.386189
+				0.700000 0.234749
+				0.800000 0.212169
+				0.900000 0.229949
+				1.000000 0.127905
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.000000 -0.250661
+				0.100000 -0.213650
+				0.200000 -0.289722
+				0.300000 -0.203432
+				0.400000 -0.103043
+				0.500000 -0.041350
+				0.600000 0.224285
+				0.700000 0.381094
+				0.800000 0.382928
+				0.900000 0.067472
+				1.000000 0.332731
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory velD
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 -0.101990
+				0.100000 -0.079447
+				0.200000 -0.050753
+				0.300000 -0.019128
+				0.400000 0.009525
+				0.500000 0.039115
+				0.600000 0.070550
+				0.700000 0.104562
+				0.800000 0.126682
+				0.900000 0.127107
+				1.000000 0.127107
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis -1.000000 0.000000 0.000000
+			baseTrajectory
+				0.000000 -0.102098
+				0.100000 -0.079525
+				0.200000 -0.050813
+				0.300000 -0.019107
+				0.400000 0.009763
+				0.500000 0.039525
+				0.600000 0.070504
+				0.700000 0.104713
+				0.800000 0.126300
+				0.900000 0.126866
+				1.000000 0.126866
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			baseTrajectory
+				0.000000 1.137980
+				0.100000 1.060700
+				0.200000 0.997118
+				0.300000 0.949819
+				0.400000 0.939078
+				0.500000 0.937889
+				0.600000 0.983864
+				0.700000 1.110905
+				0.802676 1.250226
+				0.909699 1.249705
+				1.000000 1.249705
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory STANCE_Shoulder
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance left
+			baseTrajectory
+				0.000000 1.570000
+				1.000000 1.570000
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory SWING_Shoulder
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.000000 1.570000
+				1.000000 1.570000
+			/baseTrajectory
+		/component
+	/trajectory
+
+	trajectory pelvis_torso
+	characterFrameRelative
+
+		component
+			rotationAxis 0.000000 1.000000 0.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.010033 0.000340
+				0.505017 -0.100323
+				0.986622 -0.001158
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 1.000000 0.000000 0.000000
+			referenceLiquidLevel 0,0.25,0.5,0.75,1
+			baseTrajectory (0,)
+				0.000000 0.140805
+				1.000000 -0.017151
+			/baseTrajectory
+			
+			baseTrajectory (0.25,)
+				0.000000 0.066456
+				1.000000 0.100584
+			/baseTrajectory
+			
+			baseTrajectory (0.5,)
+				0.000000 -0.036850
+				1.000000 0.193380
+			/baseTrajectory
+			
+			baseTrajectory (0.75,)
+				0.000000 -0.126909
+				1.000000 0.379726
+			/baseTrajectory
+			
+			baseTrajectory (1,)
+				0.000000 0.007741
+				1.000000 0.421208
+			/baseTrajectory
+		/component
+
+		component
+			rotationAxis 0.000000 0.000000 1.000000
+			reverseTargetAngleOnStance right
+			baseTrajectory
+				0.000000 0.000000
+				0.280602 0.015874
+				0.990000 0.000000
+			/baseTrajectory
+		/component
+	/trajectory
+/ConState
+
+
+startAtState 0
+startingStance right
+loadCharacterState ../../configuration_data/controllers/bipV2/speed_07__361/learning_walk_waterlvl0_state.rs
+ipmAlterationEffectiveness 1.000000
+virtualForceEffectiveness 1.000000
