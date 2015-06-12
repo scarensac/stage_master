@@ -77,7 +77,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*
 
 		SimGlobals::water_level = 0;
-		SimGlobals::velDSagittal = 0.7;
+		SimGlobals::velDSagittal = 0.3;
 
 
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
