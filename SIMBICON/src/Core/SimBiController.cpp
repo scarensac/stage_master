@@ -1762,8 +1762,14 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 		//I finish the calculation of the avg speed
 		avgSpeed_z /= timesVelSampled;
-		avgSpeed_x_left /= timesVelSampled;
-		avgSpeed_x_right /= timesVelSampled;
+		if (stance < 0){
+			avgSpeed_x_left /= timesVelSampled;
+		}
+		else{
+			avgSpeed_x_right /= timesVelSampled;
+		}
+		
+		
 
 		TrajectoryComponent* affected_component = NULL;
 
@@ -2037,10 +2043,10 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 				//*
 				//now we need to translate the curve depending on the speed it result in and the speed we want
-				double evo_speed = 0.1;
+				double evo_speed = 0.2;
 
 				//I'l simply divide by the ratio between the avg_speed and the velD
-				double traj_delta = ((avgSpeed_x_left + avgSpeed_x_right) - velDCoronal)* evo_speed;
+				double traj_delta = ((avgSpeed_x_left + avgSpeed_x_right)/2 - velDCoronal)* evo_speed;
 				for (int i = 0; i < nbr_values; ++i){
 					affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) - stance*traj_delta);
 				}
