@@ -1,0 +1,53 @@
+\BOOKMARK [0][-]{chapter.1}{Contr\364le du mouvement de marche de personnages virtuels en milieu liquide}{}% 1
+\BOOKMARK [1][-]{section.1.1}{Introduction}{chapter.1}% 2
+\BOOKMARK [1][-]{section.1.2}{\311tat de l'art}{chapter.1}% 3
+\BOOKMARK [2][-]{subsection.1.2.1}{Animation de personnages humains}{section.1.2}% 4
+\BOOKMARK [2][-]{subsection.1.2.2}{Contr\364le dans l'espace des articulations}{section.1.2}% 5
+\BOOKMARK [2][-]{subsection.1.2.3}{Ma\356trise de l'\351quilibre au cours de la marche}{section.1.2}% 6
+\BOOKMARK [2][-]{subsection.1.2.4}{Contr\364le de la vitesse}{section.1.2}% 7
+\BOOKMARK [2][-]{subsection.1.2.5}{D\351placement en milieu aquatique}{section.1.2}% 8
+\BOOKMARK [3][-]{section*.2}{Contr\364le du mouvement en milieu aquatique}{subsection.1.2.5}% 9
+\BOOKMARK [3][-]{section*.3}{Biom\351canique de la marche en milieu aquatique}{subsection.1.2.5}% 10
+\BOOKMARK [1][-]{section.1.3}{Contributions}{chapter.1}% 11
+\BOOKMARK [2][-]{subsection.1.3.1}{Vue globale du syst\350me}{section.1.3}% 12
+\BOOKMARK [1][-]{section.1.4}{Mod\350le physique}{chapter.1}% 13
+\BOOKMARK [2][-]{subsection.1.4.1}{Mod\351lisation du personnage}{section.1.4}% 14
+\BOOKMARK [2][-]{subsection.1.4.2}{Mod\351lisation des fluides}{section.1.4}% 15
+\BOOKMARK [3][-]{section*.4}{Forces hydrodynamiques}{subsection.1.4.2}% 16
+\BOOKMARK [3][-]{section*.5}{Pouss\351e d'Archim\350de}{subsection.1.4.2}% 17
+\BOOKMARK [1][-]{section.1.5}{Contr\364le du mouvement}{chapter.1}% 18
+\BOOKMARK [2][-]{subsection.1.5.1}{Combineur d'\351tat}{section.1.5}% 19
+\BOOKMARK [2][-]{subsection.1.5.2}{Compensateur de gravit\351}{section.1.5}% 20
+\BOOKMARK [2][-]{subsection.1.5.3}{Conservation de l'\351quilibre}{section.1.5}% 21
+\BOOKMARK [3][-]{section*.6}{Mod\350le du pendule invers\351}{subsection.1.5.3}% 22
+\BOOKMARK [2][-]{subsection.1.5.4}{Contr\364le de vitesse}{section.1.5}% 23
+\BOOKMARK [3][-]{section*.7}{Contr\364le de vitesse par force virtuelle}{subsection.1.5.4}% 24
+\BOOKMARK [3][-]{section*.8}{Alt\351ration des r\351sultats de l'IPM}{subsection.1.5.4}% 25
+\BOOKMARK [1][-]{section.1.6}{Optimisation hors ligne}{chapter.1}% 26
+\BOOKMARK [2][-]{subsection.1.6.1}{Fonction objectif}{section.1.6}% 27
+\BOOKMARK [2][-]{subsection.1.6.2}{M\351thode d'\351volution des param\350tres}{section.1.6}% 28
+\BOOKMARK [1][-]{section.1.7}{R\351sultats}{chapter.1}% 29
+\BOOKMARK [2][-]{section*.9}{Impl\351mentation}{section.1.7}% 30
+\BOOKMARK [2][-]{subsection.1.7.1}{\311tude de la fonction d'\351valuation}{section.1.7}% 31
+\BOOKMARK [3][-]{figure.1.8}{\311tude de la minimisation de l'\351nergie}{subsection.1.7.1}% 32
+\BOOKMARK [3][-]{figure.1.9}{\311tude de la minimisation de la r\351sistance du liquide}{subsection.1.7.1}% 33
+\BOOKMARK [3][-]{figure.1.11}{Minimisation des acc\351l\351rations angulaires}{subsection.1.7.1}% 34
+\BOOKMARK [3][-]{figure.1.12}{\311tude de f\(2,8,1\)}{subsection.1.7.1}% 35
+\BOOKMARK [3][-]{figure.1.13}{\311tude de f\(3,6,1\)}{subsection.1.7.1}% 36
+\BOOKMARK [3][-]{figure.1.14}{\311tude de f\(4,5,1\)}{subsection.1.7.1}% 37
+\BOOKMARK [2][-]{subsection.1.7.2}{\311tude du contr\364leur complexe}{section.1.7}% 38
+\BOOKMARK [3][-]{section*.16}{Contr\364le du personnage et interactions avec l'environnement}{subsection.1.7.2}% 39
+\BOOKMARK [2][-]{subsection.1.7.3}{Limitations}{section.1.7}% 40
+\BOOKMARK [1][-]{section.1.8}{Conclusion}{chapter.1}% 41
+\BOOKMARK [1][-]{section.A.1}{Lexique}{chapter.1}% 42
+\BOOKMARK [2][-]{section*.18}{pas.}{section.A.1}% 43
+\BOOKMARK [3][-]{section*.19}{phase descendante d'un pas.}{section*.18}% 44
+\BOOKMARK [3][-]{section*.20}{phase ascendante d'un pas.}{section*.18}% 45
+\BOOKMARK [3][-]{section*.21}{phase de vol.}{section*.18}% 46
+\BOOKMARK [3][-]{section*.22}{phase d'appui.}{section*.18}% 47
+\BOOKMARK [3][-]{section*.23}{phase du pas \(\).}{section*.18}% 48
+\BOOKMARK [3][-]{section*.24}{\351tat stable.}{section*.18}% 49
+\BOOKMARK [3][-]{section*.25}{contr\364leur robuste.}{section*.18}% 50
+\BOOKMARK [3][-]{section*.26}{simulation en temps-r\351el.}{section*.18}% 51
+\BOOKMARK [1][-]{section.A.2}{Visualisation des styles de marches du contr\364leur pour les hauteurs de liquide et les vitesses de r\351f\351rences}{chapter.1}% 52
+\BOOKMARK [1][-]{section.A.3}{Courbes d'\351volution des points clefs des trajectoires de r\351f\351rence en fonction du niveau de liquide}{chapter.1}% 53

@@ -93,7 +93,7 @@ uint InteractiveWorld::renderToObjFile(FILE* fp, uint vertexIdxOffset) {
  */
 bool InteractiveWorld::onMouseEvent(int eventType, int button, int mouseX, int mouseY){
 	//need to figure out if the mouse is in the push interface window (and if we care)...
-	if (Globals::drawPushInterface == 1 && button == MOUSE_LBUTTON && eventType != MOUSE_UP){
+	if (Globals::drawPushInterface == 1 && button == MOUSE_LBUTTON && eventType == MOUSE_DOWN){
 		Vector3d input;
 		Point3d p;
 		if (bInterface == false){

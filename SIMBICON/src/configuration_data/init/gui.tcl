@@ -169,8 +169,8 @@ pack .labelcharacter -side top -fill x -in .characterframe -anchor w
 pack .push .curve .controlHeading -side top -fill y -in .characterframe -anchor w
 
 #### water simulation control
-scale .waterlvl -label "Water level" -orient h -digit 4 -from 0.0 -to 3.0 -variable waterLevel -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
-scale .waterstr -label "Water strength" -orient h -digit 7 -from 0.0 -to 300000.0 -variable forceAlpha -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .waterlvl -label "liquid level" -orient h -digit 4 -from 0.0 -to 3.0 -variable waterLevel -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .waterstr -label "liquid viscosity" -orient h -digit 7 -from 0.0 -to 10.0 -variable forceAlpha -resolution 0.1 -length 6.5cm -sliderlength 0.2cm 
 scale .liquiddensity -label "Liquid Density" -orient h -digit 4 -from 0.0 -to 12000.0 -variable liquidDensity -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 #### heading control
@@ -195,9 +195,9 @@ pack .exit -in .buttonframe -pady 5 -side top
 
 wm resizable . 0 0
 pack .waterlvl -in .mainframe -side top -fill x
-#pack .waterstr -in .mainframe -side top -fill x
+pack .waterstr -in .mainframe -side top -fill x
 pack .liquiddensity -in .mainframe -side top -fill x
-pack .desiredheading -in .mainframe -side top -fill x
+#pack .desiredheading -in .mainframe -side top -fill x
 #pack .timefactor -in .mainframe -side top -fill x
 pack .velCoronal -in .mainframe -side top -fill x
 pack .velSagittal -in .mainframe -side top -fill x

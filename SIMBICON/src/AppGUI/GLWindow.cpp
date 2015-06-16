@@ -392,6 +392,7 @@ void GLWindow::drawFPSandPerf(double timeSinceLastUpdate, double timeSpentProces
 	glPopMatrix();
 }
 
+#include <iostream>
 /**
  * This method is called whenever there is a new event to be processed
  */
@@ -431,6 +432,7 @@ int GLWindow::onMouseEvent(int mEvent, int button, int x, int y){
 								break;
 					case MOUSE_LBUTTON:
 								camera.rotations -= Vector3d((-oldMouseY+y)/100.0, (-oldMouseX+x)/100.0, 0);
+								//std::cout << camera.rotations.x << "::" << camera.rotations.y << "::" << camera.rotations.z << std::endl;
 								break;
 					case MOUSE_MBUTTON:
 								camera.camDistance += (oldMouseY - y)/200.0;

@@ -35,6 +35,7 @@
 \usepackage{amsmath}
 
 \usepackage{url}
+\usepackage{hyperref}
 \urldef{\mailsa}\path|samuel.carensac@insa-lyon.fr|    
 
 \begin{document}
@@ -117,7 +118,7 @@ Un lexique présentant les termes importants que nous utiliserons se trouve en A
 Pour pouvoir réaliser l'animation d'un personnage, il est nécessaire de disposer d'une structure représentant ce dernier. La structure la plus utilisée est un squelette interne au personnage qui défini une hiérarchie de corps rigides reliés par des articulations. Chaque articulation dispose de un à trois degrés de liberté de rotation sur lesquels pourront être appliqués des moments. L'application d'un moment $\tau$ sur une articulation permet de générer une accélération angulaire $\alpha$ suivant la formule suivante $\tau=\alpha \times I$ avec $I$ la matrice d'inertie. Des limites sont mises en place sur les articulations (angles maximums, moments maximum) pour représenter les limites anatomiques du personnage. 
  En animation physique on peut classer les interfaces de contrôle du squelette en trois catégories \cite{geijtenbeek2012interactive}:
 \begin{itemize}
-\item{Dans la première, le squelette est animé par l'application directe de moments aux des articulations.}
+\item{Dans la première, le squelette est animé par l'application directe de moments aux articulations.}
 \item{La seconde consiste à appliquer des forces externes sur les corps solides pour les déplacer dans la direction voulue. Ces forces n'ayant pas d'équivalent dans la réalité, les mouvements obtenus peuvent ne pas sembler naturels. Cette technique a d'ailleurs été surnommé "hand-of-god" \cite{van1995guided}. }
 \item{La dernière consiste à simuler des forces externes à l'aide de moments appliqués aux articulations. Ce type de forces est appelé forces virtuelles.}
 \end{itemize}
@@ -125,8 +126,9 @@ Pour pouvoir réaliser l'animation d'un personnage, il est nécessaire de dispos
 En raison du grand nombre de données nécessaires pour produire une animation, l'utilisation directe de ces méthodes est prohibitive. C'est le rôle du contrôleur de générer ces données à partir de paramètres haut niveau. Ces paramètres doivent être intuitifs pour l'utilisateur tels que vitesse et direction du mouvement \cite{coros2010generalized}. 
 
 \subsection{Contrôle dans l'espace des articulations} 
-Le type de contrôleur le plus commun pouvant utiliser les 3 interfaces citées précédemment se dénomme "Contrôleur dans l'espace des articulations".
+Le type de contrôleur le plus commun pouvant utiliser les trois interfaces citées précédemment se dénomme "Contrôleur dans l'espace des articulations".
 De manière similaire à l'animation cinématique, ce type de contrôleur utilise une série de poses désirées représentant le mouvement à reproduire. La Figure \ref{fig:joint_space_motion_control} (à gauche) présente une vue d'ensemble d'un tel contrôleur. Le bloc "balance and pose control" a pour rôle de convertir les paramètres choisis par l'utilisateur en une cible cinématique définissant les angles et les vitesses pour chaque articulation. Ces paramètres peuvent être de haut niveau (vitesse, hauteur des pas) ou des poses de références. Le bloc "local feedback control" calcule les moments nécessaires pour atteindre la pose désirée pour chaque articulation. Ce bloc permet d'intégrer des mécanismes de calcul de moments supplémentaires (e.g. pour le contrôle de la vitesse). 
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{joint_space_motion_control.png}
@@ -144,12 +146,12 @@ Bien qu'il existe plusieurs méthodes permettant de suivre les poses désirées 
 \label{eq:pd_controler}
 \end{equation}
 Avec \(\theta_d\) et \(\dot{\theta_d}\) l'angle et la vitesse désirée, \(\theta\) et \(\dot{\theta}\) l'angle et la vitesse courante et \(k_p\) et \(k_v\) des constantes de vitesse et de position appelées les gains du PD-contrôleur.
-Parmi les systèmes basés sur un PD-contrôleur on trouve notamment le SIMBICON (SIMple BIped CONtroler) \cite{yin2007simbicon}. Ce système est basé sur une machine à état fini. Chaque état est défini par une série de poses clefs qui définissent les poses désirées au cours du mouvement. La transition d'un état à un autre peut s'effectuer après un certain temps ou bien lors d'un nouveau contact entre un pied et le sol. La figure \ref{fig:state_machine} (droite) illustre la composition d'un contrôleur SIMBICON pour la marche. La spécification des poses clefs des états possèdent quelques spécificités propres au SIMBICON. Les angles des articulations sont exprimés dans un repère local à l'exception de l'articulation entre le bassin et le dos et de celle de la hanche en phase de vol. Enfin la hanche d'appui ne possède pas de positions cibles. Le moment \(\tau_b \) à appliquer à la hanche d'appui est calculé de manière à ce que le moment total sur le pelvis corresponde au moment \(\tau \) permettant d'obtenir l'orientation définie par l'utilisateur. Ce moment \(\tau \) désiré est déterminé par le PD-contrôleur en prenant pour angle cible la somme de l'angle défini dans la trajectoire du pelvis plus l'angle de direction du mouvement (figure \ref{fig:torques_pelvis}).
+Parmi les systèmes basés sur un PD-contrôleur on trouve notamment le SIMBICON (SIMple BIped CONtroler) \cite{yin2007simbicon}. Ce système est basé sur une machine à état fini. Chaque état est défini par une série de poses clefs qui définissent les poses désirées au cours du mouvement. La transition d'un état à un autre peut s'effectuer après un certain temps ou bien lors d'un nouveau contact entre un pied et le sol. La figure \ref{fig:state_machine} (droite) illustre la composition d'un contrôleur SIMBICON pour la marche. La spécification des poses clefs des états possèdent quelques spécificités propres au SIMBICON. Les angles des articulations sont exprimés dans un repère local à l'exception de l'articulation entre le bassin et le dos et de celle de la hanche en phase de vol. Enfin la hanche d'appui ne possède pas de positions cibles. Le moment \(\tau_b \) à appliquer à la hanche d'appui est calculé de manière à ce que le moment total sur le pelvis corresponde au moment \(\tau \) permettant d'obtenir l'orientation définie par l'utilisateur. Ce moment \(\tau \) désiré est déterminé par le PD-contrôleur en prenant pour angle cible la somme de l'angle défini dans la trajectoire du pelvis plus l'angle de direction du mouvement (figure \ref{fig:torques_pelvis} (gauche)).
 \[
 \tau_b=\tau - \tau_a - \tau_{torso}
 \]
 Avec \(\tau_a \) le moment appliqué sur la hanche de balance et \(\tau_{torso} \) le moment appliqué à l'articulation entre le pelvis et le torse.
-
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{stance_torque_and_v_and_d.png}
@@ -175,7 +177,7 @@ Donc la force à appliquer à chaque articulation i correspond à:
 \tau = (\alpha_i \times (p-p_i))^T F
 \]
 Cette méthode de compensation de gravité est appliquée à tous les membres du squelette excepté ceux composant la jambe d'appui.
-
+\vspace*{-0.4cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{IPM.png}
@@ -185,6 +187,7 @@ Cette méthode de compensation de gravité est appliquée à tous les membres du
 \label{fig:jacob}
 \end{figure}
 
+\vspace*{-0.5cm}
 \subsection{Maîtrise de l'équilibre au cours de la marche}
 \label{sec:previous_works_balance}
 
@@ -210,7 +213,7 @@ En plus de permettre l'équilibre l'IPM possède l'avantage de pouvoir complète
 
 \subsection{Contrôle de la vitesse}
 Parmi les paramètres de haut niveau primordiaux disponibles à l'utilisateur on trouve la vitesse. Dans la version originale du SIMBICON le respect d'une vitesse désirée est obtenu à l'aide d'une stratégie d'évolution. Le principe est de faire varier les poses clefs jusqu'à ce que l'on obtienne un mouvement avec la vitesse voulue. Le défaut est que non seulement il est nécessaire de trouver les poses clefs pour chaque vitesse désirée mais il est également impossible de faire varier la vitesse sans arrêter la simulation. Une amélioration du contrôleur \cite{coros2009robust} apporte la possibilité d'avoir plusieurs états. Le principe est d'avoir des états généraux (i.e. marche avant, marche arrière, …) et de faire des combinaisons de ces états pour obtenir des états intermédiaires. Cela permet de changer de vitesse sans avoir à arrêter la simulation et diminue le nombre de poses clefs nécessaires pour obtenir de multiples vitesses. Cependant, ce système n'assure qu'un suivit peu précis de la vitesse désirée si l'on s'éloigne des états définis.
-Plus récemment, une méthode se servant d'une force virtuelle horizontale pour accélérer ou ralentir le personnage a été présentée \cite{coros2010generalized}. Le principe est d'appliquer une force virtuelle sur le centre des masses du personnage pour créer une déséquilibre vers l'avant ou vers l'arrière permettant de contrôler la vitesse du personnage. L'intensité de la force à appliquer est calculée à l'aide d'un PD-contrôleur se basant sur la différence entre la vitesse courante du personnage et la vitesse désirée. Les torques à appliquer aux articulations sont ensuite calculés à l'aide de la méthode de la transposée jacobienne.  La chaine de membres articulée considérée pour l'application de la force est la chaine reliant la tête au pied d'appui (voir figure \ref{fig:jacob} (centre)). Ce système permet d'avoir un contrôle fin de la vitesse. Cette méthode de contrôle a été utilisée de manière intensive dans le but de conserver l'équilibre dans une position statique \cite{geijtenbeek2012simple}. Cependant, ce système ne permet pas de suivre correctement les vitesses si les gains du contrôleur ne sont pas adaptés à la configuration. Par exemple des gains adaptés pour un déplacement à l'air libre deviendraient inefficaces pour un déplacement dans un milieu liquide. De plus l'utilisation d'une force virtuelle est limitée par les valeurs maximales des moments aux articulations. Ce qui veux dire que si l'on a besoin d'une force virtuelle élevée, cette stratégie de contrôle devient invalide.
+Plus récemment, une méthode se servant d'une force virtuelle horizontale pour accélérer ou ralentir le personnage a été présentée \cite{coros2010generalized}. Le principe est d'appliquer une force virtuelle sur le centre des masses du personnage pour créer un déséquilibre vers l'avant ou vers l'arrière permettant de contrôler la vitesse du personnage. L'intensité de la force à appliquer est calculée à l'aide d'un PD-contrôleur se basant sur la différence entre la vitesse courante du personnage et la vitesse désirée. Les torques à appliquer aux articulations sont ensuite calculés à l'aide de la méthode de la transposée jacobienne.  La chaine de membres articulée considérée pour l'application de la force est la chaine reliant la tête au pied d'appui (voir figure \ref{fig:jacob} (centre)). Ce système permet d'avoir un contrôle fin de la vitesse. Cette méthode de contrôle a été utilisée de manière intensive dans le but de conserver l'équilibre dans une position statique \cite{geijtenbeek2012simple}. Cependant, ce système ne permet pas de suivre correctement les vitesses si les gains du contrôleur ne sont pas adaptés à la configuration. Par exemple des gains adaptés pour un déplacement à l'air libre deviendraient inefficaces pour un déplacement dans un milieu liquide. De plus l'utilisation d'une force virtuelle est limitée par les valeurs maximales des moments aux articulations. Ce qui veux dire que si l'on a besoin d'une force virtuelle élevée, cette stratégie de contrôle devient invalide.
 
 \subsection{Déplacement en milieu aquatique}
 \subsubsection{Contrôle du mouvement en milieu aquatique}
@@ -226,20 +229,20 @@ La marche en milieu aquatique a été le sujet de plusieurs études dans le mili
 \section{Contributions}
 \label{sec:overview}
 
-
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.6]{strips/min_drag_25cm.png}
+\includegraphics[scale=0.55]{strips/min_drag_25cm.png}
 \caption{Marche d'un personnage cherchant à minimiser les forces de résistance de l'eau dans 25cm de liquide. La ligne bleu représente le niveau d'eau.}
 \label{fig:min_drag_25}
 \end{figure}
 
 
-La contrôle de la marche en milieu liquide n'a donc peu été l'objet de travaux dans le domaine de l'animation.  Des travaux aient été réalisés dans le domaine de la biomécanique ne considérant que des cas où l'immersion dépasse le milieu du torse. En animation, l'utilisation actuelle des systèmes de maintien de l'équilibre limite fortement la capacité à simuler des mouvements variés ce qui empêche l'émergence de mouvements appropriés au déplacement en milieu liquide. D'autre part, les systèmes de contrôle de la vitesse exposés dans notre état de l'art présentent tous  le défaut de ne pas assurer le suivi correct de la vitesse désirée si l'on s'éloigne des conditions pour lesquels ils ont été optimisés. Enfin, les contrôleurs basé physique implémentant l'interaction avec un fluide ne proposent pas un modèle permettant l'animation d'un modèle humain en temps réel.
+Le contrôle de la marche en milieu liquide a peu été l'objet de travaux dans le domaine de l'animation.  Les travaux réalisés dans le domaine de la biomécanique ne considèrent que des cas où l'immersion dépasse le milieu du torse. En animation, l'utilisation actuelle des systèmes de maintien de l'équilibre limite fortement la capacité à simuler des mouvements variés ce qui empêche l'émergence de mouvements appropriés au déplacement en milieu liquide. D'autre part, les systèmes de contrôle de la vitesse exposés dans notre état de l'art présentent tous  le défaut de ne pas assurer le suivi correct de la vitesse désirée si l'on s'éloigne des conditions pour lesquels ils ont été optimisés. Enfin, les contrôleurs basés physique implémentant l'interaction avec un fluide ne proposent pas un modèle permettant l'animation d'un modèle humain en temps réel.
 
 Nous proposons un contrôleur répondant à ces manques grâce à trois contributions. La première contribution est un modèle aquatique permettant de simuler l'influence du liquide sur le déplacement du personnage. La deuxième contribution est un système permettant de combiner plusieurs états nous permettant d'adapter les poses clefs utilisées en fonction de l'environnement et des paramètres spécifiés par l'utilisateur. Notre contrôleur démontre une grande liberté de spécification de mouvement grâce à une nouvelle gestion de la perte d'équilibre. Enfin, nous améliorons les systèmes utilisant une force virtuelle et modifiant les résultats de l'IPM à l'aide d'un système d'apprentissage autonome permettant ainsi un suivi exact et robuste de la vitesse désirée. 
 
-
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.6]{general_process.pdf}
@@ -247,6 +250,7 @@ Nous proposons un contrôleur répondant à ces manques grâce à trois contribu
 \label{fig:shema_controler}
 \end{figure}
 
+\vspace*{-0.75cm}
 \subsection{Vue globale du système}
 %
 
@@ -255,7 +259,7 @@ Notre système de contrôle du mouvement est composé de 6 blocs principaux (fig
 
 Nous commençons par calculer les forces résultant de l'influence du fluide sur le personnage. Notre modélisation utilise des formules simples (résistance de l'eau, poussée d'Archimède) nous permettant d'obtenir une simulation en temps réel (voir section \ref{sec:model_fluide}).
 
-Chaque articulation possède une trajectoire spécifiant les angles à suivre au cours du déplacement. Ces trajectoires sont déterminées à partir de poses clefs définis par l'utilisateur. Les valeurs intermédiaires sont déterminées à l'aide de splines Catmull-Rom. Les trajectoires des articulations de la jambe de balance sont déterminées dynamiquement à partir de la trajectoire désirée pour le pied en phase de vol. La trajectoire du pied en phase de vol est soit spécifiée par l'utilisateur soit déterminée par les systèmes de conservations de l'équilibre lorsque le personnage est dans la phase de descente du pas ou qu'il est en déséquilibre (voir section \ref{sec:IPM}).
+Chaque articulation possède une trajectoire spécifiant les angles à suivre au cours du déplacement. Ces trajectoires sont déterminées à partir de poses clefs définis par l'utilisateur. Les valeurs intermédiaires sont déterminées à l'aide de splines Catmull-Rom. Les trajectoires des articulations de la jambe en phase de vol sont déterminées dynamiquement à partir de la trajectoire désirée pour le pied en phase de vol. La trajectoire du pied en phase de vol est soit spécifiée par l'utilisateur soit déterminée par les systèmes de conservations de l'équilibre lorsque le personnage est dans la phase de descente du pas ou qu'il est en déséquilibre (voir section \ref{sec:IPM}).
 
 Le système de combinaison d'états permet à l'utilisateur de spécifier plusieurs trajectoires pour une articulation chacune d'entre elles étant associée à une vitesse. Le système combinera plusieurs de ces trajectoires pour obtenir un résultat plus adapté à la vitesse désirée. Ce système est particulièrement utile pour les articulations possédant des comportements très différents suivant la vitesse désirée. Les angles lus depuis les trajectoires sont ensuite utilisés par le PD-contrôleur pour calculer les moments à appliquer aux articulations au cours du déplacement (voir section \ref{sec:multi_state}).
 
@@ -271,10 +275,11 @@ Le contrôle de la vitesse est obtenu à l'aide d'une force virtuelle similaire 
 
 \subsection{Modélisation du personnage}
 %
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.4]{colli_primitives.png}
-\includegraphics[scale=0.4]{img_dof.png}
+\includegraphics[scale=0.35]{colli_primitives.png}
+\includegraphics[scale=0.35]{img_dof.png}
 \caption{A gauche, le modèle physique du personnage. A droite, degrés de liberté internes}
 \label{fig:colli_primitives}
 \label{fig:dof}
@@ -311,7 +316,7 @@ La poussée d'Archimède $F_{PA}$ est calculée à l'aide de la formule suivante
 \[
 F_{PA}=-V_i \rho g
 \]
-Le volume immergé \(V_i\) est calculé à l'aide du volume immergé des représentations physiques des différents membres du personnage.  Pour les sphères et les cylindres (jambes et orteils) le volume immergé est calculé en utilisant les formules de géométrie existantes (cylinrical wedge, cylindrical segment). Pour les prismes droits (pieds) nous découpons le volume en voxels et faisons la somme des volumes des voxels dont le centre se trouve en dessous du niveau de l'eau.
+Le volume immergé \(V_i\) est calculé à l'aide du volume immergé des représentations physiques des différents membres du personnage.  Pour les sphères et les cylindres (jambes et orteils) le volume immergé est calculé en utilisant les formules de géométrie existantes (cylindrical wedge, cylindrical segment). Pour les prismes droits (pieds) nous découpons le volume en voxels et faisons la somme des volumes des voxels dont le centre se trouve en dessous du niveau de l'eau.
 %
 \section{Contrôle du mouvement}
 \label{sec:controler}
@@ -324,7 +329,7 @@ Contrairement à \cite{coros2010generalized} nous permettons la spécification m
 \subsection{Combineur d'état}
 \label{sec:multi_state}
 %
-Suivant la vitesse désirée il est possible que les trajectoires nécessaires pour obtenir un résultat optimal soit radicalement différentes. Par exemple, étudions rapidement le cas de la cheville d'appui. Lorsque le personnage marche vers l'avant il est nécessaire que celui-ci pose le talon en premier. Une fois que le pied est à plat au sol il est nécessaire de conserver une différence entre les forces appliquées sur l'avant du pied et celles appliquées sur l'arrière du pied pour faire pencher le personnage vers l'avant. Au contraire, pour une marche sur place ou vers l'arrière, il sera nécessaire que celui-ci pose la pointe du pied en premier puis maintienne une différence des forces le faisant pencher vers l'arrière. Chaque type de déplacement (marche vers l'avant, vers l'arrière, sur place, ...) possèdent des caractéristiques spécifiques rendant plus facile le mouvement associé. C'est pourquoi nous utilisons un système permettant la définition de plusieurs trajectoires pour les articulations sur lesquelles nous observons ce type de phénomène. Notre système est similaire à celui présenté par \cite{coros2009robust}. Notre système se différencie par deux caractéristiques. Premièrement, contrairement à \cite{coros2009robust} nous n'utilisons pas notre système pour tenter de trouver un état stable en combinant plusieurs états de base. Notre système a pour but de créer une base plus adaptée au suivi de la vitesse désirée. La stabilité étant assurée par l'IPM, le combineur d'états ne cherche pas absolument à produire un état assurant la stabilité par lui-même. La seconde différence est que \cite{coros2009robust} spécifie des états complets (i.e. marche avant, marche arrière, ....). Notre système se contente de capturer les différences ayant une influence importante sur la vitesse. C'est pourquoi nous spécifions plusieurs trajectoires seulement pour les articulations pour lesquelles nous observons des différences importantes suivant la vitesse. De plus notre système a été conçu pour permettre d'utiliser la même trajectoire pour plusieurs vitesses. Nous avons déterminé que les trajectoires possédant des différences significatives sont celles des chevilles, du pelvis, du pied en phase de vol et celle de l'articulation entre le pelvis et le torse (dans une moindre mesure). 
+Suivant la vitesse désirée il est possible que les trajectoires nécessaires pour obtenir un résultat optimal soit radicalement différentes. Par exemple, étudions rapidement le cas de la cheville d'appui. Lorsque le personnage marche vers l'avant il est nécessaire que celui-ci pose le talon en premier. Une fois que le pied est à plat au sol il est nécessaire de conserver une différence entre les forces appliquées sur l'avant du pied et celles appliquées sur l'arrière du pied pour faire pencher le personnage vers l'avant. Au contraire, pour une marche sur place ou vers l'arrière, il sera nécessaire que celui-ci pose la pointe du pied en premier puis maintienne une différence des forces le faisant pencher vers l'arrière. Chaque type de déplacement (marche vers l'avant, vers l'arrière, sur place, ...) possèdent des caractéristiques spécifiques rendant plus facile le mouvement associé. C'est pourquoi nous utilisons un système permettant la définition de plusieurs trajectoires pour les articulations sur lesquelles nous observons ce type de phénomène. Notre système est similaire à celui présenté par \cite{coros2009robust}. Notre système se différencie par deux caractéristiques. Premièrement, contrairement à \cite{coros2009robust} nous n'utilisons pas notre système pour tenter de trouver un état stable en combinant plusieurs états de base. Notre système a pour but de créer une base plus adaptée au suivi de la vitesse désirée. La stabilité étant assurée par l'IPM, le combineur d'états ne cherche pas absolument à produire un état assurant la stabilité par lui-même. La seconde différence est que \cite{coros2009robust} spécifie des états complets (i.e. marche avant, marche arrière, ....). Notre système se contente de capturer les différences ayant une influence importante sur la vitesse. C'est pourquoi nous spécifions plusieurs trajectoires seulement pour les articulations pour lesquelles nous observons des différences importantes suivant la vitesse. De plus notre système a été conçu pour permettre d'utiliser la même trajectoire pour plusieurs vitesses. Nous avons déterminé que les trajectoires possédant des différences significatives sont celles des chevilles, du pelvis, du pied en phase de vol et celle de l'articulation entre le pelvis et le torse. 
 
 Nous allons maintenant expliquer le fonctionnement du combineur d'états plus en détail. Pour chaque articulation où système (e.g. pied en phase de vol) possédant plusieurs trajectoires, le combineur d'états va chercher les deux trajectoires associées aux deux vitesses les plus proches de la vitesse désirée. Si la vitesse désirée est inférieure (resp. supérieure) à la vitesse la plus basse (resp. plus haute) spécifiée, le système utilisera directement la trajectoire correspondant à la vitesse la plus basse (resp. haute) comme si il n'y avait qu'une trajectoire définie. Si le système trouve bien deux trajectoires encadrant la vitesse désirée, il créé une nouvelle trajectoire contenant $k$ points clefs répartis de manière uniforme. Lors de nos tests nous avons déterminé qu'un nombre de $k=10$ points clefs était suffisant. Le combineur d'états attribue ensuite des valeurs à chacun de ces points en utilisant une combinaison des valeurs contenues dans les deux trajectoires considérées suivant une loi d'ordre 2:
 $$
@@ -351,7 +356,7 @@ L'équilibre du personnage est obtenu par le placement intelligent du pied à l'
 L'utilisation d'un IPM permet d'avoir un système efficace de conservation d'équilibre ne nécessitant pas de paramétrage de l'utilisateur. Dans le cadre de notre  projet nous utiliserons un IPM similaire à celui présenté par \cite{coros2010generalized}. Le système utilise un IPM supposant une position nulle à la position verticale et une longueur de jambe constante. 
 
 
-Bien que l'IPM soit intéressant il limite les possibilités de mouvement. Par exemple il rend impossible un mouvement définissant une trajectoire rectangulaire pour le pied comme l'on voit sur la figure \ref{fig:min_drag_25}. Ce genre de déplacement est important dans le cadre de notre étude car elles sont typiques d'environnement ou le mouvement est beaucoup entravé (par exemple de la neige). Pour permettre l'observation de tels déplacements nous avons rajouté la possibilité de manuellement définir la position du pied au cours du pas. Cette définition manuelle est considérée temps que le personnage est dans la phase ascendante du pas \(V_{COM}(y)>0\) et qu'il n'est pas dans un état instable. Nous déterminons une instabilité du personnage si nous détectons une variation irrégulière du motif de vitesse observé au cours d'un pas (voir la section \ref{sec:speed_virt_force}). Si un état instable est détecté nous utilisons le résultat de l'IPM pour la totalité du pas jusqu'à ce que nous retournions dans un état stable.
+Bien que l'IPM soit intéressant il limite les possibilités de mouvement. Par exemple il rend impossible un mouvement définissant une trajectoire rectangulaire pour le pied comme l'on voit sur la figure \ref{fig:min_drag_25}. Ce genre de déplacement est important dans le cadre de notre étude car elles sont typiques d'environnement ou le mouvement est beaucoup entravé (e.g. dans un milieu dense comme de la neige). Pour permettre l'observation de tels déplacements nous avons rajouté la possibilité de manuellement définir la position du pied au cours du pas. Cette définition manuelle est considérée temps que le personnage est dans la phase ascendante du pas \(V_{COM}(y)>0\) et qu'il n'est pas dans un état instable. Nous déterminons une instabilité du personnage si nous détectons une variation irrégulière du motif de vitesse observé au cours d'un pas (voir la section \ref{sec:speed_virt_force}). Si un état instable est détecté nous utilisons le résultat de l'IPM pour la totalité du pas jusqu'à ce que nous retournions dans un état stable.
 %
 
 %
@@ -371,8 +376,10 @@ J_n ^T (p)=\frac{1}{M}\sum_{\substack{0<i\leq n}} ((P_i(x,y,z)-P_{i-1}(x,y,z))*M
 \]
 Avec \(M\) la somme des poids de tous les membres considérés par le système et \(P_i(x,y,z)\) la position de l'articulation \(i\) de la chaine, \(P_0(x,y,z)\) étant le point d'application de la force. Cela évite que les articulations du bas du corps reçoivent une grande importance du fait qu'elles se trouvent loin du torse (qui représente une grande partie de la masse du personnage). Cette caractéristique est intéressante car un moment appliqué sur la cheville ayant pour but de faire pencher le torse aurait de grande chance de se faire annuler par un moment sur la hanche ou le pelvis ayant pour but de redresser le personnage. De plus il est plus simple de créer un déséquilibre régulier du personnage en appliquant un moment sur l'articulation entre le pelvis et le torse qu'en appliquant un moment sur la cheville ce qui renforce l'idée que le torse doit bien être considéré indépendamment du bas du corps.
 
-Il est facile d'observer que la vitesse de déplacement du centre des masses n'est pas constant au cours d'un pas. De ce fait l'application d'une force virtuelle se basant sur une vitesse désirée constante aura pour effet de faire disparaître ce phénomène, voire demander localement au personnage de ralentir alors que l'on voudrait le voir accélérer de manière globale. C'est pourquoi il serait plus intéressant d'appliquer une force constante au cours d'un pas. Cependant ce genre de force constante serait difficile à déterminer et diminuerait la robustesse du modèle car elle ne pendrait pas en compte les évènements se passant au cours d'un pas (i.e. ralentissements du au contact avec un objet par exemple). On peut observer que lorsque nous sommes dans le cas d'un déplacement stable, la courbe de vitesse observée au cour d'un pas ne varie plus à chaque pas. L'idée serait donc d'adapter la vitesse désirée que l'on communique au PD-contrôler suivant les variations de vitesse observées au cours du pas. C'est pourquoi nous avons construit un système permettant d'apprendre cette courbe de variations de vitesse de manière à appliquer une force virtuelle plus adaptée. De manière similaire aux trajectoires des articulations, cette courbe est définie comme une fonction de la phase \(\phi\) et possède un nombre de point de référence pouvant être définis par l'utilisateur. Les valeurs entre les points de références sont également déterminées à l'aide de splines Catmull-Rom. Un nombre de 10 points de référence s'est montré être suffisant pour permettre l'obtention d'une courbe précise tout en évitant de surcharger le système. Le système utilise une courbe pour la vitesse suivant l'axe sagittal et deux courbes pour l'axe coronal (une pour chaque phase d'appui). L'axe coronal nécessite deux courbes car dans le cas d'une vitesse non nulle selon l'axe coronal le mouvement observé devient asymétrique.Une autre différence entre les deux axes et que pour l'axe coronal nous stockons directement les vitesses en $m.s^{-1}$ alors que pour l'axe sagittal nous stockons des facteurs multiplicateurs à appliquer à la vitesse désirée par l'utilisateur. L'utilisation des facteurs multiplicateurs nous permet une plus grande aisance à nous adapter aux variations de vitesses demandées par l'utilisateur. En effet pour une variation de vitesse de moyenne amplitude il est fortement possible que la courbe de facteurs multiplicateurs reste identique. Cependant vu que nous travaillons généralement avec une vitesse nulle suivant l'axe coronal, il nous est impossible de nous baser sur un coefficient multiplicateur.
+Il est facile d'observer que la vitesse de déplacement du centre des masses n'est pas constante au cours d'un pas. De ce fait l'application d'une force virtuelle se basant sur une vitesse désirée constante aura pour effet de faire disparaître ce phénomène, voire demander localement au personnage de ralentir alors que l'on voudrait le voir accélérer de manière globale. C'est pourquoi il serait plus intéressant d'appliquer une force constante au cours d'un pas. Cependant ce genre de force constante serait difficile à déterminer et diminuerait la robustesse du modèle car elle ne pendrait pas en compte les évènements se passant au cours d'un pas (e.g. ralentissements du au contact avec un objet par exemple). On peut observer que lorsque nous sommes dans le cas d'un déplacement stable, la courbe de vitesse observée au cour d'un pas ne varie plus à chaque pas. L'idée serait donc d'adapter la vitesse désirée que l'on communique au PD-contrôler suivant les variations de vitesse observées au cours du pas. C'est pourquoi nous avons construit un système permettant d'apprendre cette courbe de variations de vitesse de manière à appliquer une force virtuelle plus adaptée. De manière similaire aux trajectoires des articulations, cette courbe est définie comme une fonction de la phase \(\phi\) et possède un nombre de point de référence pouvant être définis par l'utilisateur. Les valeurs entre les points de références sont également déterminées à l'aide de splines Catmull-Rom. Un nombre de 10 points de référence s'est montré être suffisant pour permettre l'obtention d'une courbe précise tout en évitant de surcharger le système. Le système utilise une courbe pour la vitesse suivant l'axe sagittal et deux courbes pour l'axe coronal (une pour chaque phase d'appui). L'axe coronal nécessite deux courbes car dans le cas d'une vitesse non nulle selon l'axe coronal le mouvement observé devient asymétrique.Une autre différence entre les deux axes et que pour l'axe coronal nous stockons directement les vitesses en $m.s^{-1}$ alors que pour l'axe sagittal nous stockons des facteurs multiplicateurs à appliquer à la vitesse désirée par l'utilisateur. L'utilisation des facteurs multiplicateurs nous permet une plus grande aisance à nous adapter aux variations de vitesses demandées par l'utilisateur. En effet pour une variation de vitesse de moyenne amplitude il est fortement possible que la courbe de facteurs multiplicateurs reste identique. Cependant vu que nous travaillons généralement avec une vitesse nulle suivant l'axe coronal, il nous est impossible de nous baser sur un coefficient multiplicateur.
 
+
+\vspace*{-0.5cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.45]{speed_curve_learner.pdf}
@@ -381,7 +388,7 @@ Il est facile d'observer que la vitesse de déplacement du centre des masses n'e
 \end{figure}
 
 
-Ce paragraphe explique de manière plus précise l'apprentissage des courbes de vitesse. Comme présenté sur le schéma \ref{fig:speed_curve_learner} le système d'apprentissage des courbes de vitesse s'effectue par une boucle de 3 étapes répétées jusqu'à l'obtention d'une courbe stable. La première étape est de relever, aux cours d'un pas, la vitesse réellement observée pour chaque point de référence. Une fois le pas terminé nous calculons la variation moyenne entre la courbe que nous avions et la courbe observée. La deuxième étape consiste à, si la variation moyenne observée est inférieur à un seuil, adapter les valeurs stockées pour les rapprocher des valeurs observées. Nos tests ont montré qu'un seuil de 0,4 donne des résultat satisfaisant. Nous notons tout de même qu'il peut être intéressant d'utiliser un seuil plus élevé au début de la phase d'apprentissage car il est possible que la trajectoire initialement utilisée soit très différente de la trajectoire observée.  Pour éviter d'obtenir des oscillations autour de la courbe vers laquelle on cherche à converger, la variation de chaque point est limitée à une variation d'au maximum la valeur de la variation moyenne constatée. Pour finir nous translatons la courbe de vitesse ainsi obtenue pour qu'elle corresponde à la vitesse moyenne voulue. Pour obtenir ce résultat nous déterminons le ratio entre la vitesse moyenne demandée et la vitesse moyenne observée lors du dernier pas et nous multiplions tous les points de la courbe par ce ratio. Dans le cas de l'axe coronal nous utilisons le ratio entre la vitesse demandée et la moyenne des vitesses observées lors des deux derniers pas.
+Ce paragraphe explique de manière plus précise l'apprentissage des courbes de vitesse. Comme présenté sur le schéma \ref{fig:speed_curve_learner} le système d'apprentissage des courbes de vitesse s'effectue par une boucle de trois étapes répétées jusqu'à l'obtention d'une courbe stable. La première étape est de relever, aux cours d'un pas, la vitesse réellement observée pour chaque point de référence. Une fois le pas terminé nous calculons la variation moyenne entre la courbe que nous avions et la courbe observée. La deuxième étape consiste à, si la variation moyenne observée est inférieur à un seuil, adapter les valeurs stockées pour les rapprocher des valeurs observées. Nos tests ont montré qu'un seuil de 0,4 donne des résultat satisfaisant. Nous notons tout de même qu'il peut être intéressant d'utiliser un seuil plus élevé au début de la phase d'apprentissage car il est possible que la trajectoire initialement utilisée soit très différente de la trajectoire observée.  Pour éviter d'obtenir des oscillations autour de la courbe vers laquelle on cherche à converger, la variation de chaque point est limitée à une variation d'au maximum la valeur de la variation moyenne constatée. Pour finir nous translatons la courbe de vitesse ainsi obtenue pour qu'elle corresponde à la vitesse moyenne voulue. Pour obtenir ce résultat nous déterminons le ratio entre la vitesse moyenne demandée et la vitesse moyenne observée lors du dernier pas et nous multiplions tous les points de la courbe par ce ratio. Dans le cas de l'axe coronal nous utilisons le ratio entre la vitesse demandée et la moyenne des vitesses observées lors des deux derniers pas.
 
 La présence du seuil nous permet de détecter les variations irrégulières de la courbe de vitesse. Une fois la situation d'équilibre atteinte nous obtenons une courbe stable qui est caractéristique au déplacement observé. Si l'on constate une variation de cette courbe cela veut dire qu'un élément est venu perturber le déplacement. Dans ce cas, nous déclarons au contrôleur que nous ne sommes plus dans un état stable ce qui signale au contrôleur qu'il doit utiliser l'IPM durant toute la durée du pas jusqu'à ce que le mouvement redevienne stable. Une fois le mouvement redevenu stable, c'est à dire que la variation moyenne de la vitesse est redevenue inférieure à l'heuristique, nous recommençons à utiliser le système décrit précédemment pour adapter la courbe de vitesse. Si le système détecte plus de 5 pas consécutif pour lesquels le mouvement est déclaré instable, alors nous réinitialisons tous les points des courbes de vitesses à la valeur de la vitesse désirée spécifiée par l'utilisateur. Cela nous permet de restaurer le système dans le cas où les courbes auraient subit une variation très forte les éloignant trop de la courbe résultant de l'IPM ce qui bloque le système.
 %
@@ -425,10 +432,10 @@ Chacune des $f_i$ est normalisée par la valeur moyenne obtenue en effectuant un
 \begin{itemize}
 \item{\textit{Minimisation de l'énergie} ($f_{energ}$). Le but de ce critère est de faire tendre le résultat vers une simulation utilisant le minimum d'énergie dépensé par le personnage. Cela nous permettra d'éviter les mouvement superflus. Ce critère calculé par la calcul de la somme des moments aux articulations $f_{energ}=\sum_{\substack{i}}{\tau_i}$} 
 \item{\textit{Minimisation de la résistance du liquide}. ($f_{drag}$) Ce critère aura pour effet de favoriser les mouvements du personnage effectués hors du liquide et de chercher des trajectoires évitant les pics de vitesses dans le liquide. Ce critère est calculé par la somme des moments produits par la force de résistance du liquide sur chacune des articulations. Ces moments sont calculés par le produit vectoriel entre les forces de résistance du liquide et le vecteur allant de l'articulation au point d'application de la force; $f_{energ}=\sum_{\substack{i}}\sum_{\substack{j}}((P_j(x,y,z)-P_i(x,y,z)) \otimes  F_j)$ avec $P_j(x,y,z)$ le point d'application de la force et $P_i(x,y,z)$ la position de l'articulation affectée.}
-\item{\textit{Minimisation des accélérations angulaires} ($f_{acc}$). Notre but est de parvenir à obtenir un mouvement et des trajectoires à reproduire lisses. Lors de tests préliminaires nous avons observé des fortes variations dans les positions désirées pour certaines articulations (i.e. la cheville d'appui). Ceci nous fait penser que la méthode d'évolution avait apprit des détails optimisant le mouvement mais le rendant moins robuste. En introduisant ce critère nous voulons minimiser ces détails pour rendre le contrôler plus robuste. Ce critère est calculé par la somme des accélérations angulaires des poses désirées $\ddot{\theta_d}_i$ et de celles du mouvement observé $\ddot{\theta}_i$.  Pour donner une plus grande importance au mouvement final nous avons attribué une pondération de 0.25 aux accélérations des poses désirées et une pondération de 0.75 aux accélérations du mouvement observé: $f_{acc}=0.25*\sum_{\substack{i}}\ddot{\theta_d}_i+0.75*\sum_{\substack{i}}\ddot{\theta}_i$ }
+\item{\textit{Minimisation des accélérations angulaires} ($f_{acc}$). Notre but est d'obtenir un mouvement et des trajectoires à reproduire lisses. Lors de tests préliminaires nous avons observé des fortes variations dans les positions désirées pour certaines articulations (i.e. la cheville d'appui). Ceci nous fait penser que la méthode d'évolution avait apprit des détails optimisant le mouvement mais le rendant moins robuste. En introduisant ce critère nous voulons minimiser ces détails pour rendre le contrôleur plus robuste. Ce critère est calculé par la somme des accélérations angulaires des poses désirées $\ddot{\theta_d}_i$ et de celles du mouvement observé $\ddot{\theta}_i$.  Pour donner une plus grande importance au mouvement final nous avons attribué une pondération de 0.25 aux accélérations des poses désirées et une pondération de 0.75 aux accélérations du mouvement observé: $f_{acc}=0.25*\sum_{\substack{i}}\ddot{\theta_d}_i+0.75*\sum_{\substack{i}}\ddot{\theta}_i$ }
 \end{itemize}
 
-Comme nous l'avons expliqué lors de la présentation des systèmes de contrôle de vitesse (section \ref{sec:ipm_alt}), l'utilisation de valeurs élevées pour l'altérateur d'IPM peut rendre le mouvement instable. De plus, ce système entraine une modification majeure des résultats de la simulation (en général il raccourci les pas du personnage). Lors de nos premières évaluations nous avons remarqué que l'altérateur d'IPM permettait d'obtenir la vitesse spécifiée même si les poses clefs ne sont pas adaptées. C'est pourquoi nous avons ajouté une pénalisation de ce système ce qui favorise la sélection des positions clefs permettant l'obtention la vitesse désirée. Nous utilisons l'altérateur d'IPM corriger les éventuels écarts de vitesse résiduels. Cette pénalisation est représentée par une augmentation de la fonction d'évaluation par un facteur multiplicateur de $(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))})$, avec $\Delta(x,z)$ la valeur de l'altérateur à l'état d'équilibre et $max(\Delta(x,z))$ la valeur maximale autorisée (0.09). Nous obtenons donc la fonction objectif suivante:
+Comme nous l'avons expliqué lors de la présentation des systèmes de contrôle de vitesse (section \ref{sec:ipm_alt}), l'utilisation de valeurs élevées pour l'altérateur d'IPM peut rendre le mouvement instable. De plus, ce système entraine une modification majeure des résultats de la simulation (en général il raccourci les pas du personnage). Lors de nos premières évaluations nous avons remarqué que l'altérateur d'IPM permettait d'obtenir la vitesse spécifiée même si les poses clefs ne sont pas adaptées. C'est pourquoi nous avons ajouté une pénalisation de ce système ce qui favorise la sélection des positions clefs permettant l'obtention la vitesse désirée. Nous utilisons l'altérateur d'IPM pour corriger les éventuels écarts de vitesse résiduels. Cette pénalisation est représentée par une augmentation de la fonction d'évaluation par un facteur multiplicateur de $(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))})$, avec $\Delta(x,z)$ la valeur de l'altérateur à l'état d'équilibre et $max(\Delta(x,z))$ la valeur maximale autorisée (0.09). Nous obtenons donc la fonction objectif suivante:
 $$
 f_{eval} = \sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) 
 $$
@@ -465,9 +472,7 @@ Nous nous trouvons dans le cas d'un système présentant un espace complexe de v
 Le moteur physique utilisé est "Open Dynamics Engine" (ODE). La simulation physique s'effectue avec un pas de temps fixe de $5 \times 10^{-4}s$. Le modèle humain présenté précédemment est utilisé pour tous les tests. Les collisions entre les différentes parties du personnage ne sont pas prises en compte. Les gains des PD-contrôleur utilisés sont repris des fichiers de configurations de travaux précédents \cite{coros2009robust}. La modélisation physique du personnage est également identique à celle utilisée par \cite{coros2009robust}. Les moments aux articulations sont limités à $|\tau|<200Nm$ pour les hanches et les genoux et à $|\tau|<100Nm$ pour les autres articulations.
 Les simulations sont effectuées avec une implémentation en single-thread sur une machine disposant de 8Go de mémoire RAM et une processeur i5 2.5GHz.
 
-La présentation de nos résultats s'organise suivant deux étapes. La première consiste à effectuer plusieurs optimisations en utilisant différentes combinaisons de poids dans la fonction d'évaluation (équation \ref{eq:complete_eval}). Nous commencerons par étudier l'impact de chaque fonction objectif élémentaire (équation \ref{eq:simple_objective}). Puis nous étudierons plusieurs versions de la fonction d'optimisation. La seconde sera d'utiliser la combinaison que nous estimerons comme optimale pour créer un contrôleur pouvant supporter les variations de vitesse désirée et les variations du niveau de fluide. Nous testerons ensuite la robustesse de ce contrôleur à l'application de forces externes, à des modifications du milieu liquide et à des changements de vitesse désirée. Nous encourageons le lecteur à visionner la vidéo accompagnant ce document pour une meilleure vision des résultats.
-
-L'implémentation du projet est disponible sur le dépôt github suivant dans la section SIMBICON: \url{https://github.com/scarensac/stage_master/tree/master/SIMBICON}. Nous conseillons le lecteur de visionner notre vidéo de résultats se trouvant également sur le dépos github dans la section vidéo:\url{https://github.com/scarensac/stage_master/tree/master/video}
+La présentation de nos résultats s'organise suivant deux étapes. La première consiste à effectuer plusieurs optimisations en utilisant différentes combinaisons de poids dans la fonction d'évaluation (équation \ref{eq:complete_eval}). Nous commencerons par étudier l'impact de chaque fonction objectif élémentaire (équation \ref{eq:simple_objective}). Puis nous étudierons plusieurs versions de la fonction d'optimisation. La seconde sera d'utiliser la combinaison que nous estimerons comme optimale pour créer un contrôleur pouvant supporter les variations de vitesse désirée et les variations du niveau de fluide. Nous testerons ensuite la robustesse de ce contrôleur à l'application de forces externes, à des modifications du milieu liquide et à des changements de vitesse désirée. Nous encourageons le lecteur à visionner la vidéo accompagnant ce document pour une meilleure vision des résultats (\href{https://drive.google.com/folderview?id=0B6n5UVMEGbGHfjM5a1phUHZGaUtLNVRNanFDT2xRd19zN0x1UmNabjlCVGN6c1ZFdWRLczA&usp=sharing}{lien vers la vidéo}).
 
 \subsection{Étude de la fonction d'évaluation}
 
@@ -477,8 +482,8 @@ Dans cette partie nous effectuons pour chaque version de la fonction d'évaluati
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.3]{strips/min_torque_25cm.png}
-\includegraphics[scale=0.4]{strips/min_torque_75cm.png}
+\includegraphics[scale=0.28]{strips/min_torque_25cm.png}
+\includegraphics[scale=0.37]{strips/min_torque_75cm.png}
 \caption{Marche d'un personnage cherchant à minimiser l'énergie dépensée dans 25cm d'eau (gauche) et dans 75cm d'eau (droite)}
 \label{fig:min_energ}
 \end{figure}
@@ -490,6 +495,8 @@ Comme nous nous y attendions le personnage lève très peu le pied en phase de v
 
 \subsubsection{Étude de la minimisation de la résistance du liquide}
 
+
+\vspace*{-1cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{strips/min_drag_75cm.png}
@@ -500,16 +507,20 @@ Comme nous nous y attendions le personnage lève très peu le pied en phase de v
 
 Cette version ne prend en compte que la résistance de l'eau. Cela veux dire que pour une hauteur d'eau de 0m la fonction d'évaluation est inutile, ce qui fait que nous n'étudierons donc pas ce cas. Les résultats que nous attendons sont des mouvements cherchant à éviter un maximum le contact avec l'eau, donc un personnage cherchant à sortir les jambes de l'eau. On s'attend à apercevoir qu'après un certain niveau d'eau il devient impossible de sortir les jambes de l'eau et donc le personnage cherche à effectuer des mouvements les moins amples et les moins rapides possibles dans l'eau. 
  
-Comme nous nous y attendions le personnage cherche bien à sortir le pied en phase de vol de l'eau (figure \ref{fig:min_drag_25}), ce phénomène est déjà presque impossible à une hauteur d'eau de 0,5m. Au dessus de 0,5m le contrôle choisit de ne plus lever la jambe et cherche à obtenir le mouvement optimal en restant au fond de l'eau (figure \ref{fig:min_drag_25} (gauche)). Il est également intéressant de noter que le personnage cherche à aligner le tibias dans le sens du déplacement pour éviter que l'eau n'applique une résistance dessus. Ce phénomène est particulièrement remarquable dans la phase de levée du pied. Pour les niveaux d'eau où le personnage cherche à sortir le pied hors de l'eau on remarque que le pied a une trajectoire assez courbée vers l'intérieur (figure \ref{fig:min_drag2} (droite)). Ce phénomène doit probablement servir à lever le pied aussi haut que possible mais il ne donne pas un résultat visuellement réaliste.  
+Comme nous nous y attendions le personnage cherche bien à sortir le pied en phase de vol de l'eau (figure \ref{fig:min_drag_25}), ce phénomène est déjà presque impossible à une hauteur d'eau de 0,5m. Au dessus de 0,5m le contrôle choisit de ne plus lever la jambe et cherche à obtenir le mouvement optimal en restant au fond de l'eau. Il est également intéressant de noter que le personnage cherche à aligner le tibias dans le sens du déplacement pour éviter que l'eau n'applique une résistance dessus. Ce phénomène est particulièrement remarquable dans la phase de levée du pied. Pour les niveaux d'eau où le personnage cherche à sortir le pied hors de l'eau on remarque que le pied a une trajectoire assez courbée vers l'intérieur (figure \ref{fig:min_drag2} (bas)). Ce phénomène doit probablement servir à lever le pied aussi haut que possible mais il ne donne pas un résultat visuellement réaliste.  
 
 \subsubsection{Minimisation des accélérations angulaires}
+
+\vspace*{-1.25cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{strips/min_acc_75cm.png}
-\caption{Marche d'un personnage cherchant à minimiser l'opposition les accélérations angulaires dans 75cm d'eau.}
+\caption{Marche d'un personnage cherchant à minimiser les accélérations angulaires dans 75cm d'eau.}
 \label{fig:min_acc}
 \end{figure}
 
+
+\vspace*{-1.25cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{strips/stance_ankle_min_torque.png}
@@ -520,14 +531,15 @@ Comme nous nous y attendions le personnage cherche bien à sortir le pied en pha
 \end{figure}
 Ce critère ne prend en compte que la composante pénalisant les accélérations élevées. Nous nous attendons à trouver un résultat proche de ceux obtenus pour le critère de minimisation de l'énergie. En effet, obtenir des accélérations élevées demanderait des torques élevés. La différence que nous attendons principalement est au niveau de la trajectoire désirée de la cheville d'appui. Nous nous attendons à observer une courbe bien plus lisse que celle observée pour le critère de minimisation de l'énergie.
 
-On remarque que le mouvement obtenu lève le pied en phase de vol moins haut que lors de l'utilisation du critère de minimisation de l'énergie. On remarque également que cette fonction pousse plus à pencher le torse pour gagner de la vitesse.
+On remarque que le mouvement obtenu lève le pied en phase de vol moins haut que lors de l'utilisation du critère de minimisation de l'énergie (figure \ref{fig:min_acc}). On remarque également que cette fonction pousse plus à pencher le torse pour gagner de la vitesse.
  Contrairement à ce que nous espérions nous observons toujours des variations importantes sur la trajectoire de la cheville d'appui avec ce critère (voir figure \ref{fig:traj_ankle_min_acc} (droite)). C'est peut être du au fait que le personnage garde le pied extrêmement proche du sol au cours du mouvement. La courbe à donc probablement appris les variations permettant de rester aussi proche que possible du sol sans le toucher.
 
-
+\vspace*{0.5cm}
 Nous allons maintenant étudier quelques combinaisons de la fonction d'évaluation (équation \ref{eq:complete_eval}). Nous utiliserons la dénomination suivante lorsque nous voulons nous référer à une des combinaisons $f(\alpha,\beta,\gamma)$. Dans cette partie nous ne réétudierons pas les niveaux d'eau pour lesquels les résultats étaient similaires pour les trois critères d'optimisation (0, 0.75 et 1) car toute combinaison des résultats donnerait le même résultat. Donc nous n'étudierons que les niveaux de liquide 0,25m et 0,5m. Le but de cette étude est de trouver une combinaison permettant d'obtenir un mouvement fortement conditionné par la présence du liquide, dépensant une quantité d'énergie assez faible et ne présentant pas d'accélérations brusques. 
 
 \subsubsection{Étude de f(2,8,1)}
 
+\vspace*{-0.9cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.35]{strips/2_8_1_25cm.png}
@@ -544,15 +556,17 @@ Tout d'abord on remarque que l'on conserve bien les caractéristiques du critèr
 \centering
 \includegraphics[scale=0.35]{strips/3_6_1_25cm.png}
 \includegraphics[scale=0.35]{strips/3_6_1_25cm_from_back.png}
-\includegraphics[scale=0.4]{strips/3_6_1_50cm.png}
+\includegraphics[scale=0.35]{strips/3_6_1_50cm.png}
 \caption{Marche d'un personnage selon la fonction d'évaluation f(3,6,1) dans 25cm de liquide vu de coté (gauche) et vu de dos (droite) et dans 50cm de liquide vu de coté (bas)}
 \label{fig:f361}
 \end{figure}
 
 Nous constatons que cette fois-ci il n'y a pas de mouvement latéral sur le pied lors de la marche dans 0.25m de liquide (voir figure \ref{fig:f361} (droite)). Nous avons toujours un mouvement fortement conditionné par l'impact du liquide (figure \ref{fig:f361} (gauche) et (bas)). Cependant on remarque tout de même que le personnage ne sort plus le pied du liquide lors de l'immersion dans 0.25m de liquide (figure \ref{fig:f361} (gauche)). Nous allons maintenant voir si diminuer encore l'influence du critère de minimisation de la résistance du liquide à une influence sur le résultat ou si celui-ci reste stable.
 
-\vspace*{-0.75cm}
 \subsubsection{Étude de f(4,5,1)}
+
+
+\vspace*{-0.85cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{strips/4_5_1_50cm.png}
@@ -560,7 +574,7 @@ Nous constatons que cette fois-ci il n'y a pas de mouvement latéral sur le pied
 \label{fig:f451}
 \end{figure}
 
-On remarque que cette combinaison de paramètre diminue la hauteur à laquelle le pied est levé même si celui-ci ne sort pas du liquide avec la fonction f(3,6,1) (voir figure \ref{fig:f451}). Nous sommes donc moins intéressé ces valeurs de poids. 
+On remarque que cette combinaison de paramètre diminue la hauteur à laquelle le pied est levé même si celui-ci ne sort pas du liquide avec la fonction f(3,6,1) (voir figure \ref{fig:f451}). Nous sommes donc moins intéressés par ces valeurs de poids. 
 
 \subsection{Étude du contrôleur complexe}
 
@@ -568,6 +582,7 @@ Au vu des résultats précédents nous utilisons la fonction d'évaluation f(3,6
 
 Avant de créer notre contrôleur nous allons vérifier si l'on ne peut pas trouver une relation entre les trajectoires des différents niveaux de liquide utilisées par une articulation. L'existence de telles relations nous permettrait de créer un contrôleur générique pour toute hauteurs d'eau. Dans un premier temps nous allons regarder d'une manière globale si on peut trouver des articulations avec des trajectoires similaires sur plusieurs niveaux de liquide. Dans un second temps nous regarderons pour chaque point des trajectoires si l'on ne peut pas trouver une relation linéaire décrivant son évolution entre les différents niveaux de liquide.
 
+\vspace*{-0.25cm}
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{trajs_swing_ankle.pdf}
@@ -575,7 +590,7 @@ Avant de créer notre contrôleur nous allons vérifier si l'on ne peut pas trou
 \label{fig:comp_traj_swing_foot}
 \end{figure}
 
-Nous ne trouvons une similarité entre les trajectoire de références pour divers niveaux de liquide que pour l'articulation de la cheville en phase de vol (figure \ref{fig:comp_traj_swing_foot}). On peut voir sur le graphique qu'à l'exception de la courbe correspondant au personnage sans liquide les courbes sont très similaires. Nous avons donc calculé la moyenne des courbes en ne prenant pas en compte le niveau de liquide 0m et utilisons cette nouvelle courbe en temps que trajectoire pour toutes les courbes de références des niveaux de liquides supérieurs ou égal à 0.25m. 
+Nous ne trouvons une similarité entre les trajectoire de références pour divers niveaux de liquide que pour l'articulation de la cheville en phase de vol (figure \ref{fig:comp_traj_swing_foot}). On peut voir sur le graphique qu'à l'exception de la courbe correspondant au personnage sans liquide les courbes sont très similaires. Nous avons donc calculé la moyenne des courbes en ne prenant pas en compte le niveau de liquide 0m et utilisons cette nouvelle courbe en temps que trajectoire pour toutes les courbes de références des niveaux de liquides supérieurs ou égal à 0,25m. 
 
 \begin{figure}[h]
 \centering
@@ -591,24 +606,24 @@ Nous avons ensuite effectué une étude de l'évolution de l'angle de chaque poi
 Une visualisation des styles de marche définis à l'aide de de l'optimisation est présenté dans l'annexe \ref{sec:complex_controler_reference}. 
 
 Notre contrôleur permet la variation dynamique des vitesses désirées suivant les axes sagittal et coronal. Il est également possible de modifier la largeur des pas au cours du mouvement.
-Le contrôleur est capable de s'adapter aux variations de niveau de liquide ainsi qu'aux variations de propriétés physiques du liquide (densité, viscosité). Notre système est capable de supporter des forces externes simulées par l'intermédiaire de boules solides de 5kg projetées sur le personnage.
+Le contrôleur est capable de s'adapter aux variations de niveau de liquide ainsi qu'aux variations de propriétés physiques du liquide (densité, viscosité) . Notre système est capable de supporter des forces externes simulées par l'intermédiaire de boules solides de 5kg projetées sur le personnage.
 
-Tous ces résultats sont présentés dans la vidéo accompagnant ce document (trouvable à l'adresse précédemment mentionnée). 
+Tous ces résultats sont présentés dans la vidéo accompagnant ce document (trouvable à l'adresse mentionnée précédemment).
 
 
 \subsection{Limitations}
 Notre contrôleur possède plusieurs limitations provenant de diverses origines. 
 Une limitation majeure de notre système est la présence d'un seuil fixe permettant la détection des instabilités. Il est très dur d'obtenir un seuil adapté car suivant la situation il serait préférable d'avoir un seuil plus ou moins élevé. Durant la phase de convergence vers le mouvement stable il nous est nécessaire d'avoir un seuil élevé pour permettre au système d'évoluer assez rapidement à partir d'une position initiale potentiellement non adaptée au mouvement. Mais l'utilisation d'un seuil élevé lors de la phase d'équilibre empêche  une réaction efficace du personnage. 
-Une seconde limitation est que notre contrôleur ne suit pas correctement les vitesses coronales demandées. Une raison possible est que nous n'avons pas mis en place d'altérateur d'IPM sur la composante coronale. Nous avons fait ce choix car les vitesses sur l'axe coronal étant relativement faibles nous pensions que le contrôle par force virtuelle serait suffisant. Mais nous observons que les courbes de vitesse coronale apprises par le système ne semblent pas être adaptées.
+Une seconde limitation est que notre contrôleur ne suit pas correctement les vitesses coronales demandées. Une raison possible est que nous n'avons pas mis en place d'altérateur d'IPM sur la composante coronale. Nous avons fait ce choix car les vitesses sur l'axe coronal étant relativement faibles nous pensions que le contrôle par force virtuelle serait suffisant. Mais nous observons que les courbes de vitesse coronale apprises par le système ne semblent pas être adaptées. Ce problème limite également la robustesse à l'application de forces externes et aux variations de propriétés du liquide. 
 Une troisième limitation de notre système est qu'il n'assure pas un contact ferme entre le pied d'appui et le sol. Ce phénomène est du au fait qu'il est très difficile d'obtenir une trajectoire de la cheville d'appui assurant un maintien correct du contact avec le sol. Il est fréquent que lors de nos simulations le personnage arrive à faire glisser le pied au sol. Ce phénomène est particulièrement visible lorsque l'on introduit un déséquilibre à l'aide d'une force externe. 
 Une quatrième limitation est le besoin de définir plusieurs ensembles de trajectoires pour permettre un suivi correct de la vitesse en gardant un mouvement naturel. 
-Enfin le modèle simplifié que nous avons utilisé pour la simulation du liquide ne nous permet pas d'assurer que les mouvement obtenus sont parfaitement réalistes. Nous ne prenons pas en compte les perturbations du liquide provoquées par le personnage alors qu'il est probable que celle-ci soient non négligeables. Cette remarque est particulièrement justifiée pour les mouvement ou le personnage élève le pied en phase de vol hors du liquide ce qui provoque probablement des perturbations importantes du liquide.
+Enfin le modèle simplifié que nous avons utilisé pour la simulation du liquide ne nous permet pas d'assurer que les mouvements obtenus sont parfaitement réalistes. Nous ne prenons pas en compte les perturbations du liquide provoquées par le personnage alors qu'il est probable que celle-ci soient non négligeables. Cette remarque est particulièrement justifiée pour les mouvements ou le personnage élève le pied en phase de vol hors du liquide ce qui provoque probablement des perturbations importantes du liquide.
  %L'ajout de contrôleurs supplémentaires sur les articulations clefs telles que la cheville d'appui permettrait %de gagner en robustesse du mouvement. Une amélioration de la capacité à détecter la perte d'équilibre %permettrait également au système de gagner grandement en robustesse.
 \section{Conclusion}
 \label{sec:conclusion}
 %
 Nous avons présenté un contrôleur basé physique permettant l'animation d'un personnage bipède à travers un milieu liquide. Notre contrôleur se sert d'un ensemble de trajectoires cibles pour pouvoir adapter son style de déplacement aux conditions de l'environnement. Nous obtenons une marche robuste et un suivi précis de la vitesse désirée par l'intermédiaire d'un placement intelligent du pied et de l'utilisation de systèmes incrémentaux pour prendre en compte l'influence de l'environnement. Enfin nous avons utilisé une méthode d'optimisation hors ligne pour obtenir un déplacement caractéristique des différents niveaux de liquide considérés.
-Nous avons proposé une paramétrisation de notre contrôleur permettant l'adaptation dynamique du mouvement aux variations de vitesse désirée, aux changements de quantité de liquide ainsi qu'à la modification des propriétés physiques de ce dernier. Nous avons également montré un maintien de l'équilibre après application de forces externes.
+Nous avons proposé une paramétrisation de notre contrôleur permettant l'adaptation dynamique du mouvement aux variations de vitesse désirée, aux changements de quantité de liquide ainsi qu'à la modification des propriétés physiques de ce dernier. Nous avons également montré un maintien de l'équilibre après application de forces externes modérées.
 
 Nous pensons que des extensions du contrôleur sont possibles. Il serait intéressant de mettre en place un modèle plus réaliste pour les liquides ainsi que des milieux déformables (tel que la neige) pour déterminer quels sont les composants manquants au système pour obtenir un déplacement réaliste. Enfin l'extension de notre contrôleur à de nouveaux déplacements tel que la course ou des mouvement en position statique est une piste de travail intéressante. 
 
@@ -629,11 +644,21 @@ Un article présentant les résultats de ce stage est en cours de rédaction pou
 \label{sec:lexique}
 \subsubsection{pas.} Nous définissons un pas comme le mouvement permettant de déplacer un pied en contact avec le sol à une nouvelle position présentant un contact avec le sol
 
+\subsubsection{phase descendante d'un pas.} Un instant $t$ appartient à la phase descendante du pas si la vitesse du centre des masses selon l'axe vertical du monde est négative.
+
+\subsubsection{phase ascendante d'un pas.} Un instant $t$ appartient à la phase ascendante du pas si la vitesse du centre des masses selon l'axe vertical du monde est positive.
+
 \subsubsection{phase de vol.} Un élément est dit en phase de vol quand il fait partit de la jambe n'ayant pas de contact avec le sol.
 
 \subsubsection{phase d'appui.} Un élément est dit en phase d'appui quand il fait partit de la jambe ayant un contact avec le sol.
 
-\subsubsection{phase du pas ($\phi$).} Nous définissons la phase du pas comme le rapport entre le temps $t$ écoulé depuis le début du pas et le temps maximum $T$ autorisé pour réaliser un pas $\phi=\frac{t}{T}$
+\subsubsection{phase du pas ($\phi$).} Nous définissons la phase du pas comme le rapport entre le temps $t$ écoulé depuis le début du pas et le temps maximum $T$ autorisé pour réaliser un pas $\phi=\frac{t}{T}$.
+
+\subsubsection{état stable.} Nous dirons qu'un contrôleur se trouve dans un état stable si le mouvement observé est régulier entre chaque pas.
+
+\subsubsection{contrôleur robuste.} Un contrôleur est dit robuste si il est capable de converger vers un état stable après une interaction avec l'environnement (e.g. force externe) ou une variation de l'environnement (e.g. changement du niveau d'eau).
+
+\subsubsection{simulation en temps-réel.} On dit d'une simulation qu'elle est en temps réel si l'utilisateur peut interagir avec la simulation durant son exécution. Nous considèrerons que une simulation doit avoir un framerate d'environs 30fps pour être considérée comme en temps réel.
 
 
 \newpage
@@ -647,10 +672,10 @@ Un article présentant les résultats de ce stage est en cours de rédaction pou
 \includegraphics[scale=0.3]{strips/03_50cm.png}
 \includegraphics[scale=0.3]{strips/03_75cm.png}
 \includegraphics[scale=0.3]{strips/03_100cm.png}
-\caption{Marche de référence du contrôleur complexe à une vitesse de $0.3m.s^{-1}$ pour 0cm d'eau (haut gauche), 25cm d'eau (haut milieu), 50cm d'eau (haut droite), 75cm d'eau (bas gauche), 100cm d'eau (bas droite), }
-\label{fig:joint_space_motion_control}
-\label{fig:state_machine}
+\caption{Marche de référence du contrôleur complexe à une vitesse de $0.3m.s^{-1}$ pour 0cm d'eau (haut gauche), 25cm d'eau (haut milieu), 50cm d'eau (haut droite), 75cm d'eau (bas gauche), 100cm d'eau (bas droite).}
+\label{fig:ref_mouv_07}
 \end{figure}
+
 
 \begin{figure}[!h]
 \centering
@@ -659,9 +684,8 @@ Un article présentant les résultats de ce stage est en cours de rédaction pou
 \includegraphics[scale=0.3]{strips/3_6_1_50cm.png}
 \includegraphics[scale=0.3]{strips/3_6_1_75cm.png}
 \includegraphics[scale=0.3]{strips/3_6_1_100cm.png}
-\caption{Marche de référence du contrôleur complexe à une vitesse de $0.7m.s^{-1}$ pour 0cm d'eau (haut gauche), 25cm d'eau (haut droite), 50cm d'eau (milieu gauche), 75cm d'eau (milieu droite), 100cm d'eau (bas), }
-\label{fig:joint_space_motion_control}
-\label{fig:state_machine}
+\caption{Marche de référence du contrôleur complexe à une vitesse de $0.7m.s^{-1}$ pour 0cm d'eau (haut gauche), 25cm d'eau (haut droite), 50cm d'eau (milieu gauche), 75cm d'eau (milieu droite), 100cm d'eau (bas). }
+\label{fig:ref_mouv_03}
 \end{figure}
 
 
@@ -677,8 +701,6 @@ Un article présentant les résultats de ce stage est en cours de rédaction pou
 \includegraphics[scale=0.3]{traj_pts_clefs/swing_foot_y.pdf}
 \includegraphics[scale=0.3]{traj_pts_clefs/swing_foot_z.pdf}
 \caption{Trajectoires des points clefs pour les articulations concernées par l'optimisation. Chaque graphique présente en titre l'articulation et l'axe concerné.}
-\label{fig:joint_space_motion_control}
-\label{fig:state_machine}
 \end{figure}
 
 \end{document}

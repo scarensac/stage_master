@@ -727,6 +727,8 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 		character->getCharacterBottom(lower_body);
 	}
 	
+	double friction_factor = SimGlobals::force_alpha;
+	double drag_density = SimGlobals::liquid_density*friction_factor;
 	
 	for (uint i = 0; i < lower_body.size(); ++i){
 		Joint* joint = lower_body[i];
@@ -735,35 +737,35 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 		
 		WaterImpact water_impact;
 		if (strcmp(body->name, "rToes") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lToes") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_toes(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rFoot") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lFoot") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lLowerleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rLowerleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lUpperleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rUpperleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else{
@@ -794,7 +796,8 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts
 this function handle the toes
 */
-Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level){
+Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level, double eff_density){
+
 
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
 
@@ -868,7 +871,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level){
 		}
 
 		//now that we have the surface we can compute the resulting force
-		Vector3d F = -V*V.length() * 1 / 2 * SimGlobals::liquid_density*S;
+		Vector3d F = -V*V.length() * 1 / 2 * eff_density*S;
 
 
 		//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
@@ -900,7 +903,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level){
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the feet
 */
-Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
+Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density){
 	
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
 	double density = SimGlobals::liquid_density;
@@ -1011,32 +1014,32 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level){
 		//first let's handle the back face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2));
 		cur_normal = -nz;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, eff_density);
 
 		//now the front face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, box->getZLen() / 2));
 		cur_normal = nz;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvy, nbr_interval_x, nbr_interval_y, eff_density);
 
 		//now the left face
 		cur_pos = body->getWorldCoordinates(center + Point3d(box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = nx;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, eff_density);
 
 		//now the right face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = -nx;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvy, wvz, nbr_interval_y, nbr_interval_z, eff_density);
 
 		//now the top face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = ny;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density);
 
 		//now the bottom face to finish
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = -ny;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density);
 
 		//*/
 	}
@@ -1282,7 +1285,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vec
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the legs and arms
 */
-Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level){
+Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density){
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
 
 	CollisionDetectionPrimitive* cdp = body->cdps.front();
@@ -1370,7 +1373,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level){
 						((local_speed / local_speed.length()).crossProductWith(axis_unit_vector)).length();
 
 					//now I can compute the force and apply it
-					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * SimGlobals::liquid_density*S;
+					Vector3d F = -local_speed*local_speed.length() * 1 / 2 * eff_density*S;
 					F = body->getWorldCoordinates(F);
 
 					//we apply the force

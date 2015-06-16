@@ -488,6 +488,7 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 	//else{
 	//	IPPrediction += speed_control;
 	//}
+
 	IPPrediction += -con->velDCoronal / 20;
 
 	//I'll disable all the panic system for now ...

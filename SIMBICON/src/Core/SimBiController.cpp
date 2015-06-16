@@ -1703,6 +1703,8 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 	static double cur_phi_limit_x = coronal_comp->baseTraj.getMinPosition();
 	static int cur_knot_nbr_x = 0;
 
+	static double prev_delta = 0;
+	static double delta_augment = 0;
 
 
 	if (learning_mode){
@@ -1741,7 +1743,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 		if (cur_knot_nbr_x != -1 && cur_phi > cur_phi_limit_x){
 			//we save the speed for this point
-			vel_coronal.push_back(v.x*stance - velDCoronal);
+			vel_coronal.push_back(v.x*stance-velDCoronal);
 
 			//and we look at the next phi
 			//if there are no next pt simply set the nbr of the next knot to -1
@@ -1989,7 +1991,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			sup_point_traj_val = 0;
 			if (need_sup_point){
 				sup_point_traj_val = affected_component->baseTraj.evaluate_catmull_rom(phi_last_step);
-				sup_point_variation = v.x*stance - velDCoronal - sup_point_traj_val;
+				sup_point_variation = v.x*stance -velDCoronal - sup_point_traj_val;
 				variation_moy += std::abs(sup_point_variation);
 				nbr_values++;
 			}
@@ -2006,7 +2008,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 						variation_vector[i] = variation_moy*variation_vector[i] / std::abs(variation_vector[i]);
 					}
 
-					double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i] / 2;
+					double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i] / 4;
 					affected_component->baseTraj.setKnotValue(i, new_val);
 				}
 
@@ -2035,23 +2037,52 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					}
 
 					//and we set the value in the curve
-					val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation;
+					val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation/4;
 					affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
 				}
 
 				//*
+
 				//now we need to translate the curve depending on the speed it result in and the speed we want
-				double evo_speed = 0.2;
+				double evo_speed = 0.2 +(velDSagittal/0.7)/2;
 
 				//I'l simply divide by the ratio between the avg_speed and the velD
 				double traj_delta = ((avgSpeed_x_left + avgSpeed_x_right)/2 - velDCoronal)* evo_speed;
+
+				
+
+				//just a simple thing
+				//ii'll check if there are multiple steps with thr esame traj delta
+				//if I detect it I augment the trajdelta
+				if (std::abs(delta_augment) > 0.000005 && std::signbit(traj_delta) != std::signbit(delta_augment)){
+					double variation = 0.001;
+					if (std::abs(traj_delta) > 0.020){
+						variation = 0.01;
+					}
+					double aug = (traj_delta / std::abs(traj_delta))*variation;
+					delta_augment += aug;
+				}else if (std::abs(traj_delta) > 0.002){
+					if (std::abs(traj_delta - prev_delta) < 0.005){
+						double variation = 0.001;
+						if (std::abs(traj_delta) > 0.020){
+							variation = 0.01;
+						}
+						double aug = (traj_delta / std::abs(traj_delta))*variation;
+						delta_augment += aug;
+					}
+				}
+				
+				
+
+				traj_delta += delta_augment;
 				for (int i = 0; i < nbr_values; ++i){
 					affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) - stance*traj_delta);
 				}
 				//*/
 
+				prev_delta = traj_delta - delta_augment;
 				
 
 				//I'll now handle the other points (the ones even after the point I just created
@@ -2097,7 +2128,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 						if (std::abs(point_variation) > variation_moy){
 							point_variation = variation_moy*point_variation / std::abs(point_variation);
 						}
-						next_val = affected_component->baseTraj.getKnotValue(i) + point_variation / 2;
+						next_val = affected_component->baseTraj.getKnotValue(i) + point_variation / 4;
 
 
 						//and we can set the value in the curve
