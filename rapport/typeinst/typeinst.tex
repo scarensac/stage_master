@@ -424,7 +424,7 @@ Nous n'optimisons pas les articulations des bras et du cou de manière à obteni
 %
 Nous allons construire notre fonction d'optimisation $f_{eval}$ en utilisant d'une part une combinaison pondérée de critères d'évaluation représentant un but physique et d'autre part des heuristiques. Notre fonction d'évaluation se base sur trois critères 
 \begin{equation}
-f_{eval}=\sum_{\substack{t<k}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{drag})
+f_{eval}=\sum_{\substack{t<k}} (\alpha f_{energ} + \beta f_{drag} + \gamma f_{acc})
 \label{eq:simple_objective}
 \end{equation}
 Avec k le temps en seconde durant lequel nous évaluons le contrôleur.
@@ -437,7 +437,7 @@ Chacune des $f_i$ est normalisée par la valeur moyenne obtenue en effectuant un
 
 Comme nous l'avons expliqué lors de la présentation des systèmes de contrôle de vitesse (section \ref{sec:ipm_alt}), l'utilisation de valeurs élevées pour l'altérateur d'IPM peut rendre le mouvement instable. De plus, ce système entraine une modification majeure des résultats de la simulation (en général il raccourci les pas du personnage). Lors de nos premières évaluations nous avons remarqué que l'altérateur d'IPM permettait d'obtenir la vitesse spécifiée même si les poses clefs ne sont pas adaptées. C'est pourquoi nous avons ajouté une pénalisation de ce système ce qui favorise la sélection des positions clefs permettant l'obtention la vitesse désirée. Nous utilisons l'altérateur d'IPM pour corriger les éventuels écarts de vitesse résiduels. Cette pénalisation est représentée par une augmentation de la fonction d'évaluation par un facteur multiplicateur de $(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))})$, avec $\Delta(x,z)$ la valeur de l'altérateur à l'état d'équilibre et $max(\Delta(x,z))$ la valeur maximale autorisée (0.09). Nous obtenons donc la fonction objectif suivante:
 $$
-f_{eval} = \sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) 
+f_{eval} = \sum_{\substack{t}} (\alpha f_{energ} + \beta f_{drag} + \gamma f_{acc})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) 
 $$
 
 Enfin nous ajoutons des heuristiques nous autorisant à définir les limites strictes des solutions que nous acceptons:
@@ -448,7 +448,7 @@ Enfin nous ajoutons des heuristiques nous autorisant à définir les limites str
  La version complète de notre fonction objectif est donc:
 
 \begin{equation}
-f_{eval} =\sum_{\substack{t}} (\alpha f_{energ} + \beta f_{acc} + \gamma f_{speed})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) \\
+f_{eval} =\sum_{\substack{t}} (\alpha f_{energ} + \beta f_{drag} + \gamma f_{acc})*(1+0.1*\frac{\Delta(x,z)}{max(\Delta(x,z))}) \\
 + f_{speed} + f_{balance}
 \label{eq:complete_eval}
 \end{equation}

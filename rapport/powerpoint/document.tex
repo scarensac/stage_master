@@ -1,0 +1,207 @@
+\documentclass{beamer}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{mathabx}
+\usepackage{amsmath}
+\usepackage{extarrows}
+\usepackage{cancel}
+\usefonttheme{professionalfonts}
+\usepackage{cutwin}
+\usepackage{lipsum}
+
+\usepackage[nogradient, nobackground]{beamerthemeliris} % options: nogradient,nobackground
+
+%\graphicspath{ {presentation_homotopic_thinning/} }
+
+\setbeamercovered{transparent=5}
+
+\title[Geodesic Distance]{Geodesic Distance and Metrics on Digital Surface}
+%\subtitle{}
+
+\author
+[Thomas Caissard - thomas.caissard@etu.univ-lyon1.fr]
+{T. Caissard }%\inst{1}}
+
+\institute%[XXX]
+{
+	%\inst{1}%
+	{\bf Laboratoire d'InfoRmatique en Image et Syst\`emes d'information} \\
+	{ \scriptsize{
+			LIRIS UMR 5205 CNRS/INSA de Lyon/Universit\'e Claude Bernard Lyon 1/Universit\'e Lumi\`ere Lyon 2/Ecole Centrale de Lyon\\
+			INSA de Lyon, b\^atiment J. Verne\\
+			20, Avenue Albert Einstein - 69622 Villeurbanne cedex\\
+			\url{http://liris.cnrs.fr}}
+	}
+}
+
+\AtBeginSubsection[]
+{
+	\begin{frame}<beamer>
+		\frametitle{Plan}
+		\tableofcontents[currentsubsection]
+	\end{frame}
+}
+
+\AtBeginSection[]
+{
+	\begin{frame}<beamer>
+		\frametitle{Plan}
+		\tableofcontents[currentsection]
+	\end{frame}
+}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems}
+\tcbuselibrary{skins}
+
+\newcommand{\gatherblock}[2][]{\begin{gather*}\tcboxmath[#1]{#2}\end{gather*}}
+
+
+\begin{document}
+
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\begin{frame}	
+	\frametitle{Introduction}
+	\begin{block}{Objectives}
+		\begin{itemize}
+			\item Implement, test and compare two geodesic distance algorithms.
+			\item Inject metric properties inside Discrete Exterior Calculus and test convergence.
+		\end{itemize}
+	\end{block}
+\end{frame} 
+
+\section{Geodesic Distance and DEC}
+
+\begin{frame}
+	\frametitle{What is a geodesic ?}
+	
+	\begin{block}{Geodesic Distance}
+		$\gamma : \text{[a,b]} \rightarrow M$ a curve on a manifold $M$ with length:
+		\gatherblock{L(\gamma)=\int_a^b \sqrt{g_{\gamma(t)} (\dot{\gamma}(t),\dot{\gamma}(t))dt },}
+		
+		$g$ is a metric tensor, $\dot{\gamma}$ is the derivative of $\gamma$.
+		
+		The geodesic distance between $P$ and $Q$ is the infinimum length between all the $\gamma$.
+			
+	\end{block}
+	
+\end{frame} 
+
+\begin{frame}
+	\frametitle{What is a geodesic ?}
+
+	\begin{figure}
+		\includegraphics[width=0.25\textwidth]{images/greatCircle.png}
+	\end{figure}
+	\begin{center}
+	
+	\gatherblock[colback=red!30]{\text{Geodesic is not unique !}}
+
+	\end{center}
+\end{frame}
+
+\subsection{Geodesic in Heat (GH)}
+
+\begin{frame}	
+	\begin{itemize}
+		\item Geodesics in heat: a new approach to computing distance based on
+		heat flow \cite{DBLP:journals/tog/CraneWW13}
+		\item Distance maps with heat equation
+		\item Solving variational problems
+	\end{itemize}
+	
+	\begin{figure}
+		\includegraphics[width=0.5\textwidth]{images/rabbit.png}
+		\vspace{-25px}
+		\caption{\cite{DBLP:journals/tog/CraneWW13}}
+	\end{figure}
+\end{frame} 
+
+\begin{frame}
+	\frametitle{The algorithm}
+	
+	\begin{block}{Algorithm}
+		\begin{itemize}
+			\item Integrate $u_t=\Delta u_0$ for some fixed $t$. $u_t : M\times\mathbb{R}\rightarrow\mathbb{R}$: time dependent time propagation function.
+			\item Evaluate the vector field $X = \displaystyle - \frac{\nabla u_t}{||\nabla u_t||}$.
+			\item Solve the Poisson equation $\Delta\phi = \nabla \cdot X$.
+		\end{itemize}
+	\end{block}
+	
+	\begin{figure}[ht!]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/GH_graph.jpg}
+		\caption{\cite{DBLP:journals/tog/CraneWW13} }
+	\end{figure}
+\end{frame}
+
+\subsection{Earth Mover's Distance (EMD)}
+
+\begin{frame}	
+	\begin{itemize}
+		\item Earth mover's distances on discrete surfaces \cite{DBLP:journals/tog/SolomonRGB14}
+		\item Probabilist measures displacment using Optimal Transport theory
+		\item Solving variational problems
+	\end{itemize}
+	
+		\begin{figure}
+			\includegraphics[width=\textwidth]{images/horse.png}
+			\caption{\cite{DBLP:journals/tog/SolomonRGB14}}
+		\end{figure}
+\end{frame} 
+
+\begin{frame}
+	\frametitle{Optimal Transport}
+	Geodesic distance:
+	\gatherblock{
+	\mathcal{W}(\mu_0,\mu_1) \equiv \underset{\pi\in\Pi(\mu_0,\mu_1)}{\text{inf}}\iint_{M\times M}d(x,y)d\pi(x,y)}
+	where $\mu_0$ and $\mu_1$ are probabilistic measures. $d(\cdot,\cdot)$ the distance.
+	\begin{figure}
+		\includegraphics[width=\textwidth]{images/transport.png}
+	\end{figure}
+\end{frame}
+
+
+
+\subsection{Discrete Exterior Calculus (DEC)}
+
+\begin{frame}	
+	
+\end{frame} 
+
+\section{Geodesic Distance on Digital Surface}
+
+\begin{frame}	
+	
+\end{frame} 
+
+\subsection{GH versus EMD}
+
+\begin{frame}	
+	
+\end{frame} 
+
+\subsection{Metric embedding}
+
+\begin{frame}	
+	
+\end{frame} 
+
+\section{Conclusion}
+
+\begin{frame}	
+	
+\end{frame} 
+
+\begin{frame}[allowframebreaks]
+	\frametitle{References}
+	\bibliographystyle{amsalpha}
+	\bibliography{biblio.bib}
+\end{frame}
+	
+\end{document}
