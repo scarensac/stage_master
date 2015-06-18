@@ -338,12 +338,12 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 
 	//applying the IP prediction would make the character stop, so take a smaller step if you want it to walk faster, or larger
 	//if you want it to go backwards
-	//step.z += -con->velDSagittal / 20;
-	Vector3d com_vel = con->get_v();
+	step.z += -con->velDSagittal / 20;
+	/*Vector3d com_vel = con->get_v();
 	if (com_vel.y < 0&& phase>0.2){
 		step.z += -con->velDSagittal / 20;
 		step.z += step_delta;
-	}
+	}*/
 	//and adjust the stepping in the coronal plane in order to account for desired step width...
 	step.x = adjustCoronalStepLocation(step.x);
 

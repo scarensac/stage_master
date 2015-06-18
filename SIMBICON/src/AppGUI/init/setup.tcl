@@ -18,7 +18,7 @@ if {$laptop == 1} {
 	puts "laptop = 0"
 	wm geometry . +1000+0
 	console eval {wm geometry . 120x10+0+500}
-	launch ControllerEditor 1000 450
+	launch ControllerEditor 1000 471
 	finalizeUI
 	wm title .dialog "Control Parameters"
 	wm geometry .dialog 260x120+0+0

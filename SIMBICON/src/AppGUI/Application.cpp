@@ -102,33 +102,33 @@ void Application::drawGround(){
 	glEnable(GL_TEXTURE_2D);
 	groundTexture->activate();
 	glBegin(GL_QUADS);
-		x = size; z = size;
+		x = size; z = size*100;
 		glTexCoord2d(x/2, z/2);
 		glVertex3d(x, (-x*Globals::a-z*Globals::c-Globals::d)/Globals::b,z);
-		z = -size;
+		z = -size*100;
 		glTexCoord2d(x/2, z/2);
 		glVertex3d(x, (-x*Globals::a-z*Globals::c-Globals::d)/Globals::b,z);
-		x = -size; z = -size;
+		x = -size; z = -size*100;
 		glTexCoord2d(x/2, z/2);
 		glVertex3d(x, (-x*Globals::a-z*Globals::c-Globals::d)/Globals::b,z);
-		z = size;
+		z = size*100;
 		glTexCoord2d(x/2, z/2);
 		glVertex3d(x, (-x*Globals::a-z*Globals::c-Globals::d)/Globals::b,z);
 	glEnd();
 
 	//I just duplicate it to show the water level (just for the time being)
 	if (SimGlobals::water_level > 0){
-		size = 15;
+		size = 100;
 		glEnable(GL_TEXTURE_2D);
 		waterTexture->activate();
 		glBegin(GL_QUADS);
-		x = size; z = size * 100;
+		x = 0.5; z = size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
-		x = -size; z = -size * 100;
+		x = -0.5; z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = size * 100;
@@ -154,7 +154,7 @@ Vector3d Application::getGroundNormal(){
  */
 void Application::init(){
 	groundTexture = new GLTexture("../data/textures/grid.bmp");
-	waterTexture = new GLTexture("../data/textures/test.bmp");
+	waterTexture = new GLTexture("../data/textures/blueGrid.bmp");
 }
 
 /**

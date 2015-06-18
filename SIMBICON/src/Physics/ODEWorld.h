@@ -209,9 +209,9 @@ public:
 		this function is a children function of the above one (it prevent mass duplication of code for similar body parts
 		this function handle
 	*/
-	Vector3d compute_liquid_drag_on_toes(Joint* joint, float water_level);
-	Vector3d compute_liquid_drag_on_feet(Joint* joint, float water_level);
-	Vector3d compute_liquid_drag_on_legs(Joint* joint, float water_level);
+	Vector3d compute_liquid_drag_on_toes(Joint* joint, float water_level, double eff_density);
+	Vector3d compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density);
+	Vector3d compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density);
 
 	/**
 		this function is an utilitary that is used to compute the liquid forces on a rectangular plane
@@ -227,6 +227,9 @@ public:
 	*/
 	Vector3d compute_liquid_drag_on_plane(Joint* joint, double l_x, double l_y, double l_z, Point3d pos,
 		Vector3d normal, float water_level, int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
+
+	Vector3d compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vector3d normal, float water_level,
+		Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density);
 
 
 	/**

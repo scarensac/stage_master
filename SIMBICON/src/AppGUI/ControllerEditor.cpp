@@ -366,6 +366,14 @@ void ControllerEditor::processTask(){
 	std::vector<double> phi_vect;
 	std::vector<Vector3d> speed_vect;
 
+	//those variables are herefor the evolution
+	//for those I use 2 variables 'cause I do my speed evaluation on 2 steps
+	static double last_step_speed_z = 0;
+	static double last_step_speed_z2 = 0;
+	static double last_step_speed_x = 0;
+	static double last_step_speed_x2 = 0;
+	static double avgSpeedx = 0;
+
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
 	while (simulationTime/maxRunningTime < Globals::animationTimeToRealTimeRatio){
 		simulationTime += SimGlobals::dt;
@@ -406,7 +414,9 @@ void ControllerEditor::processTask(){
 	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
 
 			//store the current speed to be able to know the avg speed at the end
-			avgSpeed += conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity()).z;
+			Vector3d effective_speed = conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity());
+			avgSpeed += effective_speed.z;
+			avgSpeedx += effective_speed.x;
 			timesVelSampled++;
 
 			//if phi is lower than the last position of our trajectory, it means we changed phase and so we need to 
@@ -445,6 +455,16 @@ void ControllerEditor::processTask(){
 				//compute the speed and show it to the user
 
 				avgSpeed /= timesVelSampled;
+				avgSpeedx /= timesVelSampled;
+
+				last_step_speed_x2 = last_step_speed_x;
+				last_step_speed_x = avgSpeedx;
+
+				last_step_speed_z2 = last_step_speed_z;
+				last_step_speed_z = avgSpeed;
+
+				Globals::avg_speed.z = (last_step_speed_z2 + last_step_speed_z) / 2;
+				Globals::avg_speed.x = (last_step_speed_x2 + last_step_speed_x) / 2;
 
 				count_step++;
 				static double avg_speed = 0;

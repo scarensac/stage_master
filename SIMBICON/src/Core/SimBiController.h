@@ -434,7 +434,7 @@ public:
 		This method is used to return the value of the phase (phi) in the current FSM state.
 	*/
 	inline double getPhase(){
-		return phi*(SimGlobals::force_alpha/100000);
+		return phi;// *(SimGlobals::force_alpha / 100000);
 	}
 
 	/**

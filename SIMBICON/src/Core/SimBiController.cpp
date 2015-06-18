@@ -676,7 +676,7 @@ void SimBiController::computeGravityCompensationTorques(std::map<uint, WaterImpa
 
 			Point3d pt1=character->joints[i]->getChild()->getCMPosition();
 			Vector3d F1 = Vector3d(0, character->joints[i]->child->props.mass*9.8, 0);
-
+			/*
 			if (resulting_impact.find(character->joints[i]->get_idx())!=resulting_impact.end()){
 				ForceStruct  boyancy = resulting_impact[character->joints[i]->get_idx()].boyancy;
 				if (!boyancy.F.isZeroVector()){
@@ -685,7 +685,7 @@ void SimBiController::computeGravityCompensationTorques(std::map<uint, WaterImpa
 					pt1 = pt1 + vect_support / vect_support.length()*L2;
 					F1 -= boyancy.F;
 				}
-			}
+			}//*/
 			pt1 = character->joints[i]->getChild()->getLocalCoordinates(pt1);
 
 			vmc->computeJointTorquesEquivalentToForce(character->joints[i], pt1, F1, NULL);
@@ -882,7 +882,7 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	show_force.pt = character->getCOM();
 	SimGlobals::vect_forces.push_back(show_force);
 	//*/
-
+	//*
 	Vector3d f1 = Vector3d(anklePos, tibia->state.position) * tibia->props.mass +
 		Vector3d(anklePos, femur->state.position) * femur->props.mass +
 		Vector3d(anklePos, pelvis->state.position) * pelvis->props.mass;// +
@@ -961,7 +961,7 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	
 	/*
 	//old code
-	Vector3d fA = computeVirtualForce();
+	//Vector3d fA = computeVirtualForce();
 
 	Vector3d r;
 
@@ -990,7 +990,7 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	//r.setToVectorBetween(character->joints[mBackIndex]->child->getWorldCoordinates(character->joints[mBackIndex]->cJPos), p);
 	//torques[mBackIndex] += r.crossProductWith(fA) / 10;
 
-	int backIndex = character->getJointIndex("pelvis_torso");
+	//int backIndex = character->getJointIndex("pelvis_torso");
 	r.setToVectorBetween(character->joints[backIndex]->child->getWorldCoordinates(character->joints[backIndex]->cJPos), p);
 	torques[backIndex] += r.crossProductWith(fA) / 5;
 	//*/

@@ -91,6 +91,8 @@ public:
 	static bool useShader;
 	//indicates wether or not to use the console
 	static bool useConsole;
+	//anything
+	static Vector3d avg_speed;
 
 	//these params define the ground plane - for drawing purposes only
 	static double a, b, c, d;
