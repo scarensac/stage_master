@@ -18,7 +18,7 @@
 
 #include <conio.h>//for kbhit
 
-const std::string cur_evo_name = "speed_07__361";
+const std::string cur_evo_name = "min_all_4_5_1";
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -76,8 +76,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	else{
 		//*
 
-		SimGlobals::water_level = 0;
-		SimGlobals::velDSagittal = 0.3;
+		SimGlobals::water_level = 0.5;
+		SimGlobals::velDSagittal = 0.7;
 
 
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
@@ -94,7 +94,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*
 		std::ostringstream oss;
 		oss << "bipV2/" << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
-		//Globals::save_mode_controller = oss.str();
+		Globals::save_mode_controller = oss.str();
 		Globals::save_mode = true;
 		Globals::useShader = false;
 		//Globals::evolution_mode = 1;
