@@ -18,7 +18,7 @@
 
 #include <conio.h>//for kbhit
 
-const std::string cur_evo_name = "min_all_4_5_1";
+const std::string cur_evo_name = "min_drag";
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -76,7 +76,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	else{
 		//*
 
-		SimGlobals::water_level = 0.5;
+		SimGlobals::water_level = 0.25;
 		SimGlobals::velDSagittal = 0.7;
 
 

@@ -143,7 +143,12 @@ public:
 	 * Selects the trajectory to edit
 	 */
 	inline void addEditedCurve( Trajectory1D* editedCurve ) {
-		curveEditors.push_back( new CurveEditor(300*curveEditors.size(), 0, 300, 200) );
+		if (curveEditors.size() < 2){
+			curveEditors.push_back(new CurveEditor(225 * curveEditors.size(), 0, 225, 150));
+		}
+		else{
+			curveEditors.push_back(new CurveEditor(100+225 * curveEditors.size(), 0, 225, 150));
+		}
 		curveEditors.back()->setTrajectory( editedCurve );
 	}
 
