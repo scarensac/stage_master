@@ -124,13 +124,13 @@ void Application::drawGround(){
 		glEnable(GL_TEXTURE_2D);
 		waterTexture->activate();
 		glBegin(GL_QUADS);
-		x = 0.5; z = size * 100;
+		x = size * 100; z = size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
-		x = -0.5; z = -size * 100;
+		x = -size*100; z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = size * 100;

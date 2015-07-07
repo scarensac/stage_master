@@ -72,6 +72,9 @@ Vector3d Globals::avg_speed=Vector3d(0,0,0);
 
 double Globals::a=0, Globals::b=1, Globals::c=0, Globals::d=0;
 
+double Globals::ref_paper_eval=0, Globals::cur_paper_eval=0;
+
+
 Globals::Globals(void){
 }
 

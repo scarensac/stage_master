@@ -76,8 +76,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	else{
 		//*
 
-		SimGlobals::water_level = 0.25;
-		SimGlobals::velDSagittal = 0.7;
+		SimGlobals::water_level = 0.4;
+		SimGlobals::velDSagittal = 0.6;
 
 
 		std::string primary_save_config = "controllers/bipV2/primary_save_config.txt";
@@ -94,7 +94,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*
 		std::ostringstream oss;
 		oss << "bipV2/" << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
-		Globals::save_mode_controller = oss.str();
+		//Globals::save_mode_controller = oss.str();
 		Globals::save_mode = true;
 		Globals::useShader = false;
 		//Globals::evolution_mode = 1;

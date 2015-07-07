@@ -764,17 +764,22 @@ void ControllerEditor::processTask(){
 				
 				Vector3d v = conF->getLastStepTaken();
 				
+				/*
 				if (!Globals::evolution_mode&&!Globals::close_after_saving){
 					if (conF->getController()->recovery_step){
-						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
+						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, step_delta = %lf)\n",
+							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
 	
 					}
 					else{
-						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, avgSpeed, step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
+						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, step_delta = %lf)\n",
+							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z,  step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
 					}
 				}
+				//*/
+				//this print is to draw the curve of evo of the speeds
+				tprintf("%lf, %lf\n",Globals::avg_speed.x, Globals::avg_speed.z);
+
 
 				//Globals::animationRunning = false;
 

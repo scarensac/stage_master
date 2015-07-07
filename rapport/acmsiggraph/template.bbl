@@ -1,0 +1,142 @@
+\begin{thebibliography}{\protect\citename{Van~de Panne and Lamouret }1995}
+
+\bibitem[\protect\citename{Barela et~al\mbox{.} }2006]{barela2006biomechanical}
+{\sc Barela, A.~M., Stolf, S.~F., and Duarte, M.}
+\newblock 2006.
+\newblock Biomechanical characteristics of adults walking in shallow water and
+  on land.
+\newblock {\em Journal of Electromyography and Kinesiology 16}, 3, 250--256.
+
+\bibitem[\protect\citename{Chevutschi et~al\mbox{.}
+  }2009]{chevutschi2009comparison}
+{\sc Chevutschi, A., Alberty, M., Lensel, G., Pardessus, V., and Thevenon, A.}
+\newblock 2009.
+\newblock Comparison of maximal and spontaneous speeds during walking on dry
+  land and water.
+\newblock {\em Gait \& posture 29}, 3, 403--407.
+
+\bibitem[\protect\citename{Coros et~al\mbox{.} }2009]{coros2009robust}
+{\sc Coros, S., Beaudoin, P., and van~de Panne, M.}
+\newblock 2009.
+\newblock Robust task-based control policies for physics-based characters.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, vol.~28, ACM, 170.
+
+\bibitem[\protect\citename{Coros et~al\mbox{.} }2010]{coros2010generalized}
+{\sc Coros, S., Beaudoin, P., and van~de Panne, M.}
+\newblock 2010.
+\newblock Generalized biped walking control.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, vol.~29, ACM, 130.
+
+\bibitem[\protect\citename{Geijtenbeek and Pronost
+  }2012]{geijtenbeek2012interactive}
+{\sc Geijtenbeek, T., and Pronost, N.}
+\newblock 2012.
+\newblock Interactive character animation using simulated physics: A
+  state-of-the-art review.
+\newblock In {\em Computer Graphics Forum}, vol.~31, Wiley Online Library,
+  2492--2515.
+
+\bibitem[\protect\citename{Geijtenbeek et~al\mbox{.}
+  }2012]{geijtenbeek2012simple}
+{\sc Geijtenbeek, T., Pronost, N., and van~der Stappen, A.~F.}
+\newblock 2012.
+\newblock Simple data-driven control for simulated bipeds.
+\newblock In {\em Proceedings of the ACM SIGGRAPH/Eurographics Symposium on
+  Computer Animation}, Eurographics Association, 211--219.
+
+\bibitem[\protect\citename{Hansen }2006]{hansen2006cma}
+{\sc Hansen, N.}
+\newblock 2006.
+\newblock The cma evolution strategy: a comparing review.
+\newblock In {\em Towards a new evolutionary computation}. Springer, 75--102.
+
+\bibitem[\protect\citename{Kajita et~al\mbox{.} }2001]{kajita20013d}
+{\sc Kajita, S., Kanehiro, F., Kaneko, K., Yokoi, K., and Hirukawa, H.}
+\newblock 2001.
+\newblock The 3d linear inverted pendulum mode: A simple modeling for a biped
+  walking pattern generation.
+\newblock In {\em Intelligent Robots and Systems, 2001. Proceedings. 2001
+  IEEE/RSJ International Conference on}, vol.~1, IEEE, 239--246.
+
+\bibitem[\protect\citename{Kwatra et~al\mbox{.} }2010]{kwatra2010fluid}
+{\sc Kwatra, N., Wojtan, C., Carlson, M., Essa, I., Mucha, P.~J., and Turk, G.}
+\newblock 2010.
+\newblock Fluid simulation with articulated bodies.
+\newblock {\em Visualization and Computer Graphics, IEEE Transactions on 16},
+  1, 70--80.
+
+\bibitem[\protect\citename{Lentine et~al\mbox{.} }2011]{lentine2011creature}
+{\sc Lentine, M., Gretarsson, J.~T., Schroeder, C., Robinson-Mosher, A., and
+  Fedkiw, R.}
+\newblock 2011.
+\newblock Creature control in a fluid environment.
+\newblock {\em Visualization and Computer Graphics, IEEE Transactions on 17},
+  5, 682--693.
+
+\bibitem[\protect\citename{Miyoshi et~al\mbox{.} }2005]{miyoshi2005functional}
+{\sc Miyoshi, T., Shirota, T., Yamamoto, S.-I., Nakazawa, K., and Akai, M.}
+\newblock 2005.
+\newblock Functional roles of lower-limb joint moments while walking in water.
+\newblock {\em Clinical Biomechanics 20}, 2, 194--201.
+
+\bibitem[\protect\citename{Mussa-Ivaldi }1997]{mussa1997nonlinear}
+{\sc Mussa-Ivaldi, F.~A.}
+\newblock 1997.
+\newblock Nonlinear force fields: a distributed system of control primitives
+  for representing and learning movements.
+\newblock In {\em Computational Intelligence in Robotics and Automation, 1997.
+  CIRA'97., Proceedings., 1997 IEEE International Symposium on}, IEEE, 84--90.
+
+\bibitem[\protect\citename{Neff and Fiume }2002]{neff2002modeling}
+{\sc Neff, M., and Fiume, E.}
+\newblock 2002.
+\newblock Modeling tension and relaxation for computer animation.
+\newblock In {\em Proceedings of the 2002 ACM SIGGRAPH/Eurographics symposium
+  on Computer animation}, ACM, 81--88.
+
+\bibitem[\protect\citename{Orselli and Duarte }2011]{orselli2011joint}
+{\sc Orselli, M. I.~V., and Duarte, M.}
+\newblock 2011.
+\newblock Joint forces and torques when walking in shallow water.
+\newblock {\em Journal of biomechanics 44}, 6, 1170--1175.
+
+\bibitem[\protect\citename{Si et~al\mbox{.} }2014]{si2014realistic}
+{\sc Si, W., Lee, S.-H., Sifakis, E., and Terzopoulos, D.}
+\newblock 2014.
+\newblock Realistic biomechanical simulation and control of human swimming.
+\newblock {\em ACM Transactions on Graphics (TOG) 34}, 1, 10.
+
+\bibitem[\protect\citename{Stam }1999]{stam1999stable}
+{\sc Stam, J.}
+\newblock 1999.
+\newblock Stable fluids.
+\newblock In {\em Proceedings of the 26th annual conference on Computer
+  graphics and interactive techniques}, ACM Press/Addison-Wesley Publishing
+  Co., 121--128.
+
+\bibitem[\protect\citename{Tan et~al\mbox{.} }2011]{tan2011articulated}
+{\sc Tan, J., Gu, Y., Turk, G., and Liu, C.~K.}
+\newblock 2011.
+\newblock Articulated swimming creatures.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, vol.~30, ACM, 58.
+
+\bibitem[\protect\citename{Van~de Panne and Lamouret }1995]{van1995guided}
+{\sc Van~de Panne, M., and Lamouret, A.}
+\newblock 1995.
+\newblock {\em Guided optimization for balanced locomotion}.
+\newblock Springer.
+
+\bibitem[\protect\citename{Yang et~al\mbox{.} }2004]{yang2004layered}
+{\sc Yang, P.-F., Laszlo, J., and Singh, K.}
+\newblock 2004.
+\newblock Layered dynamic control for interactive character swimming.
+\newblock In {\em Proceedings of the 2004 ACM SIGGRAPH/Eurographics symposium
+  on Computer animation}, Eurographics Association, 39--47.
+
+\bibitem[\protect\citename{Yin et~al\mbox{.} }2007]{yin2007simbicon}
+{\sc Yin, K., Loken, K., and van~de Panne, M.}
+\newblock 2007.
+\newblock Simbicon: Simple biped locomotion control.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, vol.~26, ACM, 105.
+
+\end{thebibliography}

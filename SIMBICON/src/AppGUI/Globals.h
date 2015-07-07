@@ -125,6 +125,10 @@ public:
 	//these params define the ground plane - for drawing purposes only
 	static double a, b, c, d;
 
+
+	//just some value to realise the paper (ignore them)
+	static double ref_paper_eval, cur_paper_eval;
+
 	Globals(void);
 	~Globals(void);
 
