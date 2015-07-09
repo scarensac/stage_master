@@ -129,6 +129,9 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	//init the virtula model controler
 	vmc = new VirtualModelController(b);
 
+	velD_sagital_factor = 0.0;
+	velD_coronal_factor_right = 0.0;
+	velD_coronal_factor_left = 0.0;
 
 	recovery_step = false;
 }
@@ -1656,15 +1659,26 @@ SimBiConState* SimBiController::getState( uint idx ) {
 this function get the desired sagital velocity (affected by the variation trajectory)
 */
 inline double SimBiController::get_effective_desired_sagittal_velocity(double phi){
-	return velDSagittal *velD_sagittal_component()->baseTraj.evaluate_catmull_rom(phi);
+	return velDSagittal *(velD_sagittal_component()->baseTraj.evaluate_catmull_rom(phi)+velD_sagital_factor);
 }
 
 /**
 this function get the desired coronal velocity (affected by the variation trajectory)
 */
 inline double SimBiController::get_effective_desired_coronal_velocity(double phi){
-	double signChange = (getStance() == RIGHT_STANCE) ? 1 : -1;
-	return velDCoronal +velD_coronal_component(getStance())->baseTraj.evaluate_catmull_rom(phi)*signChange;
+	double signChange;
+	double add_factor;
+
+	if (getStance() == RIGHT_STANCE){
+		signChange = 1;
+		add_factor = velD_coronal_factor_right;
+	}
+	else{
+		signChange = -1;
+		add_factor = velD_coronal_factor_left;
+	}
+
+	return velDCoronal +(velD_coronal_component(getStance())->baseTraj.evaluate_catmull_rom(phi)+add_factor)*signChange;
 	//return velDCoronal;
 }
 
@@ -1832,25 +1846,23 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					sup_point_variation = variation_moy*sup_point_variation / std::abs(sup_point_variation);
 				}
 
-				double new_val = sup_point_traj_val + sup_point_variation ;
-
+				
 				//I now need to calculate the value for the next point in the trajectory
-				// I'll use a linear interpolation for it
+				// I'll use a linear interpolation of the observed variation for it
 				int pt_nbr = nbr_values - 2;
-				double val_previous_pt = affected_component->baseTraj.getKnotValue(pt_nbr);
 				double pos_previous_pt = affected_component->baseTraj.getKnotPosition(pt_nbr);
 				double pos_next_pt = affected_component->baseTraj.getKnotPosition(pt_nbr + 1);
+				
+				double val_next_variation = sup_point_variation*(pos_next_pt - pos_previous_pt) / (phi_last_step - pos_previous_pt);
 
-				double val_next_pt = val_previous_pt + (pos_next_pt - pos_previous_pt)*(new_val - val_previous_pt) / (phi_last_step - pos_previous_pt);
 
 				//we now limit the variation
-				double val_next_variation = val_next_pt - affected_component->baseTraj.getKnotValue(pt_nbr + 1);
 				if (std::abs(val_next_variation) > variation_moy){
 					val_next_variation = variation_moy*val_next_variation / std::abs(val_next_variation);
 				}
 
 				//and we set the value in the curve
-				val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation ;
+				double val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation ;
 				affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
@@ -1858,10 +1870,10 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 
 			//now we need to translate the curve depending on the speed it result in and the speed we want
-			double evo_speed = 1;
+			double evo_speed = 1.0;
 
 			//I'l simply divide by the ratio between the avg_speed and the velD
-			double traj_delta = (avgSpeed_z / velDSagittal - 1)* evo_speed;
+			double traj_delta = (velDSagittal / avgSpeed_z - 1)* evo_speed;
 			
 			//I'll limit the possible translation to 0.25
 			if (traj_delta>0.25){
@@ -1870,11 +1882,9 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			else if (traj_delta < -0.25){
 				traj_delta = -0.25;
 			}
-			traj_delta += 1;
+			//traj_delta += 1;
 
-			for (int i = 0; i < nbr_values; ++i){
-				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) / traj_delta);
-			}
+			velD_sagital_factor += traj_delta;
 
 			//I'll now handle the other points (the ones even after the point I just created
 			//simply using a linear interpolation to know how they should be updated (limiting the possible variation the the variation_moy/2

@@ -58,7 +58,7 @@ Simulating realistic human motion is a key step in creating virtual environments
 
 The main challenge of a controller is to allow high level parametrization of the system under the constraint of partial immersion. For example, these high level parameters may be the character's speed, the direction of displacement or the motion style. The need to simulate a large number of motion styles (walking, running, jumping...) makes creating a generic controller extremely challenging. Similarly, the mastery of multiples interactions with the environment also increases considerably the complexity of the system. This is why the existing controllers focus on the study of a limited number of motion styles at a time and interactions with the environment~\cite{geijtenbeek2012interactive}. We focused on the control of walking in partial immersion conditions in a liquid. Our objective was to define and implement the necessary mechanisms to a physics-based controller to allow real-time animation of a virtual character interacting with a liquid. Our controller is capable of great freedom of gait style and precise tracking of the character's motion speed.
 
-The remainder of this paper section~\ref{sec:previous_works} reviews previous. Section~\ref{sec:overview} proposes an overview of our system. Sections ~\ref{sec:ext_forces}, ~\ref{sec:control_framework} and \ref{sec:optimisation} focuses on the techniques used in the implemented system. Section~\ref{sec:results} illustrates a variety of results, provides discutions and gives the limits of our method. Section~\ref{sec:conclusion} summarises our approach and highlightq future areas of work.
+The remainder of this paper section~\ref{sec:previous_works} reviews previous. Section~\ref{sec:overview} proposes an overview of our system. Sections ~\ref{sec:ext_forces}, ~\ref{sec:control_framework} and \ref{sec:optimisation} focuses on the techniques used in the implemented system. Section ~\ref{sec:implementation} presents the parameters used for our implementation. Section~\ref{sec:results} illustrates a variety of results, provides discutions and gives the limits of our method. Section~\ref{sec:conclusion} summarises our approach and highlightq future areas of work.
  
 \section{Previous works}
 \label{sec:previous_works}
@@ -110,7 +110,7 @@ $$
 F_D=\frac{1}{2} \rho v^2 A_n C_d \times \mu
 $$
 %***mettre les symboles dnas l'ordre ou ils sont trouvés dnas la formule***
-where $C_d$ is the drag coefficient, $\rho$ the fluid density, $A_n$ the cross sectional area and $v$ the relative speed to the fluid. Due to the complexity of dynamically computing $C_d$, we set it to 1.0 (average value for a man). $\mu$ is a coefficient representing the fluid viscosity allowing us a rough representation of the friction. The velocity varying through the limbs we use a finite elements decomposition of the surface of each limb and compute the parasitic drag for each element individually. Thus the computation of the cross sectional area $A_n$ and the immersion test are both directly realized on each element.
+where  $\rho$ the fluid density, $v$ the relative speed to the fluid, $A_n$ the cross sectional area and $C_d$ is the drag coefficient. Due to the complexity of dynamically computing $C_d$, we set it to 1.0 (average value for a man). $\mu$ is a coefficient representing the fluid viscosity allowing us a rough representation of the friction. The velocity varying through the limbs we use a finite elements decomposition of the surface of each limb and compute the parasitic drag for each element individually. Thus the computation of the cross sectional area $A_n$ and the immersion test are both directly realized on each element.
 
 \section{Control Framework}
 \label{sec:control_framework}
@@ -216,12 +216,14 @@ The second part of the evaluation function consists of functions limiting the se
 \subsection{Optimization strategy}
 Our fitness landscape presents many local minimums. As several physics-based animation systems~\cite{geijtenbeek2012simple,tan2011articulated}, we use a Covariance Matrix Adaptation (CMA)~\cite{hansen2006cma} to explore it.
 
-\section{Results}
-\label{sec:results}
 
-\subsection{Implementation}
+\section{Implementation}
+\label{sec:implementation}
 The physics engine used is Open Dynamics Engine (ODE). The simulation step size is $5 \times 10^{-4}s$. The human model used is composed of 28 degrees of freedom, see \cite{coros2009robust} for more details. Collisions between the character's limbs are not considered. The gains of the PD-controller are kept constant through the simulation, and are the same as in the forward walking controller of~\cite{coros2009robust}. Joint torques are limited to $|\tau|<200Nm$  for the hips and knees and $|\tau|<100Nm$  for the other joints. The simulations are performed with a single-thread implementation on a common laptop with 8GB RAM and a 2.5GHz i5 processor. The controller proposed in this section as been build using a liquid with characteristics similar to water: $\rho=1000kg.m^{-3}$ and $\mu=1$.
 
+
+\section{Results}
+\label{sec:results}
 All the results are best seen in the accompanying video.
 
 \subsection{Offline Optimization}

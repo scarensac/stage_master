@@ -176,7 +176,11 @@ public:
 	Trajectory* swing_foot_traj;
 
 	//I'll store the velD trajectory here before I'll use it often
+	//also keep the factors that need to be applyed on the curves here (just be carefull it's an adition on sagittal and an addition on coronal)
 	Trajectory* velD_traj;
+	double velD_sagital_factor;
+	double velD_coronal_factor_right;
+	double velD_coronal_factor_left;
 
 	//this bolean indicate if the next step should be a step where we focus on trying to get back in a stable state
 	bool recovery_step;
