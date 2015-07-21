@@ -260,8 +260,8 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		}
 		step_delta -= (d_v)*0.1;
 
-		if (step_delta > 0){
-			step_delta = 0;
+		if (step_delta > 0.0){
+			step_delta = 0.0;
 		}
 		else if (step_delta < -0.09){
 			step_delta = -0.09;

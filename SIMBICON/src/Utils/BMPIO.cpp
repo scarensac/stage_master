@@ -76,14 +76,24 @@ void BMPIO::readBMPData(FILE* fp, Image* img, BMPInfoHeader* infoHeader){
 	//go through each pixel, and read the value
 	for (i=0; i<img->getHeight();i++){
 		for (j=0; j<img->getWidth();j++){
-			//if we are dealing with a 24 bit bitmap, we need to read the R, G and B components of the image.
-			if (infoHeader->getNrBits() == 24){
-				fread(&temp,sizeof(temp),1,fp);
-				img->setBPixelAt(i,j,(byte)temp);
-				fread(&temp,sizeof(temp),1,fp);
-				img->setGPixelAt(i,j,(byte)temp);
-				fread(&temp,sizeof(temp),1,fp);
-				img->setRPixelAt(i,j,(byte)temp);
+			//if we are dealing with a 32 bit bitmap, we need to read the R, G and B components of the image.
+			if (infoHeader->getNrBits() == 32){
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setBPixelAt(i, j, (byte)temp);
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setGPixelAt(i, j, (byte)temp);
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setRPixelAt(i, j, (byte)temp);
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setAPixelAt(i, j, (byte)temp);
+			}//if we are dealing with a 24 bit bitmap, we need to read the R, G and B components of the image.
+			else if (infoHeader->getNrBits() == 24){
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setBPixelAt(i, j, (byte)temp);
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setGPixelAt(i, j, (byte)temp);
+				fread(&temp, sizeof(temp), 1, fp);
+				img->setRPixelAt(i, j, (byte)temp);
 			}
 			//if it's not a 24 bit bitmap, we'll only deal with bitmaps that are 8-bit and using a color pallete
 			else if (pallete != NULL){
@@ -97,7 +107,8 @@ void BMPIO::readBMPData(FILE* fp, Image* img, BMPInfoHeader* infoHeader){
 		}
 		//and skip the padding - that formula is meant to read all the padding that fills the data up to the closest 32-bit value
 		//I'm sure there must be an easier way to do that...
-		for (j=0; j<(4-(3*img->getWidth())%4)%4;j++)
+		int limit = (4 - (3 * img->getWidth()) % 4) % 4;
+		for (j=0; j<limit;j++)
 			fread(&temp,sizeof(temp),1,fp);
 	}
 }
@@ -129,11 +140,11 @@ Image* BMPIO::loadFromFile(int imageModel){
 
 	BMPHeader *header = new BMPHeader(fp);
 	BMPInfoHeader *infoHeader = new BMPInfoHeader(fp);
-
+	
 	//create an image with the info from the infoHeader of the given bitmap
 	Image* newImage;
 	//create an RGBA image if requested
-	if (imageModel == RGBA_MODEL)
+	if (infoHeader->getNrBits() == 32)
 		newImage = allocateImage(infoHeader, 32);
 	else
 		newImage = allocateImage(infoHeader);
@@ -279,14 +290,14 @@ BMPInfoHeader::BMPInfoHeader(FILE* fp){
 		fread(&importantColours,sizeof(importantColours),1,fp)!=1	
 	)
 		throwError("Unexpected End Of File (BMPInfoHeader).");
-	if (size != HEADERINFOSIZE)
+	if (size != HEADERINFOSIZE && size != HEADERINFOSIZE32)
 		throwError("Invalid BMP file.");
 	if (nrPlanes != 1)
 		throwError( "Unsupported number of bit planes.");
-	if (nrBits != 8 && nrBits != 24)
+	if (nrBits != 8 && nrBits != 24 && nrBits != 32)
 		throwError( "Unsupported number of bits.");
-	if (compression != 0)
-		throwError( "Only uncompressed bmp files are supported.");
+	//if (compression != 0)
+	//	throwError( "Only uncompressed bmp files are supported.");
 		
 	//support pallete information...
 	pallete = NULL;

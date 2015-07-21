@@ -75,6 +75,7 @@ public:
 */
 #define HEADERSIZE 14
 #define HEADERINFOSIZE 40
+#define HEADERINFOSIZE32 124
 
 /**
 	This class acts as a container for a bitmap header.

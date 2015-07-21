@@ -25,6 +25,7 @@
 #include <Utils/BMPIO.h>
 #include <Utils/Image.h>
 #include <Utils/Utils.h>
+#include <iostream>
 
 
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
@@ -44,10 +45,53 @@ bool checkTexSize(int x){
 	This constructor throws errors if the file cannot be found, or if it's height and width are not powers of 2
 */
 GLTexture::GLTexture(char* fileName){
-	//load the image
-	BMPIO b(fileName);
-	Image* im = b.loadFromFile();
+	
+	std::vector<std::string> splited;
+	splited= split(std::string(fileName), '.', splited);
 
+
+	//load the image
+	Image* im;
+
+	if (splited.back() == "bmp"){
+		BMPIO b(fileName);
+		im = b.loadFromFile();
+
+		if (splited[splited.size()-2] == "transpa"){
+			int w = im->getWidth();
+			int h = im->getHeight();
+			byte *imageData = new byte[w* 4 * h];
+			byte * imageDataPtr = imageData;
+			byte * old_ptr = im->getDataPointer();
+			for (int i = 0; i < h; ++i){
+				for (int j = 0; j < w; ++j){
+					*imageDataPtr++ = *old_ptr++;
+					*imageDataPtr++ = *old_ptr++;
+					*imageDataPtr++ = *old_ptr++;
+					*imageDataPtr++ = 120;
+				}
+			}
+			delete im;
+			im = new Image(4, h, w, imageData);
+		}
+	}
+	else if (splited.back() == "png"){
+		byte *imageData = new byte[512*4* 512];
+		byte * imageDataPtr = imageData;
+		for (int i = 0; i < 512; ++i){
+			for (int j = 0; j < 512; ++j){
+				*imageDataPtr++ = 100;
+				*imageDataPtr++ = 0;
+				*imageDataPtr++ = 0;
+				*imageDataPtr++ = 100;
+			}
+		}
+
+		im= new Image(4, 512, 512, imageData);
+	}
+	else{
+		throwError("the image ain't a bmp of a png");
+	}
 	texID = 0;
 
 	//and generate the texture...
@@ -55,7 +99,7 @@ GLTexture::GLTexture(char* fileName){
 
 	activate();
 
-	if (!checkTexSize(im->getWidth()) || !checkTexSize(im->getHeight()) || im->getNrBytes()!=3){
+	if (!checkTexSize(im->getWidth()) || !checkTexSize(im->getHeight()) || (im->getNrBytes() != 3 && im->getNrBytes() != 4)){
 		throwError("Wrong texture dimension or nr bits in file \'%s\'", fileName);
 	}
 
@@ -69,8 +113,15 @@ GLTexture::GLTexture(char* fileName){
 
 //	glTexImage2D(GL_TEXTURE_2D, 0, 3, im->getWidth(), im->getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, im->getDataPointer());
 
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im->getWidth(), im->getHeight(), GL_RGB, GL_UNSIGNED_BYTE, im->getDataPointer());
+	if (im->getNrBytes()==4){
+		gluBuild2DMipmaps(GL_TEXTURE_2D, im->getNrBytes(), im->getWidth(), im->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, im->getDataPointer());
 
+	}
+	else {
+		gluBuild2DMipmaps(GL_TEXTURE_2D, im->getNrBytes(), im->getWidth(), im->getHeight(), GL_RGB, GL_UNSIGNED_BYTE, im->getDataPointer());
+
+	}
+	
 	delete im;
 }
 /*

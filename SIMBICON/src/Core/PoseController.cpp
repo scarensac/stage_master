@@ -143,7 +143,7 @@ void PoseController::scaleAndLimitTorque(Vector3d* torque, ControlParams* cParam
 /**
 	This method is used to compute the torques that are to be applied at the next step.
 */
-void PoseController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact){
+void PoseController::computeTorques( int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact){
 	Quaternion qRelD;
 	Vector3d relAngVelD;
 

@@ -1,2 +1,2 @@
-min_drag/learning_walk_waterlvl0.4_state.rs
-min_drag/learning_walk_waterlvl0.4.sbc
+min_drag/learning_walk_waterlvl0_state.rs
+min_drag/learning_walk_waterlvl0.sbc

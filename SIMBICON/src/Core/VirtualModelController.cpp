@@ -13,7 +13,7 @@ VirtualModelController::~VirtualModelController(void){
 /**
 This method is used to compute the torques, based on the current and desired poses
 */
-void VirtualModelController::computeTorques(DynamicArray<ContactPoint> *cfs, int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact){
+void VirtualModelController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact){
 	//don't call this method...
 }
 

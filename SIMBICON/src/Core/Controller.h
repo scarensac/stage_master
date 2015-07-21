@@ -46,7 +46,7 @@ public:
 	/**
 		This method is used to compute the torques, based on the current and desired poses
 	*/
-	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact) = 0;
+	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact) = 0;
 
 	/**
 		This method is used to apply the torques that are computed to the character that is controlled.

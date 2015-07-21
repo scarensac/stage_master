@@ -27,6 +27,7 @@
 #include "ConUtils.h"
 #include "TwoLinkIK.h"
 #include <MathLib/Point3d.h>
+#include <fstream>
 
 SimBiController::SimBiController(Character* b) : PoseController(b){
 	if (b == NULL)
@@ -90,6 +91,8 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	rKneeIndex = character->getJointIndex("rKnee");
 	lAnkleIndex = character->getJointIndex("lAnkle");
 	rAnkleIndex = character->getJointIndex("rAnkle");
+	lToeJointIndex = character->getJointIndex("lToeJoint");
+	rToeJointIndex = character->getJointIndex("rToeJoint");
 
 
 	panicHeight = 0;
@@ -271,14 +274,31 @@ bool SimBiController::isStanceFoot(RigidBody* rb){
 
 /**
 	This method returns the net force on the body rb, acting from the ground
+	return only the vertical force (since it's the only on used anyway
 */
-Vector3d SimBiController::getForceOnFoot(RigidBody* foot, DynamicArray<ContactPoint> *cfs){
+Vector3d SimBiController::getForceOnFoot(RigidBody* foot){
+	Vector3d fNet;
+	if (foot == swingFoot){
+		for (int i = 0; i < 4; ++i){
+			fNet.y += std::abs(force_swing_foot[i].y);
+		}
+		fNet.y += std::abs(force_swing_toes.y);
+	}
+	else{
+		for (int i = 0; i < 4; ++i){
+			fNet.y += std::abs(force_stance_foot[i].y);
+		}
+		fNet.y += std::abs(force_stance_toes.y);
+	}
+	
+	/*
 	Vector3d fNet = getForceOn(foot, cfs);
 
 	//we will also look at all children of the foot that is passed in (to take care of toes).
 	for (uint i=0;i<((ArticulatedRigidBody*)foot)->cJoints.size();i++){
 		fNet += getForceOn(((ArticulatedRigidBody*)foot)->cJoints[i]->child, cfs);
 	}
+	//*/
 	return fNet;
 }
 
@@ -312,7 +332,7 @@ int SimBiController::advanceInTime(double dt, DynamicArray<ContactPoint> *cfs){
 	advance_phase(dt);
 
 	//see if we have to transition to the next state in the FSM, and do it if so...
-	if (states[FSMStateIndex]->needTransition(getPhase(), fabs(getForceOnFoot(swingFoot, cfs).dotProductWith(SimGlobals::up)), fabs(getForceOnFoot(stanceFoot, cfs).dotProductWith(SimGlobals::up)))){
+	if (states[FSMStateIndex]->needTransition(getPhase(), fabs(getForceOnFoot(swingFoot).dotProductWith(SimGlobals::up)), fabs(getForceOnFoot(stanceFoot).dotProductWith(SimGlobals::up)))){
 		int newStateIndex = states[FSMStateIndex]->getNextStateIndex();
 		transitionToState(newStateIndex);
 		return newStateIndex;
@@ -350,9 +370,9 @@ Vector3d SimBiController::computeIPStepLocation(){
 	This method is used to return the ratio of the weight that is supported by the stance foot.
 	return -1 if there are no vertical forces on the feet (meaning neither of them toutch the ground
 */
-double SimBiController::getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs){
-	Vector3d stanceFootForce = getForceOnFoot(stanceFoot, cfs);
-	Vector3d swingFootForce = getForceOnFoot(swingFoot, cfs);
+double SimBiController::getStanceFootWeightRatio(){
+	Vector3d stanceFootForce = getForceOnFoot(stanceFoot);
+	Vector3d swingFootForce = getForceOnFoot(swingFoot);
 	double totalYForce = (stanceFootForce + swingFootForce).dotProductWith(SimGlobals::up);
 
 	if (IS_ZERO(totalYForce))
@@ -478,6 +498,8 @@ void SimBiController::updateSwingAndStanceReferences(){
 	stanceKneeIndex = ((stance == LEFT_STANCE) ? (lKneeIndex) : (rKneeIndex));
 	stanceAnkleIndex = ((stance == LEFT_STANCE) ? (lAnkleIndex) : (rAnkleIndex));
 	swingAnkleIndex = ((stance == LEFT_STANCE) ? (rAnkleIndex) : (lAnkleIndex));
+	stanceToeJointIndex = ((stance == LEFT_STANCE) ? (lToeJointIndex) : (rToeJointIndex));
+	swingToeJointIndex = ((stance == LEFT_STANCE) ? (rToeJointIndex) : (lToeJointIndex));
 
 	swingHip = character->joints[swingHipIndex];
 	swingKnee = character->joints[swingKneeIndex];
@@ -508,12 +530,16 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	h = (h - hMin) / (hMax - hMin);
 
 	//if we are on the ground I can just skip everything
-	if (h <= 0.001){
+	if (h <= 0.01){
 		for (uint i = 0; i < torques.size(); i++){
 			torques[i] = Vector3d(0, 0, 0);
 		}
 		return;
 	}
+
+	//here I'll organize the contact forces for easier use later
+	organize_contact_forces(cfs);
+
 
 	//we create the interface to modify the target pose
 	ReducedCharacterState poseRS(&desiredPose);
@@ -525,7 +551,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	evaluateJointTargets(poseRS,qRootD);
 
 	//we check the nbr of feet on the ground
-	stanceHipToSwingHipRatio = getStanceFootWeightRatio(cfs);
+	stanceHipToSwingHipRatio = getStanceFootWeightRatio();
 	if (stanceHipToSwingHipRatio < 0){
 		stance_mode = -1;
 	}
@@ -550,7 +576,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 		
 
 	//compute the torques now, using the desired pose information - the hip torques will get overwritten below
-	PoseController::computeTorques(cfs,swingHipIndex,resulting_impact);
+	PoseController::computeTorques(swingHipIndex,resulting_impact);
 	
 
 	//bubble-up the torques computed from the PD controllers
@@ -565,7 +591,7 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 	Vector3d ffRootTorque(0, 0, 0);
 
 	if (cfs->size() > 0){
-		COMJT(cfs,ffRootTorque);
+		COMJT(ffRootTorque);
 	}
 
 	if (stanceHipToSwingHipRatio < 0)
@@ -585,13 +611,81 @@ void SimBiController::computeTorques(DynamicArray<ContactPoint> *cfs, std::map<u
 
 	//here I'l start the stance foot control system
 	foot_contact_control();
-	
+
+
 	//this is a ponderation if we are near to fall
 	for (uint i=0;i<torques.size();i++){
 		torques[i] = torques[i] * h;// +Vector3d(0, 0, 0) * (1 - h);
 	}
 }
 
+/**
+this method organize the contact forces for later use
+*/
+void SimBiController::organize_contact_forces(DynamicArray<ContactPoint> *cfs){
+	//*
+	//first I'll sort the forces on the feet
+	RigidBody* swing_toe = static_cast<ArticulatedRigidBody*>(swingFoot)->getChildJoints().front()->getChild();
+	RigidBody* stance_toe = static_cast<ArticulatedRigidBody*>(stanceFoot)->getChildJoints().front()->getChild();
+	
+	//so I start by resetting the values
+	for (int i = 0; i < 4; i++){
+		force_stance_foot[i] = Vector3d(0,0,0);
+		force_swing_foot[i] = Vector3d(0, 0, 0);
+	}
+	force_stance_toes = Vector3d(0, 0, 0);
+	force_swing_toes = Vector3d(0, 0, 0);
+	
+	Point3d tmpP;
+	for (uint i = 0; i<cfs->size(); i++){
+		if (((*cfs)[i].rb1 == stanceFoot) || ((*cfs)[i].rb2 == stanceFoot)){
+			tmpP = stanceFoot->getLocalCoordinates((*cfs)[i].cp);
+			if (tmpP.z < 0){
+				if (tmpP.x > 0){
+					force_stance_foot[0] = (*cfs)[i].f;
+				}
+				else{
+					force_stance_foot[1] = (*cfs)[i].f;
+				}
+			}
+			else{
+				if (tmpP.x > 0){
+					force_stance_foot[2] = (*cfs)[i].f;
+				}
+				else{
+					force_stance_foot[3] = (*cfs)[i].f;
+				}
+			}
+		}
+		else if (((*cfs)[i].rb1 == stance_toe) || ((*cfs)[i].rb2 == stance_toe)){
+			force_stance_toes = (*cfs)[i].f;
+		}
+		else if(((*cfs)[i].rb1 == swingFoot) || ((*cfs)[i].rb2 == swingFoot)){
+			tmpP = swingFoot->getLocalCoordinates((*cfs)[i].cp);
+			if (tmpP.z < 0){
+				if (tmpP.x > 0){
+					force_swing_foot[0] = (*cfs)[i].f;
+				}
+				else{
+					force_swing_foot[1] = (*cfs)[i].f;
+				}
+			}
+			else{
+				if (tmpP.x > 0){
+					force_swing_foot[2] = (*cfs)[i].f;
+				}
+				else{
+					force_swing_foot[3] = (*cfs)[i].f;
+				}
+			}
+		}
+		else if (((*cfs)[i].rb1 == swing_toe) || ((*cfs)[i].rb2 == swing_toe)){
+			force_swing_toes = (*cfs)[i].f;
+		}
+	}
+	//*/
+	
+}
 
 void SimBiController::evaluateJointTargets(ReducedCharacterState& poseRS,Quaternion& qRootD){
 
@@ -692,7 +786,7 @@ for better tracking purposes
 void SimBiController::computeGravityCompensationTorques(std::map<uint, WaterImpact>& resulting_impact){
 	vmc->resetTorques();
 	for (uint i = 0; i<character->joints.size(); i++){
-		if (i != stanceHipIndex && i != stanceKneeIndex && i != stanceAnkleIndex){
+		if (i != stanceHipIndex && i != stanceKneeIndex && i != stanceAnkleIndex && i != stanceToeJointIndex){
 			//I need to diminish the force depending on the water boyancy
 
 			Point3d pt1=character->joints[i]->getChild()->getCMPosition();
@@ -720,22 +814,20 @@ void SimBiController::computeGravityCompensationTorques(std::map<uint, WaterImpa
 }
 
 
-void SimBiController::COMJT(DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque){
+void SimBiController::COMJT( Vector3d& ffRootTorque){
 	
 
 	if (stance_mode < 0){
 		return;
 	}
 
-	//ArticulatedRigidBody* foot = character->joints[stanceAnkleIndex]->child;
-	//getForceInfoOn(foot, cfs, &stanceHeelInContact, &stanceToeInContact);
 
 	//in the case of the dual stance mode (I'll apply the torques proportionally to their impact to the ground)
-	computeLegTorques(stanceAnkleIndex, stanceKneeIndex, stanceHipIndex, cfs, ffRootTorque, stanceHipToSwingHipRatio);
+	computeLegTorques(stanceAnkleIndex, stanceKneeIndex, stanceHipIndex, ffRootTorque, stanceHipToSwingHipRatio);
 
 	//*
 	if (stance_mode == 1){
-		computeLegTorques(swingAnkleIndex, swingKneeIndex, swingHipIndex, cfs, ffRootTorque, 1.0-stanceHipToSwingHipRatio);
+		computeLegTorques(swingAnkleIndex, swingKneeIndex, swingHipIndex, ffRootTorque, 1.0-stanceHipToSwingHipRatio);
 	}//*/
 }
 
@@ -780,10 +872,10 @@ Vector3d SimBiController::computeVirtualForce(){
 This method returns performes some pre-processing on the virtual torque. The torque is assumed to be in world coordinates,
 and it will remain in world coordinates.
 */
-void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<ContactPoint> *cfs, Vector3d *ankleVTorque){
+void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, Vector3d *ankleVTorque){
 	ForceStruct heel_force,front_foot_force, toe_force;
 	ArticulatedRigidBody* foot = character->joints[ankleJointIndex]->child;
-	getForceInfoOn(foot, cfs, heel_force, front_foot_force, toe_force);
+	getForceInfoOn(foot, heel_force, front_foot_force, toe_force);
 	*ankleVTorque = foot->getLocalCoordinates(*ankleVTorque);
 
 	if (front_foot_force.F.isZeroVector() || getPhase() < 0.2 || getPhase() > 0.8){
@@ -791,7 +883,7 @@ void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<C
 	}
 
 	Vector3d footRelativeAngularVel = foot->getLocalCoordinates(foot->getAngularVelocity());
-	if ((footRelativeAngularVel.z < -0.2 && ankleVTorque->z > 0) || (footRelativeAngularVel.z > 0.2 && ankleVTorque->z < 0)){
+	if ((footRelativeAngularVel.z < -0.5 && ankleVTorque->z > 0) || (footRelativeAngularVel.z > 0.5 && ankleVTorque->z < 0)){
 		ankleVTorque->z = 0;
 	}
 
@@ -817,10 +909,11 @@ void SimBiController::preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<C
 determines if there are any heel/toe forces on the given RB
 the rigid body passed in the parameters HAVE to be a foot
 */
-void SimBiController::getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, ForceStruct& heelForce, ForceStruct& frontFeetForce,
+void SimBiController::getForceInfoOn(RigidBody* rb, ForceStruct& heelForce, ForceStruct& frontFeetForce,
 												ForceStruct& toeForce){
 
 	//I will compte the resulting force of the ground on the heel, the front foot and the toes
+	/*
 	RigidBody* toe_body = static_cast<ArticulatedRigidBody*>(rb)->getChildJoints().front()->getChild();
 
 	Point3d tmpP;
@@ -830,9 +923,7 @@ void SimBiController::getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *
 			tmpP = rb->getLocalCoordinates((*cfs)[i].cp);
 			if (tmpP.z < 0){
 				heelForce.F += Vector3d(0, std::abs((*cfs)[i].f.y), 0);
-			}
-			
-			if (tmpP.z > 0){
+			} else{
 				frontFeetForce.F += Vector3d(0, std::abs((*cfs)[i].f.y), 0);
 			}
 		}
@@ -843,6 +934,28 @@ void SimBiController::getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *
 			}
 			toeForce.F += (*cfs)[i].f;
 		}
+	}
+	//*/
+
+
+	//reset everything
+	heelForce.F=Vector3d(0,0,0);
+	frontFeetForce.F = Vector3d(0, 0, 0);
+	toeForce.F = Vector3d(0, 0, 0);
+
+	if (rb == swingFoot){
+		heelForce.F.y += std::abs(force_swing_foot[0].y);	
+		heelForce.F.y += std::abs(force_swing_foot[1].y);
+		frontFeetForce.F.y += std::abs(force_swing_foot[2].y);
+		frontFeetForce.F.y += std::abs(force_swing_foot[3].y);
+		toeForce.F.y = std::abs(force_swing_toes.y);
+	}
+	else{
+		heelForce.F.y += std::abs(force_stance_foot[0].y);
+		heelForce.F.y += std::abs(force_stance_foot[1].y);
+		frontFeetForce.F.y += std::abs(force_stance_foot[2].y);
+		frontFeetForce.F.y += std::abs(force_stance_foot[3].y);
+		toeForce.F.y = std::abs(force_stance_toes.y);
 	}
 }
 
@@ -864,8 +977,7 @@ bool SimBiController::haveRelationBetween(RigidBody* rb, RigidBody* whichBody){
 /**
 This method is used to compute torques for the stance leg that help achieve a desired speed in the sagittal and lateral planes
 */
-void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, DynamicArray<ContactPoint> *cfs,Vector3d& ffRootTorque,
-			double leg_ratio){
+void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, Vector3d& ffRootTorque,double leg_ratio){
 	
 	/*bool heelInContact, toeInContact;
 	ArticulatedRigidBody* foot = character->joints[ankleIndex]->child;
@@ -930,7 +1042,7 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	fA.x = 0;
 
 	Vector3d torque = f1.crossProductWith(fA)*leg_ratio;
-	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
+	preprocessAnkleVTorque(ankleIndex, &torque);
 	torque.y = 0;
 	torques[ankleIndex] += torque;
 
@@ -957,7 +1069,7 @@ void SimBiController::computeLegTorques(int ankleIndex, int kneeIndex, int hipIn
 	fA.x=x_back*SimGlobals::time_factor;
 
 	torque = f1.crossProductWith(fA)*leg_ratio;
-	preprocessAnkleVTorque(ankleIndex, cfs, &torque);
+	preprocessAnkleVTorque(ankleIndex, &torque);
 	torque.y = 0;
 	torques[ankleIndex] += torque;
 	
@@ -1336,14 +1448,144 @@ first it store a curve updating how the interactions beetween the foot and the g
 second it make sure that the contact of the foot with the ground is real.
 */
 void SimBiController::foot_contact_control(){
+	//*
+	//this is the second version i'll check each corner one by one
+	//*/
+	
+	/*
+	//this is the first version is check the ratios left/right and front back
+	//though the problem is that there isz instabilité (some of the points go from 200N to 0 in one timestep
 	//this function should not do anything if we are not in a phase of foot contact
-	if (getPhase() < 0.14){
-		return;
+	//coronal control
+	double val_left = std::abs(force_stance_foot[0].y) + std::abs(force_stance_foot[2].y);
+	double val_right = std::abs(force_stance_foot[1].y) + std::abs(force_stance_foot[3].y);
+	
+	bool need_action = false;
+	double cor_total = val_left + val_right;
+	double ratio = val_left / cor_total;
+	int torque_sign = 1;
+	double limit = 0.10;
+	
+	if (ratio < limit){
+		need_action = true;
+	}
+	else{
+		ratio = val_right / cor_total;
+
+		if (ratio < limit){
+			need_action = true;
+			torque_sign = -1;
+		}
+	}
+	
+
+	if (ratio < 0.01){
+		ratio /= 2;
+	}
+	if (need_action){
+		torques[stanceAnkleIndex].z += torque_sign*(limit - ratio) * 500;
+	}
+
+	static bool need_sag_control = false;
+	if (getPhase() < 0.000001){
+		need_sag_control = false;
 	}
 
 
+	double val_front = std::abs(force_stance_foot[2].y) + std::abs(force_stance_foot[3].y);
+	double val_back = 1;
+	double sag_total = 1;
 
-	//so first I need the ground force I can attribute with each corner of the foot
+	if (!need_sag_control){
+		if (val_front > 0.0001){
+			need_sag_control = true;
+		}
+	}
+
+	if (need_sag_control){
+		val_back = std::abs(force_stance_foot[0].y) + std::abs(force_stance_foot[1].y);
+		need_action = false;
+		sag_total = val_back + val_front;
+		ratio = val_front / sag_total;
+		torque_sign = -1;
+		limit = 0.05;
+
+		if (ratio < limit){
+			need_action = true;
+		}
+		else{
+			ratio = val_back / sag_total;
+
+			if (ratio < limit){
+				need_action = true;
+				torque_sign = 1;
+			}
+		}
+
+		if (need_action){
+			torques[stanceAnkleIndex].x += torque_sign*(limit - ratio) * 500;
+		}
+	}
+	//*/
+
+	//*
+	static std::vector<double> ratios_cor;
+	static std::vector<double> ratios_sag;
+	static std::vector<double> ratios_cor2;
+	static std::vector<double> ratios_sag2;
+	static std::vector<double> vect_phi;
+	static int nbr_step = 0;
+	if (getPhase() < 0.000001){
+		++nbr_step;
+		if (nbr_step == 31){
+			std::ofstream file("contact_ratio_step31.txt");
+			if (file.is_open()) {
+				file << "phi,back_left,phi,back_right,phi,front_left,phi,front_right," << std::endl;
+				for (int i = 0; i < (int)vect_phi.size(); ++i){
+					//file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i] << std::endl;
+					file << vect_phi[i] << "," << ratios_cor[i] << ",";
+					file << vect_phi[i] << "," << ratios_sag[i] << ",";
+					file << vect_phi[i] << "," << ratios_cor2[i] << ",";
+					file << vect_phi[i] << "," << ratios_sag2[i] << std::endl;
+				}
+			}
+			else{
+				exit(31);
+			}
+		}
+
+		if (nbr_step == 32){
+			std::ofstream file("contact_ratio_step32.txt");
+			if (file.is_open()) {
+				file << "phi,back_left,phi,back_right,phi,front_left,phi,front_right," << std::endl;
+				for (int i = 0; i < (int)vect_phi.size(); ++i){
+					//file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i] << std::endl;
+					file << vect_phi[i] << "," << ratios_cor[i] << ",";
+					file << vect_phi[i] << "," << ratios_sag[i] << ",";
+					file << vect_phi[i] << "," << ratios_cor2[i] << ",";
+					file << vect_phi[i] << "," << ratios_sag2[i] << std::endl;
+				}
+			}
+			else{
+				exit(32);
+			}
+		}
+		
+		ratios_cor.clear();
+		ratios_sag.clear();
+	}
+
+	if (nbr_step >= 30){
+		if (nbr_step >= 32){
+			exit(0);
+		}
+		vect_phi.push_back(phi);
+		ratios_cor.push_back(force_stance_foot[0].y);
+		ratios_sag.push_back(force_stance_foot[1].y);
+		ratios_cor2.push_back(force_stance_foot[2].y);
+		ratios_sag2.push_back(force_stance_foot[3].y);
+	}
+	//*/
 }
 
 
@@ -1785,7 +2027,9 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			avgSpeed_x_right /= timesVelSampled;
 		}
 		
-		
+		static std::vector<double> previous_speeds_z;
+		previous_speeds_z.push_back(avgSpeed_z);
+
 
 		TrajectoryComponent* affected_component = NULL;
 
@@ -1873,8 +2117,22 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			double evo_speed = 1.0;
 
 			//I'l simply divide by the ratio between the avg_speed and the velD
-			double traj_delta = (velDSagittal / avgSpeed_z - 1)* evo_speed;
+			double traj_delta = (velDSagittal / avgSpeed_z - 1);
+			//wel will use a square-law 
 			
+			int nbr_speeds = (int)previous_speeds_z.size();
+			if (nbr_speeds > 1){
+				double prev_delta = velDCoronal - previous_speeds_z[nbr_speeds - 2];
+				if (std::signbit(prev_delta) == std::signbit(traj_delta)){
+					if (std::abs(prev_delta) < std::abs(traj_delta)){
+						traj_delta *= 2;
+					}
+					else{
+						//traj_delta = 0;
+					}
+				}
+			}
+
 			//I'll limit the possible translation to 0.25
 			if (traj_delta>0.25){
 				traj_delta = 0.25;
@@ -1882,8 +2140,12 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			else if (traj_delta < -0.25){
 				traj_delta = -0.25;
 			}
-			//traj_delta += 1;
-
+			/*
+			traj_delta += 1;
+			for (int i = 0; i < nbr_values; ++i){
+				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i)*traj_delta);
+			}
+			//*/
 			velD_sagital_factor += traj_delta;
 
 			//I'll now handle the other points (the ones even after the point I just created
@@ -1983,6 +2245,9 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 		static int nbr_steps=0;
 		nbr_steps++;
 		if (nbr_steps>2){
+			static std::vector<double> previous_speeds;
+			previous_speeds.push_back((avgSpeed_x_left + avgSpeed_x_right) / 2);
+
 
 			affected_component = coronal_comp;
 			need_sup_point = static_cast<int>(vel_coronal.size()) < affected_component->baseTraj.getKnotCount();
@@ -2056,13 +2321,36 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				//*
 
 				//now we need to translate the curve depending on the speed it result in and the speed we want
-				double evo_speed = 0.2 +(velDSagittal/0.7)/2;
+				double evo_speed = 0.2+(velDSagittal/0.7)/2;
 
 				//I'l simply divide by the ratio between the avg_speed and the velD
-				double traj_delta = ((avgSpeed_x_left + avgSpeed_x_right)/2 - velDCoronal)* evo_speed;
+				double traj_delta = (velDCoronal - previous_speeds.back());
 
+				//I need to break the inertia effect that cause occilasion around the desired speed
+				//I'll store the speed that I had at the previous steps to adapt the evolution of the factor on them
+				int nbr_speeds = (int)previous_speeds.size();
+				if (nbr_speeds > 1){
+					double prev_delta = velDCoronal - previous_speeds[nbr_speeds - 2];
+					if (std::signbit(prev_delta) == std::signbit(traj_delta)){
+						if (std::abs(prev_delta) < std::abs(traj_delta)){
+							traj_delta *= 2;
+						}
+						else{
+							if (nbr_speeds > 2){
+								double prev2_delta = velDCoronal - previous_speeds[nbr_speeds - 3];
+								if (std::signbit(prev2_delta) == std::signbit(prev_delta)){
+									if (std::abs(prev2_delta) < std::abs(prev_delta)){
+										traj_delta /= 2;
+									}
+								}
+							}
+						}
+					}
+				}
 				
-
+				traj_delta *= evo_speed;
+				
+				/*
 				//just a simple thing
 				//ii'll check if there are multiple steps with thr esame traj delta
 				//if I detect it I augment the trajdelta
@@ -2088,11 +2376,26 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 				traj_delta += delta_augment;
 				for (int i = 0; i < nbr_values; ++i){
-					affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) - stance*traj_delta);
+					affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i) + stance*traj_delta);
+				}
+
+				prev_delta = traj_delta - delta_augment;
+
+				//*/
+				//*
+
+				
+
+				if (stance_var == RIGHT_STANCE){
+					velD_coronal_factor_right += traj_delta;
+					//velD_coronal_factor_left -= 0.1*traj_delta;
+				}
+				else{
+					velD_coronal_factor_left -= traj_delta;
+					//velD_coronal_factor_right += 0.1*traj_delta;
 				}
 				//*/
 
-				prev_delta = traj_delta - delta_augment;
 				
 
 				//I'll now handle the other points (the ones even after the point I just created

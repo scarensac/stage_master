@@ -111,8 +111,13 @@ void Image::setGPixelAt(int x, int y, byte newValue){
 }
 
 void Image::setBPixelAt(int x, int y, byte newValue){
-	int location = IMAGELOCATION(this,x,y,((nrBytesPerPixel==1)?(0):(2)));
-	SETIMAGEAT(this,location,newValue);
+	int location = IMAGELOCATION(this, x, y, ((nrBytesPerPixel == 1) ? (0) : (2)));
+	SETIMAGEAT(this, location, newValue);
+}
+
+void Image::setAPixelAt(int x, int y, byte newValue){
+	int location = IMAGELOCATION(this, x, y, ((nrBytesPerPixel == 1) ? (0) : (3)));
+	SETIMAGEAT(this, location, newValue);
 }
 
 /**

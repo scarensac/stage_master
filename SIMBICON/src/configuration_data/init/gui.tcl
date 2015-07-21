@@ -178,7 +178,7 @@ scale .desiredheading -label "desired heading" -orient h -digit 4 -from -1.54 -t
 
 #### others
 scale .timefactor -label "time factor" -orient h -digit 4 -from 0 -to 3 -variable time_factor -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
-scale .stepwidth -label "step with" -orient h -digit 4 -from 0 -to 1.0 -variable step_width -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
+scale .stepwidth -label "step width" -orient h -digit 4 -from 0 -to 1.0 -variable step_width -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 
 
 #### speed control
 scale .velCoronal -label "velCoronal" -orient h -digit 4 -from -1.5 -to 2.5 -variable vel_coronal -resolution 0.001 -length 6.5cm -sliderlength 0.2cm 

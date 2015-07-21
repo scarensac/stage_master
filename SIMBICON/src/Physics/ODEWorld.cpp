@@ -35,7 +35,7 @@
 	Default constructor
 */
 ODEWorld::ODEWorld() : AbstractRBEngine(){
-	int maxCont = 4;
+	int maxCont = 10;
 
 	//Initialize the world, simulation space and joint groups
     worldID = dWorldCreate();

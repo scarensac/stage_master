@@ -94,7 +94,7 @@ public:
 	/**
 		This method is used to compute the torques, based on the current and desired poses
 	*/
-	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact);
+	virtual void computeTorques( int swing_hip_idx, std::map<uint, WaterImpact>& resulting_impact);
 
 	/**
 		This method is used to compute the PD torque, given the current relative orientation of two coordinate frames (child and parent),

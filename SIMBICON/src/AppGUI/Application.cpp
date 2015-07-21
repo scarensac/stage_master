@@ -27,6 +27,7 @@
 #include <AppGUI/Globals.h>
 #include <Core/SimGlobals.h>
 #include <sstream>
+#include <iostream>
 
 
 
@@ -124,13 +125,13 @@ void Application::drawGround(){
 		glEnable(GL_TEXTURE_2D);
 		waterTexture->activate();
 		glBegin(GL_QUADS);
-		x = size * 100; z = size * 100;
+		x = size*100 ; z = size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
-		x = -size*100; z = -size * 100;
+		x = -size * 100; z = -size * 100;
 		glTexCoord2d(x / 2, z / 2);
 		glVertex3d(x, (-x*Globals::a - z*Globals::c - Globals::d) / Globals::b + SimGlobals::water_level + 0.001, z);
 		z = size * 100;
@@ -163,7 +164,8 @@ void Application::init(){
 
 
 	std::ostringstream oss2;
-	oss2 << Globals::data_folder_path << "textures/blueGrid.bmp";
+	oss2 << Globals::data_folder_path << "textures/waterText.transpa.bmp";
+	//oss2 << Globals::data_folder_path << "textures/blue.transpa.bmp";
 	char dest2[230];
 	strcpy(dest2, oss2.str().c_str());
 	waterTexture = new GLTexture(dest2);
@@ -196,6 +198,14 @@ bool Application::onKeyEvent(int key){
 	if (key == 27){
 		exit(0);
 		return true;//useless but at least it follow the function logic 
+	}
+	else if (key == 122){
+		if (SimGlobals::water_level < 0.5){
+			SimGlobals::water_level += 0.0015;
+		}else if (SimGlobals::water_level < 1.0){
+			SimGlobals::water_level += 0.003;
+		}
+		return true;
 	}
 
 	return false;

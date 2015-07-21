@@ -179,6 +179,9 @@ void GLWindow::setCameraTarget(const Point3d& newTarget){
  *	This method is used to draw the scene.
  */
 void GLWindow::draw(){
+	/*if (mouseButtonPressed == MOUSE_RBUTTON){
+		camera.rotations += Vector3d(0, 0.0125, 0);
+	}*/
 	//clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -411,6 +414,8 @@ int GLWindow::onMouseEvent(int mEvent, int button, int x, int y){
 			if (Globals::app->onMouseEvent(mEvent, mouseButtonPressed, x, y))
 				processed = true;
 
+		
+
 		//if not, we'll do our own thing now
 		if (processed == false){
 			if (mEvent == MOUSE_DRAG){
@@ -461,7 +466,8 @@ int GLWindow::onMouseEvent(int mEvent, int button, int x, int y){
  * This method is called whenever there is a new event to be processed
  */
 int GLWindow::onKeyEvent(int character) {
-	
+
+
 
 	return Globals::app->onKeyEvent(character);
 }

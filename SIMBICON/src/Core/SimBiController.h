@@ -156,15 +156,14 @@ public:
 
 
 	//keep track of the legs
-	int swingHipIndex, swingKneeIndex, swingAnkleIndex;
-	int stanceHipIndex, stanceAnkleIndex, stanceKneeIndex;
+	int swingHipIndex, swingKneeIndex, swingAnkleIndex, swingToeJointIndex;
+	int stanceHipIndex, stanceAnkleIndex, stanceKneeIndex, stanceToeJointIndex;
 
 	Joint *swingKnee, *swingHip;
 
 	//we also keep the indices (useless and should be removed when refactoring)
-	int lHipIndex;
-	int rHipIndex;
-	int lKneeIndex, rKneeIndex, lAnkleIndex, rAnkleIndex;
+	int lHipIndex, lKneeIndex, lAnkleIndex, lToeJointIndex;
+	int rHipIndex, rKneeIndex, rAnkleIndex, rToeJointIndex;
 
 	//I'll store the stance I am in so i don't have to do it endlessly
 	int stance_mode;//-1 no feet on ground, 0 one foot on ground, 1 both feet on ground
@@ -184,6 +183,14 @@ public:
 
 	//this bolean indicate if the next step should be a step where we focus on trying to get back in a stable state
 	bool recovery_step;
+
+	//those variables will organize the contact forces on the foots. 
+	//the order is 0:back_left; 1:back_right, 2:front_left, 3:frontright
+	Vector3d force_stance_foot[4];
+	Vector3d force_stance_toes;
+	Vector3d force_swing_foot[4];
+	Vector3d force_swing_toes;
+
 
 protected:
 
@@ -216,7 +223,7 @@ protected:
 	/**
 		This method returns the net force on the body rb, acting from the ground
 	*/
-	Vector3d getForceOnFoot(RigidBody* foot, DynamicArray<ContactPoint> *cfs);
+	Vector3d getForceOnFoot(RigidBody* foot);
 
 	/**
 		This method is used to determine if the rigid body that is passed in as a parameter is a
@@ -237,7 +244,7 @@ protected:
 	/**
 		This method is used to return the ratio of the weight that is supported by the stance foot.
 	*/
-	double getStanceFootWeightRatio(DynamicArray<ContactPoint> *cfs);
+	double getStanceFootWeightRatio();
 
 	/**
 	this function override the results of the ipm with the specified results
@@ -376,6 +383,11 @@ public:
 	virtual void computeTorques(DynamicArray<ContactPoint> *cfs, std::map<uint, WaterImpact>& resulting_impact);
 
 	/**
+		this method organize the contact forces for later use
+	*/
+	void organize_contact_forces(DynamicArray<ContactPoint> *cfs);
+
+	/**
 	This method is used to compute the target orientations using the current FSM
 	*/
 	void evaluateJointTargets(ReducedCharacterState& poseRS, Quaternion& qRootD);
@@ -395,7 +407,7 @@ public:
 	/**
 	This function simulate a force on the COM to achieve the desired speed in the sagittal and corronal pane
 	*/
-	void COMJT(DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque);
+	void COMJT( Vector3d& ffRootTorque);
 
 	/**
 	This method is used to compute the force that the COM of the character should be applying.
@@ -406,12 +418,12 @@ public:
 	This method returns performes some pre-processing on the virtual torque. The torque is assumed to be in world coordinates,
 	and it will remain in world coordinates.
 	*/
-	void preprocessAnkleVTorque(int ankleJointIndex, DynamicArray<ContactPoint> *cfs, Vector3d *ankleVTorque);
+	void preprocessAnkleVTorque(int ankleJointIndex, Vector3d *ankleVTorque);
 
 	/**
 	determines if there are any heel/toe forces on the given RB
 	*/
-	void getForceInfoOn(RigidBody* rb, DynamicArray<ContactPoint> *cfs, ForceStruct& heelForce, ForceStruct& frontFeetForce,ForceStruct& toeForce);
+	void getForceInfoOn(RigidBody* rb, ForceStruct& heelForce, ForceStruct& frontFeetForce,ForceStruct& toeForce);
 	/**
 	check to see if rb is the same as whichBody or any of its children
 	*/
@@ -420,7 +432,7 @@ public:
 	/**
 	This method is used to compute torques for the stance leg that help achieve a desired speed in the sagittal and lateral planes
 	*/
-	void computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, DynamicArray<ContactPoint> *cfs, Vector3d& ffRootTorque,double leg_ratio);
+	void computeLegTorques(int ankleIndex, int kneeIndex, int hipIndex, Vector3d& ffRootTorque,double leg_ratio);
 
 
 	/**
