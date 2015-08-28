@@ -30,7 +30,7 @@
 #include <Core/SimGlobals.h>
 #include <Utils/Timer.h>
 #include "Core\Character.h"
-
+#include <iostream>
 /**
 	Default constructor
 */
@@ -60,6 +60,12 @@ ODEWorld::ODEWorld() : AbstractRBEngine(){
 	pcQuery = NULL;
 
 	pcQuery = new PreCollisionQuery();
+
+	//now we initialize ODE
+	int init_result=dInitODE2(0);
+	if (init_result == false){
+		std::cout << "ODE initialisation failed" << std::endl;
+	}
 }
 
 /**
@@ -540,27 +546,8 @@ void collisionCallBack(void* odeWorld, dGeomID o1, dGeomID o2){
 	((ODEWorld*)odeWorld)->processCollisions(o1, o2);
 }
 
-void runTestStep(dWorldID w, dReal stepsize);
 
 
-/**
-	run a testing method...
-*/
-void ODEWorld::runTest(){
-	//make sure that the state of the RB's is synchronized with the engine...
-	setEngineStateFromRB();
-
-	//restart the counter for the joint feedback terms
-	jointFeedbackCount = 0;
-
-	Timer t;
-	t.restart();
-	for (int i=0;i<10000000;i++){
-		//and run the step...
-		runTestStep(worldID, 1/2000.0);
-	}
-	logPrint("ODE: This took %lf s\n", t.timeEllapsed());
-}
 
 /**
 	This method is used to integrate the forward simulation in time.
@@ -591,54 +578,6 @@ void ODEWorld::advanceInTime(double deltaT){
 
 	//advance the simulation
 	dWorldStep(worldID, deltaT);
-//	runTestStep(worldID, deltaT);
-
-	//copy over the state of the ODE bodies to the rigid bodies...
-	setRBStateFromEngine();
-
-	//copy over the force information for the contact forces
-	for (int i=0;i<jointFeedbackCount;i++){
-		contactPoints[i].f = Vector3d(jointFeedback[i].f1[0], jointFeedback[i].f1[1], jointFeedback[i].f1[2]);
-		//make sure that the force always points away from the static objects
-		if (contactPoints[i].rb1->isLocked() && !contactPoints[i].rb2->isLocked()){
-			contactPoints[i].f = contactPoints[i].f * (-1);
-			RigidBody* tmpBdy = contactPoints[i].rb1;
-			contactPoints[i].rb1 = contactPoints[i].rb2;
-			contactPoints[i].rb2 = tmpBdy;
-		}
-	}
-}
-
-/**
-	This method is used to integrate the forward simulation in time.
-*/
-void ODEWorld::testAdvanceInTime(double deltaT){
-	//make sure that the state of the RB's is synchronized with the engine...
-	setEngineStateFromRB();
-
-	//restart the counter for the joint feedback terms
-	jointFeedbackCount = 0;
-
-	//go through all the joints in the world, and apply their torques to the parent and child rb's
-	for (uint j=0;j<jts.size();j++){
-		Vector3d t = jts[j]->torque;
-		//we will apply to the parent a positive torque, and to the child a negative torque
-		dBodyAddTorque(odeToRbs[jts[j]->parent->id].id, t.x, t.y, t.z);
-		dBodyAddTorque(odeToRbs[jts[j]->child->id].id, -t.x, -t.y, -t.z);
-	}
-
-	//clear the previous list of contact forces
-	contactPoints.clear();
-
-	//we need to determine the contact points first - delete the previous contacts
-	dJointGroupEmpty(contactGroupID);
-	//initiate the collision detection
-	dSpaceCollide(spaceID, this, &collisionCallBack);
-
-	//advance the simulation
-//	dWorldStep(worldID, deltaT);
-	runTestStep(worldID, deltaT);
-
 
 	//copy over the state of the ODE bodies to the rigid bodies...
 	setRBStateFromEngine();
@@ -727,8 +666,11 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 		character->getCharacterBottom(lower_body);
 	}
 	
-	double friction_factor = SimGlobals::force_alpha;
-	double drag_density = SimGlobals::liquid_density*friction_factor;
+
+
+
+	double friction_factor = SimGlobals::liquid_density/(SimGlobals::force_alpha*1E-3);
+	double drag_density = SimGlobals::liquid_density;// *friction_factor;
 	
 	for (uint i = 0; i < lower_body.size(); ++i){
 		Joint* joint = lower_body[i];
@@ -745,27 +687,27 @@ void ODEWorld::compute_water_impact(Character* character, float water_level, std
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rFoot") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lFoot") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_feet(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lLowerleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rLowerleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "lUpperleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else if (strcmp(body->name, "rUpperleg") == 0){
-			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density);
+			water_impact.drag_torque = compute_liquid_drag_on_legs(joint, water_level, drag_density, friction_factor);
 			water_impact.boyancy = compute_buoyancy(joint, water_level);
 		}
 		else{
@@ -903,8 +845,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_toes(Joint* joint, float water_level, 
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the feet
 */
-Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density){
-	
+Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density, double friction_coef){
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
 	double density = SimGlobals::liquid_density;
 
@@ -954,9 +895,12 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, 
 		int nbr_interval_y = 2;
 		int nbr_interval_z = 9;
 
-		double d_x = box->getXLen() / nbr_interval_x;
-		double d_y = box->getYLen() / nbr_interval_y;
-		double d_z = box->getZLen() / nbr_interval_z;
+		double l_x = box->getXLen();
+		double l_y = box->getYLen();
+		double l_z = box->getZLen();
+		double d_x = l_x / nbr_interval_x;
+		double d_y = l_y / nbr_interval_y;
+		double d_z = l_z / nbr_interval_z;
 		Point3d cur_pos,cur_normal;
 
 		///TODO optimize this so we star with the lowest corner
@@ -1011,6 +955,9 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, 
 		Vector3d wvz = nz*d_z;
 
 
+		//just a note since the larger faces are the top and bottom face (and that it's near impossible that none of them
+		//is facing the movement) I'll base miself on tham to compute the friction
+
 		//first let's handle the back face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2 + d_y / 2, -box->getZLen() / 2));
 		cur_normal = -nz;
@@ -1034,12 +981,12 @@ Vector3d ODEWorld::compute_liquid_drag_on_feet(Joint* joint, float water_level, 
 		//now the top face
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = ny;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density, friction_coef*l_y, l_y);
 
 		//now the bottom face to finish
 		cur_pos = body->getWorldCoordinates(center + Point3d(-box->getXLen() / 2 + d_x / 2, -box->getYLen() / 2, -box->getZLen() / 2 + d_z / 2));
 		cur_normal = -ny;
-		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density);
+		drag_torque += compute_liquid_drag_on_planev2(joint, cur_pos, cur_normal, water_level, wvx, wvz, nbr_interval_x, nbr_interval_z, eff_density, friction_coef*l_y, l_y);
 
 		//*/
 	}
@@ -1225,15 +1172,16 @@ Vector3d ODEWorld::compute_liquid_drag_on_plane(Joint* joint, double l_x, double
 
 
 Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vector3d normal, float water_level,
-	Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density){
+	Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density, double friction_coef, double l3){
 
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
-
 
 	Vector3d drag_torque = Vector3d(0, 0, 0);
 
 
 	double d_S = v1.length()*v2.length();
+	double S_face = 2 * d_S;//front and back
+	double S_sides = v1.length()*l3;
 
 
 	for (int i = 0; i < nbr_interval_v1; ++i){
@@ -1252,9 +1200,20 @@ Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vec
 			double V_eff = V.dotProductWith(normal);
 			if (V_eff > 0){
 				
-				//now that we have the surface we can compute the resulting force
-				Vector3d F = -normal*V_eff*V_eff * 0.5 * density*d_S;
 
+				//now that we have the surface we can compute the resulting force
+				Vector3d F = -normal*V_eff*V_eff * 0.5 * (density*d_S);
+				
+				if (l3 > 0){
+					double S_contact = S_face;
+					//now I'll take into account the sides
+					if (j == 0 || j == (nbr_interval_v2 - 1)){
+						S_contact += S_sides;
+					}
+					F += V*V.length()*0.5*density*S_contact*(1.328 / std::sqrt(friction_coef*V.length()));
+				}
+
+				
 				//if we remove th e approximation of constant speed on the whole toes we need to stop doing the integral
 				//and apply the force on every ds
 				applyForceTo(body, F, body->getLocalCoordinates(pos));
@@ -1272,6 +1231,11 @@ Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vec
 				//*/
 
 			}
+
+			
+			
+
+
 			pos = pos + v2;
 		}
 		pos = line_start + v1;
@@ -1285,7 +1249,7 @@ Vector3d ODEWorld::compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vec
 this function is a children function of the above one (it prevent mass duplication of code for similar body parts)
 this function handle the legs and arms
 */
-Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density){
+Vector3d ODEWorld::compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density, double friction_coef){
 	RigidBody* body = static_cast<RigidBody*>(joint->getChild());
 
 	CollisionDetectionPrimitive* cdp = body->cdps.front();

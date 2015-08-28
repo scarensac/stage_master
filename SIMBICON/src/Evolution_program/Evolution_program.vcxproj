@@ -52,8 +52,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_WINDOWS;_DEBUG;SHARK_VERSION_MAJOR=3;SHARK_VERSION_MINOR=0;SHARK_VERSION_PATCH=0;NDEBUG;BOOST_UBLAS_NDEBUG;BOOST_PARAMETER_MAX_ARITY=15;BOOST_FILESYSTEM_VERSION=3;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\boost\boost_1_57_0;C:\shark\include;../;../include;../ode-0.9/include;../AppGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_WINDOWS;_DEBUG;SHARK_VERSION_MAJOR=3;SHARK_VERSION_MINOR=0;SHARK_VERSION_PATCH=0;NDEBUG;BOOST_UBLAS_NDEBUG;BOOST_PARAMETER_MAX_ARITY=15;BOOST_FILESYSTEM_VERSION=3;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;dDOUBLE;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\boost\boost_1_57_0;C:\shark\include;../;../include;../ode-0_13/include;../AppGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -74,9 +74,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;_LIB;_WINDOWS;SHARK_VERSION_MAJOR=3;SHARK_VERSION_MINOR=0;SHARK_VERSION_PATCH=0;BOOST_UBLAS;BOOST_PARAMETER_MAX_ARITY=15;BOOST_FILESYSTEM_VERSION=3;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;_LIB;_WINDOWS;SHARK_VERSION_MAJOR=3;SHARK_VERSION_MINOR=0;SHARK_VERSION_PATCH=0;BOOST_UBLAS;BOOST_PARAMETER_MAX_ARITY=15;BOOST_FILESYSTEM_VERSION=3;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;dDOUBLE;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\boost\boost_1_57_0;C:\shark\include;../;../include;../ode-0.9/include;../AppGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\boost\boost_1_57_0;C:\shark\include;../;../include;../ode-0_13/include;../AppGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -149,13 +149,8 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="..\ode-0.9\ode.vcxproj">
-      <Project>{3ec14e21-cdc2-4262-a0b8-7ee6a0166b47}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    <ProjectReference Include="..\ode-0_13\build\vs2008\ode.vcxproj">
+      <Project>{6bb4190c-dd37-1a48-8ad9-6b7c8d25c929}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Physics\Physics.vcxproj">
       <Project>{d39405f1-f2b0-4a94-8c66-b4ba846f6e86}</Project>

@@ -187,15 +187,6 @@ public:
 	*/
 	virtual void applyTorqueTo(RigidBody* b, const Vector3d& t);
 
-	/**
-		This method is used to integrate the forward simulation in time.
-	*/
-	void testAdvanceInTime(double deltaT);
-
-	/**
-		run a testing method...
-	*/
-	virtual void runTest();
 
 
 	/**
@@ -210,8 +201,8 @@ public:
 		this function handle
 	*/
 	Vector3d compute_liquid_drag_on_toes(Joint* joint, float water_level, double eff_density);
-	Vector3d compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density);
-	Vector3d compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density);
+	Vector3d compute_liquid_drag_on_feet(Joint* joint, float water_level, double eff_density, double friction_coef);
+	Vector3d compute_liquid_drag_on_legs(Joint* joint, float water_level, double eff_density, double friction_coef);
 
 	/**
 		this function is an utilitary that is used to compute the liquid forces on a rectangular plane
@@ -228,8 +219,11 @@ public:
 	Vector3d compute_liquid_drag_on_plane(Joint* joint, double l_x, double l_y, double l_z, Point3d pos,
 		Vector3d normal, float water_level, int nbr_interval_x, int nbr_interval_y, int nbr_interval_z);
 
+	/*
+	the default parameters indicate that the friction does not need to be computed on that plane
+	*/
 	Vector3d compute_liquid_drag_on_planev2(Joint* joint, Point3d pos, Vector3d normal, float water_level,
-		Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density);
+		Vector3d v1, Vector3d v2, int nbr_interval_v1, int nbr_interval_v2, double density, double friction_coef=0, double l3=0);
 
 
 	/**

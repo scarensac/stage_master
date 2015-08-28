@@ -1,0 +1,83 @@
+\begin{thebibliography}{}
+
+\bibitem[Barela et~al., 2006]{barela2006biomechanical}
+Barela, A.~M., Stolf, S.~F., and Duarte, M. (2006).
+\newblock Biomechanical characteristics of adults walking in shallow water and
+  on land.
+\newblock {\em Journal of Electromyography and Kinesiology}, 16(3):250--256.
+
+\bibitem[Chevutschi et~al., 2009]{chevutschi2009comparison}
+Chevutschi, A., Alberty, M., Lensel, G., Pardessus, V., and Thevenon, A.
+  (2009).
+\newblock Comparison of maximal and spontaneous speeds during walking on dry
+  land and water.
+\newblock {\em Gait \& posture}, 29(3):403--407.
+
+\bibitem[Coros et~al., 2009]{coros2009robust}
+Coros, S., Beaudoin, P., and van~de Panne, M. (2009).
+\newblock Robust task-based control policies for physics-based characters.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, volume~28, page 170.
+  ACM.
+
+\bibitem[Coros et~al., 2010]{coros2010generalized}
+Coros, S., Beaudoin, P., and van~de Panne, M. (2010).
+\newblock Generalized biped walking control.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, volume~29, page 130.
+  ACM.
+
+\bibitem[Geijtenbeek and Pronost, 2012]{geijtenbeek2012interactive}
+Geijtenbeek, T. and Pronost, N. (2012).
+\newblock Interactive character animation using simulated physics: A
+  state-of-the-art review.
+\newblock In {\em Computer Graphics Forum}, volume~31, pages 2492--2515. Wiley
+  Online Library.
+
+\bibitem[Geijtenbeek et~al., 2012]{geijtenbeek2012simple}
+Geijtenbeek, T., Pronost, N., and van~der Stappen, A.~F. (2012).
+\newblock Simple data-driven control for simulated bipeds.
+\newblock In {\em Proceedings of the ACM SIGGRAPH/Eurographics Symposium on
+  Computer Animation}, pages 211--219. Eurographics Association.
+
+\bibitem[Hansen, 2006]{hansen2006cma}
+Hansen, N. (2006).
+\newblock The cma evolution strategy: a comparing review.
+\newblock In {\em Towards a new evolutionary computation}, pages 75--102.
+  Springer.
+
+\bibitem[Kajita et~al., 2001]{kajita20013d}
+Kajita, S., Kanehiro, F., Kaneko, K., Yokoi, K., and Hirukawa, H. (2001).
+\newblock The 3d linear inverted pendulum mode: A simple modeling for a biped
+  walking pattern generation.
+\newblock In {\em Intelligent Robots and Systems, 2001. Proceedings. 2001
+  IEEE/RSJ International Conference on}, volume~1, pages 239--246. IEEE.
+
+\bibitem[Lentine et~al., 2011]{lentine2011creature}
+Lentine, M., Gretarsson, J.~T., Schroeder, C., Robinson-Mosher, A., and Fedkiw,
+  R. (2011).
+\newblock Creature control in a fluid environment.
+\newblock {\em Visualization and Computer Graphics, IEEE Transactions on},
+  17(5):682--693.
+
+\bibitem[Si et~al., 2014]{si2014realistic}
+Si, W., Lee, S.-H., Sifakis, E., and Terzopoulos, D. (2014).
+\newblock Realistic biomechanical simulation and control of human swimming.
+\newblock {\em ACM Transactions on Graphics (TOG)}, 34(1):10.
+
+\bibitem[Tan et~al., 2011]{tan2011articulated}
+Tan, J., Gu, Y., Turk, G., and Liu, C.~K. (2011).
+\newblock Articulated swimming creatures.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, volume~30, page~58. ACM.
+
+\bibitem[Yang et~al., 2004]{yang2004layered}
+Yang, P.-F., Laszlo, J., and Singh, K. (2004).
+\newblock Layered dynamic control for interactive character swimming.
+\newblock In {\em Proceedings of the 2004 ACM SIGGRAPH/Eurographics symposium
+  on Computer animation}, pages 39--47. Eurographics Association.
+
+\bibitem[Yin et~al., 2007]{yin2007simbicon}
+Yin, K., Loken, K., and van~de Panne, M. (2007).
+\newblock Simbicon: Simple biped locomotion control.
+\newblock In {\em ACM Transactions on Graphics (TOG)}, volume~26, page 105.
+  ACM.
+
+\end{thebibliography}

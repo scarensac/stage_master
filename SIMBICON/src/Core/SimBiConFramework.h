@@ -79,7 +79,9 @@ private:
 
 public:
 	//this variable store the current value of the ipm_alteration system
-	double step_delta;
+	double ipm_alt_sagittal;
+	double ipm_alt_coronal_left;
+	double ipm_alt_coronal_right;
 
 	//tis variable contain the impact of the water for the previous step
 	std::map<uint, WaterImpact> resulting_impact;
@@ -126,7 +128,7 @@ public:
 	/**
 	modify the coronal location of the step so that the desired step width results.
 	*/
-	double adjustCoronalStepLocation(double IPPrediction);
+	double adjustCoronalStepLocation(double IPPrediction, double phase);
 
 	/**
 	returns a panic level which is 0 if val is between minG and maxG, 1 if it's

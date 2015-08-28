@@ -37,8 +37,10 @@ SimBiConFramework::SimBiConFramework(char* input, char* conFile){
 	legLength = 0.90;//the leg does 0.94 but since the leg ain't centered on the pelvis the effective length is a bit lower
 	ankleBaseHeight = 0.05;
 	stepHeight = 0.15;
-	coronalStepWidth=0.1;
-	step_delta = 0;
+	coronalStepWidth = 0.1;
+	ipm_alt_sagittal = 0;
+	ipm_alt_coronal_left = 0;
+	ipm_alt_coronal_right = 0;
 
 
 	//create the physical world...
@@ -155,40 +157,34 @@ SimBiConFramework::~SimBiConFramework(void){
 */
 
 bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recomputeTorques, bool advanceWorldInTime){
-	static double avg_speed = 0;
+	static double avg_speed_z = 0;
+	static double avg_speed_x = 0;
 	static int times_vel_sampled = 0;
+
+	//for those I use 2 variables because I do my speed evaluation on 2 steps
+	static double last_step_speed_z = 0;
+	static double previous_step_speed_z = 0;
+	static double last_step_speed_x = 0;
+	static double previous_step_speed_x = 0;
 
 	//some static var for later use
 	static Vector3d cur_com = Vector3d(0, 0, 0);
-
 	ODEWorld* world = dynamic_cast<ODEWorld*>(pw);
 
+	//store the current speed to be able to know the avg speed at the end
+	Vector3d effective_speed = getCharacter()->getHeading().getComplexConjugate().rotate(getCharacter()->getRoot()->getCMVelocity());
+	avg_speed_z += effective_speed.z;
+	avg_speed_x += effective_speed.x;
+	times_vel_sampled++;
+	
+	
+	
+	
 	//we simulate the effect of the liquid
 	SimGlobals::vect_forces.clear();
 	resulting_impact.clear();
 	world->compute_water_impact(con->get_character(),SimGlobals::water_level, resulting_impact);
 
-	//I'll add a force for the control of the speed (only for now, I will have to convert it to virtual torques)
-	/*Joint* torso_joint = con->get_character()->getJointByNameOfChild("torso");
-	RigidBody* body = torso_joint->getChild();
-
-	double factor;
-	factor = (SimGlobals::left_stance_factor*SimGlobals::balance_force_factor_left +
-		(1 - SimGlobals::left_stance_factor)*SimGlobals::balance_force_factor_right);
-	//factor = (SimGlobals::balance_force_factor_right + SimGlobals::balance_force_factor_left) / 2;
-	Vector3d F = -Vector3d(0, 0, 1)*SimGlobals::liquid_density / 3000.0* 5.0 * factor;
-	world->applyForceTo(body, F, body->getLocalCoordinates(body->getCMPosition()));*/
-
-	//I'll also add a force to help the caracter follow the heading 
-	//don't work
-	/*if (!com_displacement_previous_to_last_step.isZeroVector()){
-		Vector3d displacement = com_displacement_last_step + com_displacement_previous_to_last_step;
-		Vector3d F2 = Vector3d(displacement.x / displacement.z, 0, 0);
-		world->applyForceTo(body, F2, body->getLocalCoordinates(body->getCMPosition()));
-	}*/
-
-
-	
 	//compute te new torques and apply them 
 	if (applyControl == false){
 		con->resetTorques();
@@ -200,9 +196,8 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 	}
 	con->applyTorques();
 	
-	//store the current speed to be able to know the avg speed at the end
-	avg_speed += getCharacter()->getHeading().getComplexConjugate().rotate(getCharacter()->getRoot()->getCMVelocity()).z;
-	times_vel_sampled++;
+
+
 
 	if (advanceWorldInTime)
 		pw->advanceInTime(dt);
@@ -213,6 +208,23 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 
 	//here we are assuming that each FSM state represents a new step. 
 	if (newFSMState){
+		//compute the avgs speeds
+		avg_speed_z /= times_vel_sampled;
+		avg_speed_x /= times_vel_sampled;
+
+		previous_step_speed_z = last_step_speed_z;
+		last_step_speed_z = avg_speed_z;
+
+		previous_step_speed_x = last_step_speed_x;
+		last_step_speed_x = avg_speed_x;
+		
+		Globals::avg_speed.z = (previous_step_speed_z + last_step_speed_z) / 2;
+		Globals::avg_speed.x = (previous_step_speed_x + last_step_speed_x) / 2;
+
+
+
+		
+		
 		con->getState(con->getFSMState())->update_joints_trajectory();
 
 		//adapt the velD trajectories
@@ -243,35 +255,129 @@ bool SimBiConFramework::advanceInTime(double dt, bool applyControl, bool recompu
 		con->swingFootTrajectoryCoronal.clear();
 		con->swingFootTrajectorySagittal.clear();
 
-
 		con->swingFootTrajectoryCoronal.addKnot(0, 0);
 		con->swingFootTrajectoryCoronal.addKnot(1, 0);
 
 		con->swingFootTrajectorySagittal.addKnot(0, 0);
 		con->swingFootTrajectorySagittal.addKnot(1, 0);
 
-		//addapt the variation on the IPM result depending on our speed
-		avg_speed/=times_vel_sampled;
-		static double previous_speed = avg_speed;
 
-		double d_v = con->velDSagittal - (avg_speed*.75+previous_speed*0.25);
-		if (std::abs(d_v) > 0.3){
-			d_v = 0.3*(d_v / std::abs(d_v));
-		}
-		step_delta -= (d_v)*0.1;
+		//first I'll deternime if I should adatp the IPM
+		//I I detect that it should be adapted then i'll adapt it during the 3 next step before checking if I should continue
+		//everytime I detect I should evolve the value the nbr of step left before stoping to evolve will be set to 3
+		static bool evolve_sagittal = true;
+		static bool evolve_coronal_left = false;
+		static bool evolve_coronal_right = false;
 
-		if (step_delta > 0.0){
-			step_delta = 0.0;
+		bool new_sag, new_cor;
+		getController()->IPM_alteration_should_evolve(new_cor, new_sag);
+
+		static int steps_left_sag = 0;
+		static int steps_left_cor_left = 0;
+		static int steps_left_cor_right = 0;
+	
+		if (new_sag){
+			evolve_sagittal = true;
+			steps_left_sag = 3;
 		}
-		else if (step_delta < -0.09){
-			step_delta = -0.09;
+
+		if (new_cor){
+			if (getController()->getStance() == RIGHT_STANCE){
+				evolve_coronal_right = true;
+				steps_left_cor_right = 3;
+			}
+			else{
+				evolve_coronal_left = true;
+				steps_left_cor_left = 3;
+			}
+		}
+
+		//store the sum of virt force for easier use
+		Vector3d virt_force_avg = getController()->last_virt_force_signed;
+
+	
+		//Adapt the IPM alteration on sagittal results
+		double d_v = con->velDSagittal - (last_step_speed_z*.75 + previous_step_speed_z*0.25);
+		if (evolve_sagittal){
+			//this mean we have to evolve
+
+			if (std::abs(d_v) > 0.3){
+				d_v = 0.3*(d_v / std::abs(d_v));
+			}
+			ipm_alt_sagittal -= (d_v)*0.1;
+
+			if (ipm_alt_sagittal > 0.0){
+				ipm_alt_sagittal = 0.0;
+			}
+			else if (ipm_alt_sagittal < -0.09){
+				ipm_alt_sagittal = -0.09;
+			}
+
+			steps_left_sag--;
+			if (steps_left_sag < 1){
+				evolve_sagittal = false;
+			}
+		}
+		else{
+			//this mean we don't need to evolve
+			//here what I want to do is to lower the IPM alteration if it opose the current virtual force I use
+			//by lower I mean I'll try to move it back to 0
+
+			if (getController()->last_virt_force_signed.z < 0 && ipm_alt_sagittal>0){
+				//if it happens I'll lower the IPM alt by 10%
+				ipm_alt_sagittal -= ipm_alt_sagittal*0.1;
+				std::cout << "triggered IPM degradation" << std::endl;
+			}
+
+		}
+
+		//Adapt IPM alteration on coronal results though the coronal ain't implemented yet
+		double cor_top_limit = 0.03;
+		double cor_top_inf = -0.03;
+
+		d_v =virt_force_avg.x/1000;
+		if (evolve_coronal_right && getController()->getStance() == RIGHT_STANCE){
+			if (std::abs(d_v) > 0.3){
+				d_v = 0.3*(d_v / std::abs(d_v));
+			}
+			ipm_alt_coronal_right -= (d_v)*0.01;
+
+			if (ipm_alt_coronal_right > cor_top_limit){
+				ipm_alt_coronal_right = cor_top_limit;
+			}
+			else if (ipm_alt_coronal_right < cor_top_inf){
+				ipm_alt_coronal_right = cor_top_inf;
+			}
+
+			steps_left_cor_right--;
+			if (steps_left_cor_right < 1){
+				evolve_coronal_right = false;
+			}
+		}
+		else if (evolve_coronal_left && getController()->getStance() == LEFT_STANCE){
+			if (std::abs(d_v) > 0.3){
+				d_v = 0.3*(d_v / std::abs(d_v));
+			}
+			ipm_alt_coronal_left -= (d_v)*0.1;
+
+			if (ipm_alt_coronal_left > cor_top_limit){
+				ipm_alt_coronal_left = cor_top_limit;
+			}
+			else if (ipm_alt_coronal_left < cor_top_inf){
+				ipm_alt_coronal_left = cor_top_inf;
+			}
+
+			steps_left_cor_left--;
+			if (steps_left_cor_left < 1){
+				evolve_coronal_left = false;
+			}
 		}
 		
 
-		previous_speed= avg_speed;
-
+		//reset speed calculation variables
 		times_vel_sampled = 0;
-		avg_speed = 0;
+		avg_speed_x = 0;
+		avg_speed_z = 0;
 	}
 
 	return newFSMState;
@@ -398,10 +504,10 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 	Vector3d com_vel = con->get_v();
 	if (com_vel.y < 0&& phase>0.2){
 		step.z += -con->velDSagittal / 20;
-		step.z += step_delta*SimGlobals::ipm_alteration_effectiveness;
+		step.z += ipm_alt_sagittal*SimGlobals::ipm_alteration_effectiveness;
 	}
 	//and adjust the stepping in the coronal plane in order to account for desired step width...
-	step.x = adjustCoronalStepLocation(step.x);
+	step.x = adjustCoronalStepLocation(step.x,phase);
 
 	boundToRange(&step.z, -0.4 * legLength, 0.4 * legLength);
 	boundToRange(&step.x, -0.4 * legLength, 0.4 * legLength);
@@ -461,10 +567,8 @@ Vector3d SimBiConFramework::computeSwingFootLocationEstimate(const Point3d& comP
 /**
 modify the coronal location of the step so that the desired step width results.
 */
-double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
+double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction, double phase){
 
-
-	//when the caracter ain't in a falling situation
 	double speed_control= con->get_v().x;
 
 
@@ -474,26 +578,27 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction){
 
 	//this help to diminish the fact that the caracter turn the leg when inside the water
 	if (con->getPhase() > 0.8){
-		 if(stepWidth*speed_control > 0){
-			//IPPrediction += IPPrediction /5;
-		 }
-		 else{
+		if (stepWidth*speed_control < 0){
 			IPPrediction -= stepWidth;
 		 }
 	}
+	IPPrediction += stepWidth;
 
-	//if (stepWidth*speed_control > 0){
-		IPPrediction += stepWidth;
-	//}
-	//else{
-	//	IPPrediction += speed_control;
-	//}
+	if (con->get_v().y < 0 && phase>0.2){
+		IPPrediction += -con->velDCoronal / 100;
+		double ipm_alt_coronal = 0;
+		if (con->getStance() == LEFT_STANCE){
+			ipm_alt_coronal = ipm_alt_coronal_left;
+		}
+		else{
+			ipm_alt_coronal = ipm_alt_coronal_right;
+		}
+		//IPPrediction += ipm_alt_coronal*SimGlobals::ipm_alteration_effectiveness;
+	}
 
-	IPPrediction += -con->velDCoronal / 20;
 
 	//I'll disable all the panic system for now ...
 	/**
-
 	//now for the step in the coronal direction - figure out if the character is still doing well - panic = 0 is good, panic = 1 is bad...
 	double panicLevel = 1;
 	

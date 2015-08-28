@@ -18,7 +18,7 @@
 
 #include <conio.h>//for kbhit
 
-const std::string cur_evo_name = "min_drag";
+const std::string cur_evo_name = "speed_07__361";
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -76,7 +76,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	else{
 		//*
 
-		SimGlobals::water_level = 0;
+		SimGlobals::water_level = 1.0;
 		SimGlobals::velDSagittal = 0.7;
 
 

@@ -137,6 +137,12 @@ SimBiController::SimBiController(Character* b) : PoseController(b){
 	velD_coronal_factor_left = 0.0;
 
 	recovery_step = false;
+
+	last_virt_force = Vector3d(0, 0, 0);
+	last_virt_force_cumul = Vector3d(0, 0, 0);
+	last_virt_force_signed = Vector3d(0, 0, 0);
+	last_virt_force_cumul_signed = Vector3d(0, 0, 0);
+	virt_force_limit = Vector3d(100, 0, 200);
 }
 
 /**
@@ -845,10 +851,9 @@ Vector3d SimBiController::computeVirtualForce(){
 	double eff_velDSagittal = get_effective_desired_sagittal_velocity(phi); 
 	double eff_velDCoronal = get_effective_desired_coronal_velocity(phi);
 
-	desA.z = (eff_velDSagittal - vw.z) *30;// +SimGlobals::force_alpha / 1000);
-	desA.x = (eff_velDCoronal - vw.x) * 20;// +(comOffsetCoronal - d.x) * 2;
-	//desA.x = (-d.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
-
+	desA.z = (eff_velDSagittal - vw.z) *30;
+	desA.x = (eff_velDCoronal - vw.x) * 20;
+	
 	if (stance == 1){
 		//Vector3d errV = characterFrame.inverseRotate(doubleStanceCOMError*-1);
 		//desA.x = (-errV.x + comOffsetCoronal) * 20 + (velDCoronal - v.x) * 9;
@@ -857,8 +862,14 @@ Vector3d SimBiController::computeVirtualForce(){
 
 	//and this is the force that would achieve that - make sure it's not too large...
 	Vector3d fA = (desA)* character->getAF()->getMass(); 
-	boundToRange(&fA.x, -100, 100);
-	boundToRange(&fA.z, -200, 200);
+	boundToRange(&fA.x, -virt_force_limit.x, virt_force_limit.x);
+	boundToRange(&fA.z, -virt_force_limit.z, virt_force_limit.z);
+
+	//store it for external usage
+	last_virt_force_cumul.x += std::abs(fA.x);
+	last_virt_force_cumul.z += std::abs(fA.z);
+	last_virt_force_cumul_signed.x += fA.x;
+	last_virt_force_cumul_signed.z += fA.z;
 
 	//now change this quantity to world coordinates...
 	fA = characterFrame.rotate(fA);
@@ -1449,14 +1460,16 @@ second it make sure that the contact of the foot with the ground is real.
 */
 void SimBiController::foot_contact_control(){
 	//*
-	//this is the second version i'll check each corner one by one
-	//*/
-	
-	/*
 	//this is the first version is check the ratios left/right and front back
 	//though the problem is that there isz instabilité (some of the points go from 200N to 0 in one timestep
 	//this function should not do anything if we are not in a phase of foot contact
 	//coronal control
+	double torque_sag = 0;
+	double torque_cor = 0;
+
+	double gain_cor = 300;
+	double gain_sag = 300;
+
 	double val_left = std::abs(force_stance_foot[0].y) + std::abs(force_stance_foot[2].y);
 	double val_right = std::abs(force_stance_foot[1].y) + std::abs(force_stance_foot[3].y);
 	
@@ -1478,12 +1491,9 @@ void SimBiController::foot_contact_control(){
 		}
 	}
 	
-
-	if (ratio < 0.01){
-		ratio /= 2;
-	}
 	if (need_action){
-		torques[stanceAnkleIndex].z += torque_sign*(limit - ratio) * 500;
+		torques[stanceAnkleIndex].z += torque_sign*(limit - ratio) * gain_cor;
+		torque_cor = torques[stanceAnkleIndex].z;
 	}
 
 	static bool need_sag_control = false;
@@ -1523,7 +1533,8 @@ void SimBiController::foot_contact_control(){
 		}
 
 		if (need_action){
-			torques[stanceAnkleIndex].x += torque_sign*(limit - ratio) * 500;
+			torques[stanceAnkleIndex].x += torque_sign*(limit - ratio) * gain_sag;
+			torque_sag = torques[stanceAnkleIndex].x;
 		}
 	}
 	//*/
@@ -1533,57 +1544,74 @@ void SimBiController::foot_contact_control(){
 	static std::vector<double> ratios_sag;
 	static std::vector<double> ratios_cor2;
 	static std::vector<double> ratios_sag2;
+
+	static std::vector<double> vect1;
+	static std::vector<double> vect2;
+	static std::vector<double> vect3;
+	static std::vector<double> vect4;
 	static std::vector<double> vect_phi;
 	static int nbr_step = 0;
+	int limit_step = 30;
 	if (getPhase() < 0.000001){
 		++nbr_step;
-		if (nbr_step == 31){
-			std::ofstream file("contact_ratio_step31.txt");
+		if (nbr_step == limit_step+1){
+			std::ofstream file("contact_ratio_step1.txt");
 			if (file.is_open()) {
-				file << "phi,back_left,phi,back_right,phi,front_left,phi,front_right," << std::endl;
+				file << "phi,coronal,sagittal,phi,torque_cor,torque_sag,";
+				file << "phi,back_left,back_right,phi,front_left,front_right," << std::endl;
 				for (int i = 0; i < (int)vect_phi.size(); ++i){
-					//file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i] << std::endl;
-					file << vect_phi[i] << "," << ratios_cor[i] << ",";
-					file << vect_phi[i] << "," << ratios_sag[i] << ",";
-					file << vect_phi[i] << "," << ratios_cor2[i] << ",";
-					file << vect_phi[i] << "," << ratios_sag2[i] << std::endl;
+					file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i]<<",";
+					file << vect_phi[i] << "," << ratios_cor2[i] << "," << ratios_sag2[i] << ",";
+					file << vect_phi[i] << "," << vect1[i] << ","<< vect2[i] << ",";
+					file << vect_phi[i] << "," << vect3[i] << "," << vect4[i] << std::endl;
 				}
 			}
 			else{
-				exit(31);
+				exit(limit_step+1);
 			}
 		}
 
-		if (nbr_step == 32){
-			std::ofstream file("contact_ratio_step32.txt");
+		if (nbr_step == limit_step+2){
+			std::ofstream file("contact_ratio_step2.txt");
 			if (file.is_open()) {
-				file << "phi,back_left,phi,back_right,phi,front_left,phi,front_right," << std::endl;
+				file << "phi,coronal,sagittal,phi,torque_cor,torque_sag,";
+				file << "phi,back_left,back_right,phi,front_left,front_right," << std::endl;
 				for (int i = 0; i < (int)vect_phi.size(); ++i){
-					//file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i] << std::endl;
-					file << vect_phi[i] << "," << ratios_cor[i] << ",";
-					file << vect_phi[i] << "," << ratios_sag[i] << ",";
-					file << vect_phi[i] << "," << ratios_cor2[i] << ",";
-					file << vect_phi[i] << "," << ratios_sag2[i] << std::endl;
+					file << vect_phi[i] << "," << ratios_cor[i] << "," << ratios_sag[i]<<",";
+					file << vect_phi[i] << "," << ratios_cor2[i] << "," << ratios_sag2[i] << ",";
+					file << vect_phi[i] << "," << vect1[i] << "," << vect2[i] << ",";
+					file << vect_phi[i] << "," << vect3[i] << "," << vect4[i] << std::endl;
 				}
 			}
 			else{
-				exit(32);
+				exit(limit_step+2);
 			}
 		}
-		
+		vect_phi.clear();
 		ratios_cor.clear();
 		ratios_sag.clear();
+		ratios_cor2.clear();
+		ratios_sag2.clear();
 	}
 
-	if (nbr_step >= 30){
-		if (nbr_step >= 32){
-			exit(0);
+	if (nbr_step >= limit_step){
+		if (nbr_step >= limit_step+2){
+			return;
+			//exit(0);
 		}
 		vect_phi.push_back(phi);
-		ratios_cor.push_back(force_stance_foot[0].y);
-		ratios_sag.push_back(force_stance_foot[1].y);
-		ratios_cor2.push_back(force_stance_foot[2].y);
-		ratios_sag2.push_back(force_stance_foot[3].y);
+		//*
+		ratios_cor.push_back(val_left/cor_total);
+		ratios_sag.push_back(val_back/sag_total);
+		ratios_cor2.push_back(torque_cor);
+		ratios_sag2.push_back(torque_sag);
+		//*/
+		//*
+		vect1.push_back(force_stance_foot[0].y);
+		vect2.push_back(force_stance_foot[1].y);
+		vect3.push_back(force_stance_foot[2].y);
+		vect4.push_back(force_stance_foot[3].y);
+		//*/
 	}
 	//*/
 }
@@ -2017,6 +2045,13 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 	else{
 		bool recovery_step_asked = false;
 
+		//finish the computation for the avg virt force applied during the step
+		last_virt_force.x = last_virt_force_cumul.x / timesVelSampled;
+		last_virt_force.z = last_virt_force_cumul.z / timesVelSampled;
+		last_virt_force_cumul = Vector3d(0, 0, 0);
+		last_virt_force_signed.x = last_virt_force_cumul_signed.x / timesVelSampled;
+		last_virt_force_signed.z = last_virt_force_cumul_signed.z / timesVelSampled;
+		last_virt_force_cumul_signed = Vector3d(0, 0, 0);
 
 		//I finish the calculation of the avg speed
 		avgSpeed_z /= timesVelSampled;
@@ -2072,14 +2107,18 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 		if (variation_moy < variation_moy_limit_z){
 
+			double avg_signed_variation = 0;
 			//we handle the points stored in the buffer
 			for (int i = 0; i < (int)vel_sagittal.size(); ++i){
 				//we prevent that the variation we are gonna use is based on a value superior to the moy variation
 				if (std::abs(variation_vector[i]) > variation_moy){
 					variation_vector[i] = variation_moy*variation_vector[i] / std::abs(variation_vector[i]);
 				}
+				variation_vector[i] /= 2;
 
-				double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i] / 2;
+				avg_signed_variation += variation_vector[i];
+
+				double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i];
 				affected_component->baseTraj.setKnotValue(i, new_val);
 			}
 
@@ -2106,7 +2145,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				}
 
 				//and we set the value in the curve
-				double val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation ;
+				double val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation/2 ;
 				affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
@@ -2118,7 +2157,6 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 
 			//I'l simply divide by the ratio between the avg_speed and the velD
 			double traj_delta = (velDSagittal / avgSpeed_z - 1);
-			//wel will use a square-law 
 			
 			int nbr_speeds = (int)previous_speeds_z.size();
 			if (nbr_speeds > 1){
@@ -2126,9 +2164,6 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				if (std::signbit(prev_delta) == std::signbit(traj_delta)){
 					if (std::abs(prev_delta) < std::abs(traj_delta)){
 						traj_delta *= 2;
-					}
-					else{
-						//traj_delta = 0;
 					}
 				}
 			}
@@ -2146,6 +2181,23 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				affected_component->baseTraj.setKnotValue(i, affected_component->baseTraj.getKnotValue(i)*traj_delta);
 			}
 			//*/
+
+			//I'll do one last rule.
+			//the effect will be to miminish the delta on the factor if it evolve the same way as the curve
+			//this should lower the iniertia effect
+			avg_signed_variation /= vel_sagittal.size();
+			if (std::signbit(avg_signed_variation) == std::signbit(traj_delta)){
+				//std::cout << "case detected" << std::endl;
+				if (std::abs(traj_delta) > std::abs(avg_signed_variation)){
+					traj_delta -= avg_signed_variation*0.75;
+					//std::cout << "sub possible" << std::endl;
+				}
+				else{
+					traj_delta = 0;
+				}
+			}
+
+			//and we finalyaffect the delta to the factor
 			velD_sagital_factor += traj_delta;
 
 			//I'll now handle the other points (the ones even after the point I just created
@@ -2274,7 +2326,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 			variation_moy /= nbr_values;
 
 			if (variation_moy < variation_moy_limit_x){
-
+				double avg_signed_variation = 0;
 				//we handle the points stored in the buffer
 				for (int i = 0; i < (int)vel_coronal.size(); ++i){
 					double cur_phi = i*0.1;
@@ -2282,8 +2334,10 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 					if (std::abs(variation_vector[i]) > variation_moy){
 						variation_vector[i] = variation_moy*variation_vector[i] / std::abs(variation_vector[i]);
 					}
-
-					double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i] / 4;
+					variation_vector[i] /= 4;
+					avg_signed_variation += variation_vector[i];
+					
+					double new_val = affected_component->baseTraj.getKnotValue(i) + variation_vector[i];
 					affected_component->baseTraj.setKnotValue(i, new_val);
 				}
 
@@ -2294,25 +2348,18 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 						sup_point_variation = variation_moy*sup_point_variation / std::abs(sup_point_variation);
 					}
 
-					double new_val = sup_point_traj_val + sup_point_variation;
-
 					//I now need to calculate the value for the next point in the trajectory
-					// I'll use a linear interpolation for it
+					// I'll use a linear interpolation of the observed variation for it
 					int pt_nbr = nbr_values - 2;
-					double val_previous_pt = affected_component->baseTraj.getKnotValue(pt_nbr);
 					double pos_previous_pt = affected_component->baseTraj.getKnotPosition(pt_nbr);
 					double pos_next_pt = affected_component->baseTraj.getKnotPosition(pt_nbr + 1);
 
-					double val_next_pt = val_previous_pt + (pos_next_pt - pos_previous_pt)*(new_val - val_previous_pt) / (phi_last_step - pos_previous_pt);
+					double val_next_variation = sup_point_variation*(pos_next_pt - pos_previous_pt) / (phi_last_step - pos_previous_pt);
 
-					//we now limit the variation
-					double val_next_variation = val_next_pt - affected_component->baseTraj.getKnotValue(pt_nbr + 1);
-					if (std::abs(val_next_variation) > variation_moy){
-						val_next_variation = variation_moy*val_next_variation / std::abs(val_next_variation);
-					}
+
 
 					//and we set the value in the curve
-					val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation/4;
+					double val_next_pt = affected_component->baseTraj.getKnotValue(pt_nbr + 1) + val_next_variation/4;
 					affected_component->baseTraj.setKnotValue(pt_nbr + 1, val_next_pt);
 
 
@@ -2321,7 +2368,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				//*
 
 				//now we need to translate the curve depending on the speed it result in and the speed we want
-				double evo_speed = 0.2+(velDSagittal/0.7)/2;
+				double evo_speed = 0.2;// +(velDSagittal / 0.7) / 2;
 
 				//I'l simply divide by the ratio between the avg_speed and the velD
 				double traj_delta = (velDCoronal - previous_speeds.back());
@@ -2340,7 +2387,7 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 								double prev2_delta = velDCoronal - previous_speeds[nbr_speeds - 3];
 								if (std::signbit(prev2_delta) == std::signbit(prev_delta)){
 									if (std::abs(prev2_delta) < std::abs(prev_delta)){
-										traj_delta /= 2;
+										//traj_delta /= 2;
 									}
 								}
 							}
@@ -2384,19 +2431,91 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				//*/
 				//*
 
+				//I'll limit the possible translation
+				double cor_delta_limit = 0;
+				for (int i = 0; i < nbr_values; ++i){
+					double val = std::abs(affected_component->baseTraj.getKnotValue(i));
+					if (val > cor_delta_limit){
+						cor_delta_limit = val;
+					}
+				}
+				cor_delta_limit /= 10;
+
+
+				if (traj_delta>cor_delta_limit){
+					traj_delta = cor_delta_limit;
+				}
+				else if (traj_delta < -cor_delta_limit){
+					traj_delta = -cor_delta_limit;
+				}
 				
+
+				//I'll do one last rule.
+				//the effect will be to miminish the delta on the factor if it evolve the same way as the curve
+				//this should lower the iniertia effect
+				double prev_speed = previous_speeds.back();
+				double prev_speed_1 = previous_speeds[previous_speeds.size() - 2];
+				double prev_speed_2 = previous_speeds[previous_speeds.size() - 3];
+
+
+				avg_signed_variation /= vel_sagittal.size();
+				if (std::abs(prev_speed)<std::abs(prev_speed_1) && std::abs(prev_speed_1)<std::abs(prev_speed_2)){
+					if (std::signbit(prev_speed) == std::signbit(prev_speed_1) && std::signbit(prev_speed_1) == std::signbit(prev_speed_2)){
+						if (std::signbit(avg_signed_variation) == std::signbit(traj_delta)){
+							std::cout << "case detected" << std::endl;
+							if (std::abs(traj_delta) > std::abs(avg_signed_variation)){
+								traj_delta -= avg_signed_variation / 2;
+								std::cout << "sub possible" << std::endl;
+							}
+							else{
+								traj_delta = 0;
+							}
+						}
+					}
+				}
+
 
 				if (stance_var == RIGHT_STANCE){
 					velD_coronal_factor_right += traj_delta;
-					//velD_coronal_factor_left -= 0.1*traj_delta;
+					velD_coronal_factor_left -= 0.5*traj_delta;
 				}
 				else{
 					velD_coronal_factor_left -= traj_delta;
-					//velD_coronal_factor_right += 0.1*traj_delta;
+					velD_coronal_factor_right += 0.5*traj_delta;
 				}
 				//*/
 
-				
+				//no I'll do the degradation if it's possible
+				//the principle is that if the 2 factors have hte same sign and that we have a balanced state
+				//then we are applying useless forces (at least force bigger than necessary)
+				//if it happens I degrade the 2 facotrs by 10% of the biggest (or 50% of the smallest if the biggest*0.1>smallest
+				//I limit it so that it cannot change the sign of one of the factors
+				if (traj_delta < 0.0001 &&prev_delta<0.0001){ //meaning we are in a pretty stable state
+					if (std::signbit(velD_coronal_factor_left) == std::signbit(velD_coronal_factor_right)){
+						double abs_left = std::abs(velD_coronal_factor_left);
+						double abs_right = std::abs(velD_coronal_factor_right);
+						double degradation_val;
+						
+						if (abs_left < abs_right){
+							degradation_val = velD_coronal_factor_right*0.1;
+							if (std::abs(degradation_val) > std::abs(velD_coronal_factor_left)){
+								degradation_val = velD_coronal_factor_left / 2;
+							}
+						}
+						else{
+							degradation_val = velD_coronal_factor_left*0.1;
+							if (std::abs(degradation_val) > std::abs(velD_coronal_factor_right)){
+								degradation_val = velD_coronal_factor_right / 2;
+							}
+						}
+
+						velD_coronal_factor_left -= degradation_val;
+						velD_coronal_factor_right -= degradation_val;
+
+					}
+				}
+
+
 
 				//I'll now handle the other points (the ones even after the point I just created
 				//simply using a linear interpolation to know how they should be updated (limiting the possible variation the the variation_moy/2

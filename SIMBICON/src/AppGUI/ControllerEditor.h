@@ -45,9 +45,6 @@ protected:
 	int nextControlShot;
 	int maxControlShot;
 
-	//keep track of the two variables below to report the speed of the character
-	double avgSpeed;
-	int timesVelSampled;
 
 
 	// These trajectories are reset after every cycle

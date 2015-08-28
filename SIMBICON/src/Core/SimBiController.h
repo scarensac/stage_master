@@ -98,7 +98,6 @@ private:
 
 	//the phase parameter, phi must have values between 0 and 1, and it indicates the progress through the current state.
 	double phi;
-	double phi_last_step;
 
 	//this quaternion gives the current heading of the character. The complex conjugate of this orientation is used
 	//to transform quantities from world coordinates into a rotation/heading-independent coordinate frame (called the character frame).
@@ -191,6 +190,17 @@ public:
 	Vector3d force_swing_foot[4];
 	Vector3d force_swing_toes;
 
+
+	//those variables store the possible limit on the virtual force and the virtual force used on the last step 
+	Vector3d last_virt_force;
+	Vector3d last_virt_force_cumul;
+	Vector3d last_virt_force_signed;
+	Vector3d last_virt_force_cumul_signed;
+	Vector3d virt_force_limit;
+
+
+	//this variable contains the phi reached at the end of the last step
+	double phi_last_step;
 
 protected:
 
@@ -661,5 +671,25 @@ public:
 		if (v.y < 0){ return true; }
 		
 		return false;
+	}
+
+	/*
+	this function is used to know if we should evolve the IPM alteration or if keep the current alteration
+	each component is handled separately
+	*/
+	void IPM_alteration_should_evolve(bool& coronal, bool& sagittal){
+		if (std::abs(last_virt_force.x) > virt_force_limit.x* 0.8){
+			coronal = true;
+		}
+		else{
+			coronal = false;
+		}
+
+		if (std::abs(last_virt_force.z) > virt_force_limit.z* 0.8){
+			sagittal = true;
+		}
+		else{
+			sagittal = false;
+		}
 	}
 };

@@ -148,7 +148,7 @@ A_RigidBody
 	frictionCoefficient 0.8
 	restitutionCoefficient 0.35	
 	
-	ODEGroundParameters 0.005 0.2
+	ODEGroundParameters 0.0005 0.2
 	
 		
 /End
@@ -170,7 +170,7 @@ A_RigidBody
 	frictionCoefficient 0.8
 	restitutionCoefficient 0.35	
 	
-	ODEGroundParameters 0.005 0.2
+	ODEGroundParameters 0.0005 0.2
 /End
 
 A_RigidBody
@@ -182,7 +182,7 @@ A_RigidBody
 	CDP_Sphere 0.0 -0.005 0.025 0.01
 	frictionCoefficient 0.8
 	restitutionCoefficient 0.35	
-	ODEGroundParameters 0.005 0.2
+	ODEGroundParameters 0.0005 0.2
 /End
 
 A_RigidBody
@@ -195,7 +195,7 @@ A_RigidBody
 	frictionCoefficient 0.8
 	restitutionCoefficient 0.35
 	
-	ODEGroundParameters 0.005 0.2
+	ODEGroundParameters 0.0005 0.2
 /End
 
 

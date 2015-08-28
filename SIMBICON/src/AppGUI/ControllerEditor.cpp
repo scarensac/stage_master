@@ -91,9 +91,6 @@ void ControllerEditor::loadFramework( int controlShot ){
 			sprintf(conFile, "..\\controlShots\\cs%05d.sbc", controlShot);
 			conF = new SimBiConFramework(inputFile, conFile);
 		}
-	
-		avgSpeed = 0;
-		timesVelSampled = 0;
 
 		Globals::changeCurrControlShotStr( controlShot );
 		conF->getState(&conState);
@@ -239,10 +236,6 @@ void ControllerEditor::drawExtras(){
  */
 void ControllerEditor::restart(){
 	conF->setState(conState);
-	avgSpeed = 0;
-	timesVelSampled = 0;
-	SimGlobals::balance_force_factor_left = 0;
-	SimGlobals::balance_force_factor_right = 0;
 }
 
 
@@ -408,13 +401,6 @@ void ControllerEditor::processTask(){
 	std::vector<double> phi_vect;
 	std::vector<Vector3d> speed_vect;
 
-	//those variables are herefor the evolution
-	//for those I use 2 variables 'cause I do my speed evaluation on 2 steps
-	static double last_step_speed_z = 0;
-	static double last_step_speed_z2 = 0;
-	static double last_step_speed_x = 0;
-	static double last_step_speed_x2 = 0;
-	static double avgSpeedx = 0;
 
 
 	//if we still have time during this frame, or if we need to finish the physics step, do this until the simulation time reaches the desired value
@@ -433,16 +419,6 @@ void ControllerEditor::processTask(){
 			conF->simStepPlan(SimGlobals::dt);
 
 
-			/*
-			if (phi>phi_it){
-				phi_it += 0.1;
-				//phi_vect.push_back(phi);
-				//speed_vect.push_back();
-				Vector3d v = conF->getController()->get_v();
-				tprintf("%lf, %lf, %lf, %lf\n",
-					phi, v.x, v.y, v.z);					
-			}//*/
-
 
 			lastFSMState = conF->getController()->getFSMState();
 			double signChange = (conF->getController()->getStance() == RIGHT_STANCE)?-1:1;
@@ -455,14 +431,8 @@ void ControllerEditor::processTask(){
 			if (Globals::use_tk_interface){
 				Tcl_UpdateLinkedVar( Globals::tclInterpreter, "targetPosePhase" );
 			}
-	//		tprintf("d = %2.4lf, v = %2.4lf\n", conF->con->d.x, conF->con->v.x);
-
-			//store the current speed to be able to know the avg speed at the end
-			Vector3d effective_speed = conF->getCharacter()->getHeading().getComplexConjugate().rotate(conF->getCharacter()->getRoot()->getCMVelocity());
-			avgSpeed += effective_speed.z;
-			avgSpeedx += effective_speed.x;
-			timesVelSampled++;
-
+	
+			
 			//if phi is lower than the last position of our trajectory, it means we changed phase and so we need to 
 			//reset the trajectory
 			if( phi < dTrajX.getMaxPosition() ) {
@@ -637,23 +607,29 @@ void ControllerEditor::processTask(){
 							
 							//we penalise this simulation if the speed ain't correct
 							//the accepted error is 5%
-							double z_speed = (last_step_speed_z + last_step_speed_z2) / 2;
+							double z_speed = Globals::avg_speed.z;
 							double accepted_error = std::fmax(std::abs(SimGlobals::velDSagittal / 100), 0.005);
 							if (std::abs(z_speed - SimGlobals::velDSagittal) > accepted_error){
 								eval_result += (double)10E15;
 							}
 
 							//we do the same for the x axis
-							double x_speed = (last_step_speed_x + last_step_speed_x2) / 2;
+							double x_speed = Globals::avg_speed.x;
 							accepted_error = std::fmax(std::abs(SimGlobals::velDCoronal / 100), 0.005);
 							if (std::abs(x_speed - SimGlobals::velDCoronal) > accepted_error){
 								eval_result += (double)10E15;
 							}
 
+							//I penalize the simulation that use phi>0.90 and <0.70 to have a movement that will be able to handle
+							//interferences without having to phi motion that are on the limit of what we can control
+							if (conF->getController()->phi_last_step > 0.9 || conF->getController()->phi_last_step < 0.7){
+								eval_result += (double)10E10;
+							}
+
 
 							//*
 							//this passage penalise the usage of the speed strategies
-							eval_result += eval_result*Globals::ipm_alteration_cost*std::abs(conF->step_delta/0.09);
+							eval_result += eval_result*Globals::ipm_alteration_cost*std::abs(conF->ipm_alt_sagittal/0.09);
 							eval_result += eval_result*Globals::virtual_force_cost*SimGlobals::virtual_force_effectiveness;
 							//*/
 
@@ -708,85 +684,34 @@ void ControllerEditor::processTask(){
 
 			//we now check if we finished our current step and act accordingly
 			if( newStep ) {
-
-				/*
-				std::vector<double> hip_target, knee_target;
-				conF->con->read_target_swing_hip_knee(hip_target, knee_target);
-
-				for (int i = 0; i < (int)hip_target.size(); ++i){
-					tprintf(" %lf \n", hip_target[i]);
-				}
-				tprintf(" \n");
-				for (int i = 0; i < (int)knee_target.size(); ++i){
-					tprintf(" %lf \n", knee_target[i]);
-				}
-				//*/
-				
-
 				phi_it = 0;
-				//compute the speed and show it to the user
-				avgSpeed /= timesVelSampled; 
-				avgSpeedx /= timesVelSampled;
-
-				last_step_speed_x2 = last_step_speed_x;
-				last_step_speed_x = avgSpeedx;
-
-				last_step_speed_z2 = last_step_speed_z;
-				last_step_speed_z = avgSpeed;
-
-				Globals::avg_speed.z = (last_step_speed_z2 + last_step_speed_z) / 2;
-				Globals::avg_speed.x = (last_step_speed_x2 + last_step_speed_x) / 2;
-
-
-
-
-
-
 				count_step++;
-				static double avg_speed = 0;
-
-				if (count_step == 10){
-					avg_speed = avgSpeed;
-
-					//tprintf("ref speed = %lf \n", avg_speed);
-				}
-				if (count_step > 10){
-					double epsilon = avgSpeed - avg_speed;
-					epsilon *= 10;
-					if (conF->getController()->getStance() == RIGHT_STANCE){
-						//SimGlobals::balance_force_factor_right += epsilon;
-					}
-					else{
-						//SimGlobals::balance_force_factor_left += epsilon;
-					}
-				}
-
-				
 				Vector3d v = conF->getLastStepTaken();
-				
-				//*
+
+
 				if (!Globals::evolution_mode&&!Globals::close_after_saving){
+					/*
 					if (conF->getController()->recovery_step){
-						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z, step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
+						tprintf("recovery: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, ipm_alt_sagittal = %lf)\n",
+							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z, step_time_end, conF->ipm_alt_sagittal*SimGlobals::ipm_alteration_effectiveness);
 	
 					}
 					else{
-						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, step_delta = %lf)\n",
-							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z,  step_time_end, conF->step_delta*SimGlobals::ipm_alteration_effectiveness);
+						tprintf("step: %lf %lf %lf (phi = %lf, avg_speed_x = %lf, avg_speed_z = %lf, TIME = %lf, ipm_alt_sagittal = %lf)\n",
+							v.x, v.y, v.z, phi, Globals::avg_speed.x, Globals::avg_speed.z,  step_time_end, conF->ipm_alt_sagittal*SimGlobals::ipm_alteration_effectiveness);
 					}
+					//*/
+					tprintf("%lf, %lf, %lf // %lf, %lf // %lf, %lf // %lf, %lf, %lf\n",
+						conF->getController()->velD_sagital_factor, conF->getController()->velD_coronal_factor_right, conF->getController()->velD_coronal_factor_left,
+						conF->getController()->last_virt_force.z, conF->getController()->last_virt_force.x,
+						conF->getController()->last_virt_force_signed.z, conF->getController()->last_virt_force_signed.x,
+						conF->ipm_alt_sagittal, conF->ipm_alt_coronal_left, conF->ipm_alt_coronal_right);
+					
 				}
-				//*/
 				//this print is to draw the curve of evo of the speeds
 				//tprintf("%lf, %lf\n",Globals::avg_speed.x, Globals::avg_speed.z);
 
 
-				//Globals::animationRunning = false;
-
-				//reset the speed for the next step
-				avgSpeed = 0;
-				avgSpeedx = 0;
-				timesVelSampled = 0;
 				step_time_end = 0;
 
 				stepTaken();
