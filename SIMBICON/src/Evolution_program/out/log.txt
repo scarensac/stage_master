@@ -1,1 +1,1 @@
-Exception: Invalid BMP file.
+Error: A controller must be loaded!

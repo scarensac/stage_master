@@ -493,7 +493,7 @@ void ControllerEditor::processTask(){
 					for (int i = 0; i < (int)vect_lower_body.size(); ++i){
 						eval_buff_torque += conF->getController()->torques[vect_lower_body[i]->get_idx()].length();
 					}
-					eval_result += 4 * eval_buff_torque / (1.2*1E6);
+					eval_result += 3 * eval_buff_torque / (1.2*1E6);
 					//*/
 					//*
 					//this version just sum the drag torque
@@ -502,7 +502,7 @@ void ControllerEditor::processTask(){
 						WaterImpact impact = it->second;
 						eval_buff_drag += impact.drag_torque.length();
 					}
-					eval_result += 5 * eval_buff_drag / (6 * 1E4);
+					eval_result += 6 * eval_buff_drag / (6 * 1E4);
 					//*/
 					/*
 					//this version minimise the maximum necessary trque and we do it for each step
@@ -629,8 +629,8 @@ void ControllerEditor::processTask(){
 
 							//*
 							//this passage penalise the usage of the speed strategies
-							eval_result += eval_result*Globals::ipm_alteration_cost*std::abs(conF->ipm_alt_sagittal/0.09);
-							eval_result += eval_result*Globals::virtual_force_cost*SimGlobals::virtual_force_effectiveness;
+							eval_result += eval_result*(1+0.1*std::abs(conF->ipm_alt_sagittal/0.09));
+							//eval_result += eval_result*Globals::virtual_force_cost*SimGlobals::virtual_force_effectiveness;
 							//*/
 
 
@@ -641,6 +641,7 @@ void ControllerEditor::processTask(){
 							}
 							else{
 								std::cout << "damn dat fail" << std::endl;
+								exit(0);
 							}
 
 							if (Globals::save_mode){
@@ -669,6 +670,7 @@ void ControllerEditor::processTask(){
 						}
 						else{
 							std::cout << "damn dat fail" << std::endl;
+							exit(0);
 						}
 
 						exit(0);

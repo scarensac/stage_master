@@ -585,7 +585,7 @@ double SimBiConFramework::adjustCoronalStepLocation(double IPPrediction, double 
 	IPPrediction += stepWidth;
 
 	if (con->get_v().y < 0 && phase>0.2){
-		IPPrediction += -con->velDCoronal / 100;
+		IPPrediction += -con->velDCoronal / 200;
 		double ipm_alt_coronal = 0;
 		if (con->getStance() == LEFT_STANCE){
 			ipm_alt_coronal = ipm_alt_coronal_left;

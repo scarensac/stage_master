@@ -18,7 +18,7 @@
 
 #include <conio.h>//for kbhit
 
-const std::string cur_evo_name = "speed_07__361";
+const std::string cur_evo_name = "speed_07__361_v2";
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -50,6 +50,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		SimGlobals::liquid_density = 1000;
 		SimGlobals::water_level = wcstof(argv[1], NULL);
 		SimGlobals::velDSagittal = 0.7;
+		SimGlobals::force_alpha = 0;
 
 		
 		for (int i = 2; i < argc; ++i){
@@ -94,7 +95,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*
 		std::ostringstream oss;
 		oss << "bipV2/" << cur_evo_name << "/learning_walk_waterlvl" << SimGlobals::water_level << ".sbc";
-		//Globals::save_mode_controller = oss.str();
+		Globals::save_mode_controller = oss.str();
 		Globals::save_mode = true;
 		Globals::useShader = false;
 		//Globals::evolution_mode = 1;
@@ -148,8 +149,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		//*/
 		
 		/*
-		SimGlobals::water_level = 0.25;
-		double water_limit = 0.6;
+		SimGlobals::water_level = 0;
+		double water_limit = 1.1;
 		do{
 			std::cout << "starting evolution for water_lvl:" << SimGlobals::water_level << std::endl;
 			cma_program(cur_evo_name);
@@ -553,6 +554,7 @@ SimbiconOnjectiveFunction::ResultType SimbiconOnjectiveFunction::eval(const Sear
 		myfile.open("eval_result.txt");
 		myfile >> std::fixed >> std::setprecision(8) >> last_eval;
 		myfile.close();
+		//std::cout << "succesfully read:" << last_eval << std::endl;
 	}
 	else{
 		last_eval = 10E20;

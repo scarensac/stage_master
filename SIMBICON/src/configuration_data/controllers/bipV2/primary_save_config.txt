@@ -1,2 +1,2 @@
-speed_07__361/learning_walk_waterlvl1_state.rs
-speed_07__361/learning_walk_waterlvl1.sbc
+speed_07__361_v2/learning_walk_waterlvl1_state.rs
+speed_07__361_v2/learning_walk_waterlvl1.sbc

@@ -45,6 +45,9 @@
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
 
+%for real number symbol
+\usepackage{amssymb} 
+
 % for control over itemize
 \usepackage{enumitem}
 
@@ -160,7 +163,7 @@ To overcome these limitations, we propose a novel controller showing the followi
 \label{fig:shema_controler}
 \end{figure}
 
-Our controller consists of six key components that are classified in three categories (figure \ref{fig:shema_controler}). Each one of these categories correspond to one type of interaction with the character: generation of the target pose, generation of torque on the joints and generation of forces applyed on the limbs.
+Our controller consists of six key components that are classified in three categories (figure 1) according to their output, namely: the target pose, the joint torques and the external forces.
 
 First, we simulate the liquid impact on the character by applying external forces computed by simple hydrodynamics (drag, friction and buoyancy) allowing us to obtain real-time interactions between the liquid and the character (section~\ref{sec:ext_forces}). Our method combines various controllers, each one defining a gait style depending on the simulation conditions (e.g. liquid height, target speed), allowing an adaptive evolution of the gait style (section~\ref{sec:multi_state}). The specified trajectories for the joints composing the swing leg are overridden by the results of an IPM if the character is in the falling phase of a step or if the controller detects a loss of balance (section~\ref{sec:specific_ipm}).
 
@@ -168,7 +171,7 @@ We augment the PD-controller with torques computed through an external force-fie
 
 Our controller includes a precise tracking of the target velocity through an adaptive offset on the swing foot position computed by the IPM (section~\ref{sec:ipm_alt}). Our system presents an improvement of Coros et al.'s fine-scale control~\citep{coros2010generalized} by considering the intra-step speed variation of the character to compute a more efficient virtual force (section~\ref{sec:speed_virt_force}).
 
-We add a feedback controller on the stance ankle that ensure a correct contact between the stance foot and the ground (section~\ref{sec:stance_foot_contact_control}) preventing inadequate movement of the stance ankle in situation not specified in the reference controllers.
+We add a feedback controller on the stance ankle that ensures a correct contact between the stance foot and the ground (section~\ref{sec:stance_foot_contact_control}).
 
 Finally, we use offline optimization to generate the reference poses used by the controller combinator. This optimization defines a gait style specific to a given scenario (section~\ref{sec:optimisation}).
 
@@ -179,7 +182,7 @@ Beside the ground reaction forces, the external forces generated in our system a
 \begin{equation}
 F_D=\frac{1}{2} \rho v^2 \times (A_n C_d + S_n C_f)
 \end{equation}
-where $C_d$ is the drag coefficient, $\rho$ the fluid density, $A_n$ the cross sectional area and $v$ the relative speed to the fluid. Due to the complexity of dynamically computing $C_d$, we set it to 1.0 (average value for a man). $S_n$ is the surface in contact with water for each element and $C_f$ is a coefficient representing the fluid viscosity allowing us a rough representation of the friction. The velocity varying through the limbs, we use a finite elements decomposition of the surface of each limb and compute the parasitic drag for each element individually. The computation of the cross sectional area $A_n$ and the immersion test are both directly realized on each element. We use the same finite elements to obtain an approximation of the surface in contact $S_n$.
+where $C_d$ is the drag coefficient, $\rho$ the fluid density, $A_n$ the cross sectional area and $v$ the relative speed to the fluid. Due to the complexity of dynamically computing $C_d$, we set it to 1.0 (average value for a man). $S_n$ is the surface in contact with the water and $C_f$ is a coefficient representing the fluid viscosity allowing us a rough representation of the friction. The velocity varying through the limbs, we use a finite elements decomposition of the surface of each limb and compute the parasitic drag for each element individually. The computation of the cross sectional area $A_n$ and the immersion test are both directly realized on each element. We use the same finite elements to obtain an approximation of the surface in contact $S_n$.
 
 \section{Control Framework}
 \label{sec:control_framework}
@@ -210,7 +213,7 @@ The same formula is applied to adapt the gait style to the liquid height where t
 \subsection{Inversed Pendulum Model}
 \label{sec:IPM}
 
-We use an \textit{Inversed Pendulum Model} (IPM) supposing constant leg length and zero target velocity similar to the one used in~\citep{coros2010generalized}. We have modified this model to allow the previously impossible specification of some gait styles and to enable a better tracking of the user's target velocity.
+We use an \textit{Inversed Pendulum Model} (IPM) supposing constant leg length and zero target velocity similar to the one used in~\citep{coros2010generalized}. We have modified this model to allow the previously impossible specification of gait styles and to enable a better tracking of the user's target velocity.
 
 \subsubsection{Specific IPM Usage}
 \label{sec:specific_ipm}
@@ -226,7 +229,7 @@ Our solution is to add a supplementary offset $\Delta(x,z)_i$ to the results of 
 $$
 P(x,z) = P_{IPM}(x,z) - \alpha V_d + \Delta(x,z)_s
 $$ 
-To prevent parasiting between this system and the velocity tuning (section \ref{sec:speed_virt_force}), we modify the offset only if the virtual force applyed by the velocity tuning reachs $80\%$ of the maximum force allowed. 
+To prevent parasiting between this system and the velocity tuning (section \ref{sec:speed_virt_force}), we modify the offset only if the virtual force applied by the velocity tuning reaches $80\%$ of the maximum force allowed. 
 
 \subsection{External Force Fields Compensator}
 \label{sec:ext_force_comp}
@@ -296,7 +299,7 @@ With $R_{F/B}$ (resp. $R_{L/R}$) being the ratio of either front or back forces 
 \section{Offline Optimization}
 \label{sec:optimisation}
 
-The goal of the offline optimization is to find the optimal parameters of our controller for a given scenario (target character's sagittal speed and liquid height). The considered parameters are the 51 key points for the trajectory of the following elements: pelvis, joint between the pelvis and the torso (first Lumbar vertebrae), stance ankle, swing ankle, stance knee, swing foot.
+The goal of the offline optimization is to find the optimal parameters of our controller for a given scenario (target character's sagittal speed and liquid height). The considered parameters are the 51 key points for the trajectory of the following elements: pelvis, lower back joint (L1 vertebrae), stance ankle, swing ankle, stance knee, swing foot.
 
 \subsection{Objective function}
 During our optimization we use the following evaluation function:
@@ -393,19 +396,20 @@ We experimented on the weights of the evaluation function, among which the two c
 Our controller allows online modification of the character's target velocity. It is also possible to change the step width during movement. The controller is able to adapt to water height (figure~\ref{fig:controller_results}) as well as changes to the liquid's physics properties (density and viscosity). Our system is able to withstand external forces simulated through solid balls of 5kg projected onto the character (figure~\ref{fig:controller_results} bottom). All the simulations respect the real-time condition with a minimum of 27 fps when the water reaches the hips.
 
 Figure~\ref{fig:controller_results} illustrates some of the results. The first two rows show that the character adapts the height of the swing foot to reach the water height. The third row illustrates the case where the water height is too high and the character keeps the swing foot near the ground. The right images illustrate the character's recovery after an impact from a $5kg$ ball moving at $5.4m.s^{-1}$. As we can see, numerous steps are necessary to return to a stable velocity.
-The controller obtained by the presented optimization can precisely track any target sagittal speed from $0.2m.s^{-1}$ to $0.8m.s^{-1}$ under water height up to 1m and $1.0m.s^{-1}$ if the water height is lower than the knees. The following tests have been realized for a $0.6m.s^{-1}$ forward walk. The range of coronal speeds that can be achieved goes from $-0.25m.s^{-1}$ to $0.25m.s^{-1}$ under water height up to 1m. The controller can adapt to liquids with a density up to 1.5 times the density of water and. The character is robust to external pushes up to $5kg$ balls moving at $6m.s^{-1}$.
+The controller obtained by the presented optimization can precisely track any target sagittal speed from $0.2m.s^{-1}$ to $0.8m.s^{-1}$ under water height up to 1m and $1.0m.s^{-1}$ if the water height is lower than the knees. The following tests have been realized for a $0.6m.s^{-1}$ forward walk. The range of coronal speeds that can be achieved goes from $-0.25m.s^{-1}$ to $0.25m.s^{-1}$ under any water height up to 1m. The controller can adapt to liquids with a density up to 1.5 times the density of water. The character is robust to external pushes up to $5kg$ balls moving at $6m.s^{-1}$.
 \subsection{Discussions}
 
 In this work, we have focused on obtaining real-time simulations over having an extensive realism. Our controller could benefit from a more realistic water model that would still comply with the real-time constraint.
 Our system still uses a static threshold to detect the need for recovery steps instead of using an adaptive value depending on if the velocity learning has been completed or not. Using experimental results should be a correct solution to identify how the threshold should be adapted.
 Our system presents some difficulties to reach the target coronal velocities especially if the desired variation is sudden. This is most likely caused by the fact that we need two learning velocity curves for the coronal axis. Adding a learning system with complex impact of the evolution of one curve on the other could be a possible solution.
+\vspace{-2mm} %1mm vertical space
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We have presented a physics-based controller capable of real-time interactive simulation of walking motions for partially immersed bipeds. We have demonstrated online adaptation of the gait style to external conditions such as the liquid height and target character's velocity. Our controller permits the specification of new gait styles specific to walking motions in a liquid medium.
 
-This projet has been set up with the initialization of a research axis on motion control and will be continued during a Ph.D.. A paper has been submitted in july for the conference Motion In Games (MIG). I worked independently with the help of my supervisors during this project.
+This project has been set up with the initialization of a research axis on motion control of virtual humans and will be extended during a Ph.D.. A paper has been submitted in july for the conference Motion In Games (\href{https://mig2015.inria.fr}{MIG}). I worked independently with the help of my supervisors during this project.
 
 Our controller could be extended by implementing a more realistic liquid model which could consider the perturbations of the liquid caused by the character. Adding other mediums (e.g. snow-like mediums) or movement types (e.g. standing still, running…) with possible online transition between them are also interesting works we would like to investigate. Working on a non rigid model for the feet would improve the controller as well by bringing more advanced balance strategies and more realistic interactions between a virtual human and its environment. 
  
@@ -413,5 +417,139 @@ Our controller could be extended by implementing a more realistic liquid model w
 
 %\nocite{*}
 
+\vspace{-2mm} %1mm vertical space
 \bibliography{template}
+
+\newpage
+
+\appendix
+
+The following appendices are here to give to the reader the basis for the different concepts mentioned in this report. In particular, we propose one appendix for each one of the three following concepts: Joint-space motion control and PD-controllers, Inversed Pendulum model (IPM) and Inversed Kinematics with jacobian transpose. Those appendices are extracts from various papers previously mentioned. At the start of each appendix the source paper and the position of the extract within this paper will be mentioned. See the corresponding papers for a better understanding and to find the papers referenced inside the extracts.
+
+\section{Joint-space motion control and PD-controllers}
+
+This appendix has been extracted from \cite{geijtenbeek2012interactive} page 8-9.
+\vspace{5mm} %5mm vertical space
+
+
+Joint-space motion control attempts to control physics-based characters by providing kinematic target trajectories, which are tracked using \textit{local feedback controllers} that attempt to minimize the difference between the measured state and tar- get state. It has its origin in \textit{control theory} and is the most common control method in industrial robotics [KSnL05]. 
+
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\columnwidth]{images/joint_space_motion_control.png}
+
+\caption{Joint-space motion control}
+\label{fig:joint_space_motion_control}
+\end{figure}
+
+
+Figure \ref{fig:joint_space_motion_control} shows a schematic overview of joint-space motion control for physics-based character animation. Its main component performs \textit{balance and pose control}, based on the current state, high-level control parameters, and (optionally) a time-based reference pose. It outputs a \textit{desired kinematic state} for each joint, usually in the form of desired orientation and angular velocity. For each actuated joint, a \textit{local feedback controller} computes a joint torque based on the difference between measured and target state. 
+
+The main appeal of this approach is its ease of implementation: all motion can be specified in the kinematic domain, based on kinematic insights, without the need for direct access to the underlying equations of motion. The downside of using local feedback controllers is that they operate individually, while coordinated motion is the product of all joints working together. The key challenge of joint-space motion control is in devising methods to compensate for this lack of coordination. 
+
+In the remainder of this section, we first describe techniques for local feedback control, followed by an overview of different approaches for generating kinematic targets. 
+
+
+\vspace{5mm} %5mm vertical space
+\textbf{3.1. Local feedback control} 
+\vspace{4mm} %5mm vertical space
+
+The purpose of a local feedback controller is to compute a torque that minimizes the difference between the current state and desired state of a single actuated joint. Physics-based characters generally contain rotational joints; kinematic targets are therefore mostly represented through joint orientation and angular velocity. However, feedback control strategies can be applied similarly to prismatic (sliding) joints. 
+
+
+\vspace{5mm} %5mm vertical space
+\textbf{3.1.1. Proportional-derivate control}
+\vspace{4mm} %5mm vertical space 
+
+The most widely used feedback control technique in joint- space motion control is called proportional-derivative control, or PD control. It computes a joint torque, $\tau$ , that is  linearly proportional to the difference between the current state and a desired state. It takes into account both the difference in current orientation $\theta$, and desired joint orientation $\theta _d$ , as well as the difference in current angular velocity $\theta$, and desired angular velocity $\theta _d$ 
+
+\begin{equation}
+\tau=k_p(\theta_d - \theta) + k_v(\dot{\theta_d} - \dot{\theta})
+\label{eq:pd_controler}
+\end{equation}
+
+In this equation, $k_p$ and $k_v$ are controller gains, and they regulate how responsive the controller is to deviations in position and velocity, respectively. Often, applications only specify a desired joint orientation and set desired angular velocity to zero ($\theta _d = 0$). A PD controller then becomes similar to a spring-damper system, where a spring generates a force to move to its rest position, $\theta _d$ . In such a system $k_p$ defines the \textit{spring gain} (or \textit{spring constant}), and $k_v$ the damping. 
+
+\textit{Parameter tuning}. Finding correct values for $k_p$ and $k_v$ is not a straightforward task, and often requires manual tuning through \textit{trial-and-error}. When controller gains are set too low, a joint may not be able to track its target and lag behind. When set too high, a joint may follow a target trajectory too rigidly and become stiff and unresponsive. The amount of rigidity is also referred to as \textit{impedance} - in skilled human motion, impedance is usually low [TSR01, Hog90], while high impedance motion is regarded as robotic or stiff [NF02]. 
+
+$k_p$ and $k_v$ must also be set in a proper relation to each other. A relatively high value for $k_p$ may result in \textit{overshoot} (meaning that a joint will oscillate around its desired position before reaching it), while a relatively high value of $k_v$ may cause unnecessary slow convergence. When the relation between $k_p$ and $k_d$ is optimal (fastest convergence without overshoot), a controller is said to be \textit{critically damped}. If the desired state and dynamics characteristics are fixed, the optimal relation between the two gain parameters is: $k_v$ = 2 $k_p$. For physics-based characters this relation is more complex, as both the desired state and the dynamics characteristics are subject to constant change. Still, this relation is often used as an estimate or a starting point for tuning.
+
+
+\section{Inversed Pendulum Model}
+
+This appendix has been extracted from \cite{coros2010generalized} page 3.
+\vspace{5mm} %5mm vertical space
+
+Computing where to step and how to achieve that step is an important problem for walking skills. The steps we wish our controller to perform can vary widely in nature, ranging from making minimal shifts of foot position during idle stance to taking large steps during a fast walk or when receiving a large push. 
+\vspace{-5mm} %5mm vertical space
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.3\columnwidth]{images/ipm2010.png}
+\caption{Inverted pendulum model}
+\label{fig:ipm2010}
+\end{figure}
+
+We compute the desired stepping point, ($X_d$, $Z_d$), using an inverted pendulum model (IPM) in order to achieve a general solution that works across a wide range of body types. In particular, we build on an inverted pendulum model that assumes constant leg length [Pratt and Tedrake 2006] as shown in Figure \ref{fig:ipm2010}. The analysis equates the sum of the potential and kinetic energy of the IPM at the current state, described by its current velocity $v$, its height, $h$, and distance, $d$, from the future point of support, with that at the balanced rest state, i.e., $\frac{1}{2}mv^2+mgh=\frac{1}{2}mv'^2+mgh'$, where \(v'=0\) and \(h'=L=\sqrt{h^2+d^2}\). Solving this relation for $d$ gives $ d = v\sqrt{\frac{h}{g}+\frac{v^2}{4g^2}}$. The above model computes the desired value of d in order to reach zero velocity at the next step. Taking a shorter step will achieve a positive velocity while taking a larger step will achieve a negative velocity, i.e., walking backwards. Accordingly, we compute $d_0 = d - \alpha V_d$, where $V_d$ is the magnitude of the desired velocity and $\alpha$ is a constant.
+
+
+\section{Inversed Kinematics with jacobian transpose}
+
+
+This appendix has been extracted from \cite{geijtenbeek2012simple} page 4.
+\vspace{5mm} %5mm vertical space
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\columnwidth]{images/paper2012img.png}
+
+\caption{Virtual forces applied to the center of mass, through a chain of linked bodies, for single stance (left) and dual stance (right).}
+\label{fig:paper2012img}
+\end{figure}
+
+The essence of this control method is that it enables control in Cartesian space for linked structures with redundant DOFs. Using the Jacobian Transpose, it is possible to compute the set of torques that emulate the effect of an external force or torque, applied to a specific body or a virtual point (such as the center-of-mass). Virtual forces and torques are applied to a \textit{chain of linked bodies}, starting from a static base link (such as the stance foot) and moving to a target link (see Figure \ref{fig:paper2012img} for an illustration). The set of joint torques $\tau _F$ that emulate a virtual force F applied at point p corresponds to:
+\begin{equation}
+\tau=J_i^T F
+\end{equation}
+where $J(p)$ is the \textit{Jacobian} that represents the rate of change of a point $p$ for each DOF $i$ connecting the targeted chain of bodies. For a chain of bodies connected through $k$ rotational DOFs, each row in $J(p)^T$ represents the rate of change of $p$ with rotation $a_i$ about DOF $i$:
+
+\begin{equation}
+J(p)^T =\begin{bmatrix}
+\frac{\partial p_x}{\partial \alpha_1} & \frac{\partial p_y}{\partial \alpha_1} & \frac{\partial p_z}{\partial \alpha_1} \\
+. & . & . \\
+\frac{\partial p_x}{\partial \alpha_k} & \frac{\partial p_y}{\partial \alpha_k} & \frac{\partial p_z}{\partial \alpha_k} \\
+\end{bmatrix}
+\end{equation}
+
+
+For a rotational DOF $i$ represented by normalized axis $a_i$ and anchor position $b_i$ (all defined in the world coordinate frame), the derivative $\frac{\partial p_x}{\partial \alpha_i}$ corresponds to the cross product between $a_i$ and the relative position of $p$ [Jaz10]. Hence, each row $i$ of $J(p)^T$ corresponds to:
+\begin{equation}
+J_i ^T (p)=\begin{bmatrix}
+\frac{\partial p_x}{\partial \alpha_i} & \frac{\partial p_y}{\partial \alpha_i} & \frac{\partial p_z}{\partial \alpha_i} \\
+\end{bmatrix}
+= (\alpha_i \times (p-p_i))^T
+\end{equation}
+
+A virtual force F applied at point p can now be emulated by applying a torque tF;i to each DOF i that is part of the chain of bodies:
+\begin{equation}
+\tau = (\alpha_i \times (p-p_i))^T F
+\end{equation}
+
+Similarly, it is possible to apply a virtual torque to a specific body at the end of a chain. If the orientation of the targeted body is represented using an \textit{exponential map} [Gra98], $e \in  \mathbb{R} ^3$, then the rate of change of e with rotation $a_i$ is identical to the normalized DOF axis $a_i$:
+\begin{equation}
+J_i ^T (e)=\begin{bmatrix}
+\frac{\partial e_x}{\partial \alpha_i} & \frac{\partial e_y}{\partial \alpha_i} & \frac{\partial e_z}{\partial \alpha_i} \\
+\end{bmatrix}
+= a^T_i 
+\end{equation}
+Hence, a \textit{virtual torque} $T$ applied to the body at the end of the chain can be emulated by applying a torque $\tau _{Tj}$ to each DOF $i$ that is part of the chain of bodies:
+\begin{equation}
+\tau _{Tj}= a^T_i T
+\end{equation}
+Note that, since bipeds contain no links that are truly static, the effect of a virtual force or torque is always an approximation and can be determined only after simulation. That said, we have found this approximation to be sufficiently accurate to work well in practice.
+
+
 \end{document}
+

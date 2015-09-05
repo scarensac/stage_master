@@ -1539,7 +1539,7 @@ void SimBiController::foot_contact_control(){
 	}
 	//*/
 
-	//*
+	/*
 	static std::vector<double> ratios_cor;
 	static std::vector<double> ratios_sag;
 	static std::vector<double> ratios_cor2;
@@ -1606,12 +1606,12 @@ void SimBiController::foot_contact_control(){
 		ratios_cor2.push_back(torque_cor);
 		ratios_sag2.push_back(torque_sag);
 		//*/
-		//*
+	    /*
 		vect1.push_back(force_stance_foot[0].y);
 		vect2.push_back(force_stance_foot[1].y);
 		vect3.push_back(force_stance_foot[2].y);
 		vect4.push_back(force_stance_foot[3].y);
-		//*/
+		
 	}
 	//*/
 }
@@ -2462,10 +2462,10 @@ void SimBiController::velD_adapter(bool learning_mode, bool* trajectory_modified
 				if (std::abs(prev_speed)<std::abs(prev_speed_1) && std::abs(prev_speed_1)<std::abs(prev_speed_2)){
 					if (std::signbit(prev_speed) == std::signbit(prev_speed_1) && std::signbit(prev_speed_1) == std::signbit(prev_speed_2)){
 						if (std::signbit(avg_signed_variation) == std::signbit(traj_delta)){
-							std::cout << "case detected" << std::endl;
+							//std::cout << "case detected" << std::endl;
 							if (std::abs(traj_delta) > std::abs(avg_signed_variation)){
 								traj_delta -= avg_signed_variation / 2;
-								std::cout << "sub possible" << std::endl;
+								//std::cout << "sub possible" << std::endl;
 							}
 							else{
 								traj_delta = 0;
